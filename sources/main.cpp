@@ -1,7 +1,8 @@
 #include <cage-core/logger.h>
-#include <cage-core/math.h>
+#include "dnt.h"
 
-using namespace cage;
+void generateDungeon();
+void exportDungeon();
 
 int main(int argc, const char *args[])
 {
@@ -10,9 +11,8 @@ int main(int argc, const char *args[])
 		Holder<Logger> log1 = newLogger();
 		log1->format.bind<logFormatConsole>();
 		log1->output.bind<logOutputStdOut>();
-
-
-
+		generateDungeon();
+		exportDungeon();
 		return 0;
 	}
 	catch (...)
