@@ -84,7 +84,7 @@ namespace
 				tmp.push_back(Vec2i(i % f.width, i / f.width));
 		if (tmp.empty())
 			return Vec2i(-1);
-		return tmp[randomRange(size_t(0), tmp.size())];
+		return tmp[randomRange(0u, numeric_cast<uint32>(tmp.size()))];
 	}
 
 	Vec2i findNearest(const Floor &f, Vec2i s, TileEnum c)

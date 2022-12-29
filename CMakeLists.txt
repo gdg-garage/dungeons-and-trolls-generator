@@ -6,7 +6,7 @@ include(cage_all)
 cage_default_init()
 cage_assets_add_data_path("${CMAKE_CURRENT_SOURCE_DIR}/data")
 
-add_subdirectory(externals/cage)
+add_subdirectory(externals/cage EXCLUDE_FROM_ALL)
 
 file(GLOB_RECURSE dntgenerator-sources "sources/*")
 add_executable(dntgenerator ${dntgenerator-sources})
