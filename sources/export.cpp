@@ -116,11 +116,39 @@ namespace
 			cnt += it == tile;
 		return cnt;
 	}
+
+	std::string tileJson(Vec2i position, TileEnum type, const TileExtra &extra)
+	{
+		std::string json;
+		json += "{\n";
+		json += (Stringizer() + "\"x\":" + position[0] + ",\n").value.c_str();
+		json += (Stringizer() + "\"y\":" + position[1] + ",\n").value.c_str();
+		json += (Stringizer() + "\"type\":\"" + tileName(type) + "\",\n").value.c_str();
+		std::visit(
+			[&](auto &&arg)
+			{
+				using T = std::decay_t<decltype(arg)>;
+				if constexpr (std::is_same_v<T, std::monostate>)
+				{
+					// nothing
+				}
+				else if constexpr (std::is_same_v<T, std::string>)
+					json += "\"data\":" + arg + ",\n";
+				else if constexpr (std::is_same_v<T, std::unique_ptr<Monster>>)
+					json += "\"data\":" + monsterJson(*arg) + ",\n";
+				else
+					static_assert(false, "non-exhaustive visitor!");
+			},
+			extra);
+		removeLastComma(json);
+		json += "}"; // /root
+		return json;
+	}
 }
 
-Export exportFloor(const Floor &floor)
+FloorExport exportFloor(const Floor &floor)
 {
-	Export result;
+	FloorExport result;
 
 	result.html += "<div><pre>\n";
 	for (uint32 y = 0; y < floor.height; y++)
@@ -135,21 +163,19 @@ Export exportFloor(const Floor &floor)
 	result.json += (Stringizer() + "\"level\":" + floor.level + ",\n").value.c_str();
 	result.json += (Stringizer() + "\"width\":" + floor.width + ",\n").value.c_str();
 	result.json += (Stringizer() + "\"height\":" + floor.height + ",\n").value.c_str();
-	result.json += "\"tiles\":{\n";
+	result.json += "\"tiles\":[\n";
 	for (uint32 y = 0; y < floor.height; y++)
 	{
 		for (uint32 x = 0; x < floor.width; x++)
 		{
-			if (!floor.extra(x, y).empty())
-			{
-				result.json += (Stringizer() + "\"" + x + "x" + y + "\":").value.c_str();
-				result.json += floor.extra(x, y);
-				result.json += ",\n";
-			}
+			if (floor.tile(x, y) == TileEnum::Empty)
+				continue;
+			result.json += tileJson(Vec2i(x, y), floor.tile(x, y), floor.extra(x, y));
+			result.json += ",\n";
 		}
 	}
-	result.json += "\"_dummy\":0\n"; // /tiles
-	result.json += "}\n"; // /tiles
+	removeLastComma(result.json);
+	result.json += "]\n"; // /tiles
 	result.json += "}\n"; // /root
 
 	return result;
@@ -168,15 +194,21 @@ void exportDungeon(PointerRange<const Floor> floors)
 	json->writeLine("{");
 	json->writeLine("\"floors\":[");
 
+	bool firstlevel = true;
 	for (const Floor &f : floors)
 	{
-		const Export e = exportFloor(f);
+		const FloorExport e = exportFloor(f);
 		html->writeLine(Stringizer() + "<h2>Floor " + f.level + "</h2>");
 		html->write(e.html);
 		if (isLevelBoss(f.level))
 			html->writeLine(Stringizer() + "boss level: " + levelToBossIndex(f.level) + "<br>");
 		html->writeLine(Stringizer() + "monsters: " + countTiles(f, TileEnum::Monster) + "<br>");
 		html->writeLine("<hr>");
+
+		if (firstlevel)
+			firstlevel = false;
+		else
+			json->writeLine(",\n");
 		json->write(e.json);
 	}
 

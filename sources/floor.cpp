@@ -145,7 +145,10 @@ namespace
 	{
 		static constexpr TileEnum tmp = TileEnum::Monster;
 		CAGE_ASSERT(countCells(f_, tmp) == 0);
-		Floor f = f_;
+		Floor f;
+		f.width = f_.width;
+		f.height = f_.height;
+		f.tiles = f_.tiles;
 		seedReplace(f, findAny(f, TileEnum::Empty), TileEnum::Empty, tmp);
 		return countCells(f, TileEnum::Empty) == 0;
 	}
@@ -269,6 +272,7 @@ namespace
 		findOutlineWalls(f);
 
 		f.tile(w / 2, w / 2) = TileEnum::Monster; // the boss
+		f.extra(w / 2, w / 2) = std::make_unique<Monster>(generateMonster(f.level, f.level + bossIndex));
 
 		{ // additional monsters
 			const uint32 cnt = bossIndex * 2;
@@ -417,7 +421,7 @@ namespace
 				for (uint32 x = 0; x < f.width; x++)
 				{
 					f.tile(x, y) = f.tile(x, y + 1);
-					f.extra(x, y) = f.extra(x, y + 1);
+					f.extra(x, y) = std::move(f.extra(x, y + 1));
 				}
 			}
 			f.height--;
@@ -426,17 +430,22 @@ namespace
 		};
 		const auto &transpose = [&]
 		{
-			Floor g = f;
-			std::swap(g.width, g.height);
+			Floor g;
+			g.tiles.resize(f.tiles.size());
+			g.extras.resize(f.extras.size());
+			g.width = f.height;
+			g.height = f.width;
 			for (uint32 y = 0; y < f.height; y++)
 			{
 				for (uint32 x = 0; x < f.width; x++)
 				{
 					g.tile(y, x) = f.tile(x, y);
-					g.extra(y, x) = f.extra(x, y);
+					g.extra(y, x) = std::move(f.extra(x, y));
 				}
 			}
-			std::swap(f, g);
+			std::swap(f.width, f.height);
+			std::swap(f.tiles, g.tiles);
+			std::swap(f.extras, g.extras);
 		};
 
 		for (uint32 i = 0; i < 2; i++)
@@ -446,6 +455,18 @@ namespace
 			while (rowOutside(f.height - 1))
 				cutRow(f.height - 1);
 			transpose();
+		}
+	}
+
+	void fillExtras(Floor &f)
+	{
+		const uint32 cnt = f.width * f.height;
+		for (uint32 i = 0; i < cnt; i++)
+		{
+			if (f.tiles[i] == TileEnum::Monster && f.extras[i] == TileExtra())
+			{
+				f.extras[i] = std::make_unique<Monster>(generateMonster(f.level, 0));
+			}
 		}
 	}
 }
@@ -463,5 +484,6 @@ Floor generateFloor(uint32 level)
 	else
 		generateGenericFloor(f);
 	cutoutFloor(f);
+	fillExtras(f);
 	return f;
 }
