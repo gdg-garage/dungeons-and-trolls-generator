@@ -5,7 +5,7 @@
 
 using namespace cage;
 
-enum class TileEnum
+enum class TileEnum : uint8
 {
 	// free
 	Empty,
@@ -22,7 +22,7 @@ enum class TileEnum
 	Outside,
 };
 
-enum class OccupancyEnum
+enum class OccupancyEnum : uint8
 {
 	Free, // empty tiles, walkable decorations
 	Prop, // doors, chests, monsters

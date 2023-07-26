@@ -85,19 +85,19 @@ namespace
 					res += "@";
 					break;
 				case TileEnum::Wall:
-				{
-					uint32 neighbors = 0;
-					if (x > 0 && f.tile(x - 1, y) == TileEnum::Wall)
-						neighbors += 1; // left
-					if (y > 0 && f.tile(x, y - 1) == TileEnum::Wall)
-						neighbors += 2; // top
-					if (x + 1 < f.width && f.tile(x + 1, y) == TileEnum::Wall)
-						neighbors += 4; // right
-					if (y + 1 < f.height && f.tile(x, y + 1) == TileEnum::Wall)
-						neighbors += 8; // bottom
-					res += connectedWall(neighbors);
-				}
-				break;
+				//{
+				//	uint32 neighbors = 0;
+				//	if (x > 0 && f.tile(x - 1, y) == TileEnum::Wall)
+				//		neighbors += 1; // left
+				//	if (y > 0 && f.tile(x, y - 1) == TileEnum::Wall)
+				//		neighbors += 2; // top
+				//	if (x + 1 < f.width && f.tile(x + 1, y) == TileEnum::Wall)
+				//		neighbors += 4; // right
+				//	if (y + 1 < f.height && f.tile(x, y + 1) == TileEnum::Wall)
+				//		neighbors += 8; // bottom
+				//	res += connectedWall(neighbors);
+				//	break;
+				//}
 				case TileEnum::Outside:
 					res += uni(u8"\u2588");
 					break;
@@ -107,6 +107,14 @@ namespace
 			}
 		}
 		return res;
+	}
+
+	uint32 countTiles(const Floor &f, TileEnum tile)
+	{
+		uint32 cnt = 0;
+		for (auto it : f.tiles)
+			cnt += it == tile;
+		return cnt;
 	}
 }
 
@@ -165,6 +173,9 @@ void exportDungeon(PointerRange<const Floor> floors)
 		const Export e = exportFloor(f);
 		html->writeLine(Stringizer() + "<h2>Floor " + f.level + "</h2>");
 		html->write(e.html);
+		if (isLevelBoss(f.level))
+			html->writeLine(Stringizer() + "boss level: " + levelToBossIndex(f.level) + "<br>");
+		html->writeLine(Stringizer() + "monsters: " + countTiles(f, TileEnum::Monster) + "<br>");
 		html->writeLine("<hr>");
 		json->write(e.json);
 	}

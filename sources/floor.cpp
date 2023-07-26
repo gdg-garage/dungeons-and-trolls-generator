@@ -19,14 +19,17 @@ namespace
 
 	Vec2i findAny(const Floor &f, TileEnum c)
 	{
-		std::vector<Vec2i> tmp;
-		tmp.reserve(f.width * f.height);
+		uint32 cnt = 0;
+		for (TileEnum a : f.tiles)
+			cnt += a == c;
+		if (cnt == 0)
+			return Vec2i(-1);
+		cnt = randomRange(0u, cnt);
 		for (uint32 i = 0; i < f.tiles.size(); i++)
 			if (f.tiles[i] == c)
-				tmp.push_back(Vec2i(i % f.width, i / f.width));
-		if (tmp.empty())
-			return Vec2i(-1);
-		return tmp[randomRange(0u, numeric_cast<uint32>(tmp.size()))];
+				if (cnt-- == 0)
+					return Vec2i(i % f.width, i / f.width);
+		return Vec2i(-1);
 	}
 
 	Vec2i findNearest(const Floor &f, Vec2i s, TileEnum c)
@@ -286,6 +289,61 @@ namespace
 		}
 	}
 
+	void generateMazeFloor(Floor &f)
+	{
+		const uint32 w = randomRange(f.level + 20, f.level * 2 + 30);
+		const uint32 h = randomRange(f.level / 3 + 15, f.level / 2 + 20);
+		floorResize(f, Vec2i(w, h));
+
+		{ // carve out the maze
+			f.tile(w / 2, h / 2) = TileEnum::Empty;
+			const uint32 attempts = w * h * 20;
+			for (uint32 i = 0; i < attempts; i++)
+			{
+				const Vec2i p = findAny(f, TileEnum::Empty);
+				if (p[0] < 2 || p[0] > w - 3 || p[1] < 2 || p[1] > h - 3)
+					continue;
+				static constexpr Vec2i ns[4] = {
+					Vec2i(-1, 0),
+					Vec2i(+1, 0),
+					Vec2i(0, -1),
+					Vec2i(0, +1),
+				};
+				const Vec2i c = p + ns[randomRange(0, 4)];
+				if (f.tile(c) != TileEnum::Outside)
+					continue;
+				uint32 en = 0;
+				for (Vec2i n : ns)
+					en += f.tile(c + n) == TileEnum::Empty;
+				if (en != 1)
+					continue;
+				f.tile(c) = TileEnum::Empty;
+			}
+		}
+
+		{ // find outline walls
+			findOutlineWalls(f);
+		}
+
+		{ // place stairs
+			const Vec2i a = findAny(f, TileEnum::Empty);
+			const Vec2i b = findFarthest(f, a, TileEnum::Empty);
+			f.tile(a) = TileEnum::Stairs;
+			f.tile(b) = TileEnum::Spawn;
+		}
+
+		{ // place some monsters
+			const uint32 cnt = randomRange(f.level / 6, f.level / 3 + 1) + 1;
+			for (uint32 i = 0; i < cnt; i++)
+			{
+				const Vec2i p = findAny(f, TileEnum::Empty);
+				if (p == Vec2i(-1))
+					break;
+				f.tile(p) = TileEnum::Monster;
+			}
+		}
+	}
+
 	void generateGenericFloor(Floor &f)
 	{
 		const uint32 w = randomRange(f.level + 20, f.level * 2 + 30);
@@ -400,6 +458,8 @@ Floor generateFloor(uint32 level)
 		generateShopFloor(f);
 	else if (isLevelBoss(level))
 		generateBossFloor(f);
+	else if (level > 10 && level < 90 && randomChance() < 0.05)
+		generateMazeFloor(f);
 	else
 		generateGenericFloor(f);
 	cutoutFloor(f);
