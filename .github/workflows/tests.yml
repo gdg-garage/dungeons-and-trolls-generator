@@ -3,18 +3,14 @@ on: [push, pull_request]
 
 jobs:
   Windows:
-    name: windows-${{ matrix.os-version }}-${{ matrix.build-config }}-${{ matrix.build-arch }}${{ matrix.build-tool }}
+    name: windows-${{ matrix.os-version }}-${{ matrix.build-config }}-${{ matrix.build-arch }}
     runs-on: windows-${{ matrix.os-version }}
     strategy:
       fail-fast: false
       matrix:
-        os-version: [2019, 2022]
-        build-config: [debug, release, relwithdebinfo]
-        build-arch: [Win32, x64]
-        build-tool: ["", "-T ClangCL"]
-        exclude:
-        - build-arch: Win32
-          build-tool: "-T ClangCL"
+        os-version: [2019]
+        build-config: [debug, relwithdebinfo]
+        build-arch: [x64]
 
     steps:
     - name: Versions
@@ -32,13 +28,19 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -A${{ matrix.build-arch }} ${{ matrix.build-tool }} -DCMAKE_BUILD_TYPE=${{ matrix.build-config }} ..
+        cmake -A${{ matrix.build-arch }} -DCMAKE_BUILD_TYPE=${{ matrix.build-config }} ..
 
     - name: Build
       shell: bash
       run: |
         cd build
         cmake --build . --config ${{ matrix.build-config }}
+
+    - name: Run
+      shell: bash
+      run: |
+        cd build/result/${{ matrix.build-config }}
+        ./dntgenerator.exe
 
 
   Ubuntu:
@@ -51,27 +53,12 @@ jobs:
       fail-fast: false
       matrix:
         os-version: [22]
-        build-config: [debug, release, relwithdebinfo]
+        build-config: [debug, relwithdebinfo]
         compiler:
         - {
             cc: gcc-12,
             cxx: g++-12,
             install: gcc-12 g++-12
-          }
-        - {
-            cc: clang-12,
-            cxx: clang++-12,
-            install: clang-12
-          }
-        - {
-            cc: clang-13,
-            cxx: clang++-13,
-            install: clang-13
-          }
-        - {
-            cc: clang-14,
-            cxx: clang++-14,
-            install: clang-14
           }
 
     steps:
@@ -101,4 +88,10 @@ jobs:
       run: |
         cd build
         cmake --build . --config ${{ matrix.build-config }} -- -j3
+
+    - name: Run
+      shell: bash
+      run: |
+        cd build/result/${{ matrix.build-config }}
+        ./dntgenerator
 

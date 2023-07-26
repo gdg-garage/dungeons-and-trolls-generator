@@ -85,19 +85,19 @@ namespace
 					res += "@";
 					break;
 				case TileEnum::Wall:
-				//{
-				//	uint32 neighbors = 0;
-				//	if (x > 0 && f.tile(x - 1, y) == TileEnum::Wall)
-				//		neighbors += 1; // left
-				//	if (y > 0 && f.tile(x, y - 1) == TileEnum::Wall)
-				//		neighbors += 2; // top
-				//	if (x + 1 < f.width && f.tile(x + 1, y) == TileEnum::Wall)
-				//		neighbors += 4; // right
-				//	if (y + 1 < f.height && f.tile(x, y + 1) == TileEnum::Wall)
-				//		neighbors += 8; // bottom
-				//	res += connectedWall(neighbors);
-				//	break;
-				//}
+				{
+					uint32 neighbors = 0;
+					if (x > 0 && f.tile(x - 1, y) == TileEnum::Wall)
+						neighbors += 1; // left
+					if (y > 0 && f.tile(x, y - 1) == TileEnum::Wall)
+						neighbors += 2; // top
+					if (x + 1 < f.width && f.tile(x + 1, y) == TileEnum::Wall)
+						neighbors += 4; // right
+					if (y + 1 < f.height && f.tile(x, y + 1) == TileEnum::Wall)
+						neighbors += 8; // bottom
+					res += connectedWall(neighbors);
+					break;
+				}
 				case TileEnum::Outside:
 					res += uni(u8"\u2588");
 					break;
