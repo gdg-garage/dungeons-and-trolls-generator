@@ -78,6 +78,9 @@ struct Export
 };
 
 OccupancyEnum occupancy(TileEnum tile);
+bool isLevelBoss(uint32 level);
+uint32 levelToBossIndex(uint32 level);
+uint32 bossIndexToLevel(uint32 index);
 std::string generateSkill(uint32 level, Real &power);
 std::string generateItem(uint32 level, Real &power);
 std::string generateMonster(uint32 level, uint32 difficulty);

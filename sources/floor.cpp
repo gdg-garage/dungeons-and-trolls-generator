@@ -1,20 +1,5 @@
 #include "dnt.h"
 
-OccupancyEnum occupancy(TileEnum tile)
-{
-	switch (tile)
-	{
-		case TileEnum::Outside:
-		case TileEnum::Wall:
-			return OccupancyEnum::Block;
-		case TileEnum::Decoration:
-		case TileEnum::Empty:
-			return OccupancyEnum::Free;
-		default:
-			return OccupancyEnum::Prop;
-	}
-}
-
 namespace
 {
 	void floorResize(Floor &f, Vec2i size)
@@ -25,59 +10,6 @@ namespace
 		f.extras.resize(size[0] * size[1]);
 		f.width = size[0];
 		f.height = size[1];
-	}
-
-	void generateShopFloor(Floor &f)
-	{
-		static constexpr uint32 w = 17, h = 9;
-		floorResize(f, Vec2i(w, h));
-
-		const auto &isDecoration = [](uint32 x, uint32 y) -> bool { return ((x == 2 || x == w - 3) && (y >= 2 && y <= h - 3)) || ((y == 2 || y == h - 3) && (x >= 2 && x <= w - 3)); };
-
-		for (uint32 y = 0; y < h; y++)
-		{
-			for (uint32 x = 0; x < w; x++)
-			{
-				if (y == 0 || x == 0 || y + 1 == h || x + 1 == w)
-					f.tile(x, y) = TileEnum::Wall;
-				else if (isDecoration(x, y))
-					f.tile(x, y) = TileEnum::Decoration;
-				else
-					f.tile(x, y) = TileEnum::Empty;
-			}
-		}
-
-		f.tile(w / 3, h / 2) = TileEnum::Stairs;
-		f.tile(w / 2, h / 2) = TileEnum::Spawn;
-		f.tile(2 * w / 3, h / 2) = TileEnum::Waypoint;
-	}
-
-	void generateBossFloor(Floor &f)
-	{
-		const uint32 w = randomRange(40, 60);
-		const uint32 h = randomRange(10, 20);
-		floorResize(f, Vec2i(w, h));
-
-		for (uint32 y = 0; y < h; y++)
-		{
-			for (uint32 x = 0; x < w; x++)
-			{
-				if (y == 0 || x == 0 || y + 1 == h || x + 1 == w)
-					f.tile(x, y) = TileEnum::Wall;
-				else
-					f.tile(x, y) = TileEnum::Empty;
-			}
-		}
-
-		f.tile(1, 1) = TileEnum::Spawn;
-		f.tile(w - 2, h - 2) = TileEnum::Stairs;
-		f.tile(w - 2, 1) = TileEnum::Waypoint;
-		f.tile(1, h - 2) = TileEnum::Chest; // random loot
-		f.tile(w / 2 - 1, h / 2 - 1) = TileEnum::Monster; // the boss
-
-		const uint32 cnt = f.level / 20 + 2;
-		for (uint32 i = 0; i < cnt; i++)
-			f.tile(randomRange(2u, w - 2), randomRange(2u, h - 2)) = TileEnum::Monster; // few additional monsters
 	}
 
 	uint32 distance(Vec2i a, Vec2i b)
@@ -215,6 +147,145 @@ namespace
 		return countCells(f, TileEnum::Empty) == 0;
 	}
 
+	void findOutlineWalls(Floor &f)
+	{
+		for (uint32 y = 0; y < f.height; y++)
+		{
+			for (uint32 x = 0; x < f.width; x++)
+			{
+				const Vec2i p = Vec2i(x, y);
+				TileEnum &c = f.tile(p);
+				if (c != TileEnum::Outside)
+					continue;
+				uint32 neighs = 0;
+				for (sint32 j = -1; j < 2; j++)
+					for (sint32 i = -1; i < 2; i++)
+						if (f.inside(p + Vec2i(i, j)))
+							neighs += occupancy(f.tile(p + Vec2i(i, j))) != OccupancyEnum::Block;
+				if (neighs > 0)
+					c = TileEnum::Wall;
+			}
+		}
+		CAGE_ASSERT(isConnected(f));
+	}
+
+	void generateShopFloor(Floor &f)
+	{
+		static constexpr uint32 w = 17, h = 9;
+		floorResize(f, Vec2i(w, h));
+
+		const auto &isDecoration = [](uint32 x, uint32 y) -> bool { return ((x == 2 || x == w - 3) && (y >= 2 && y <= h - 3)) || ((y == 2 || y == h - 3) && (x >= 2 && x <= w - 3)); };
+
+		for (uint32 y = 0; y < h; y++)
+		{
+			for (uint32 x = 0; x < w; x++)
+			{
+				if (y == 0 || x == 0 || y + 1 == h || x + 1 == w)
+					f.tile(x, y) = TileEnum::Wall;
+				else if (isDecoration(x, y))
+					f.tile(x, y) = TileEnum::Decoration;
+				else
+					f.tile(x, y) = TileEnum::Empty;
+			}
+		}
+
+		f.tile(w / 3, h / 2) = TileEnum::Stairs;
+		f.tile(w / 2, h / 2) = TileEnum::Spawn;
+		f.tile(2 * w / 3, h / 2) = TileEnum::Waypoint;
+	}
+
+	void generateBossFloor(Floor &f)
+	{
+		CAGE_ASSERT(isLevelBoss(f.level));
+		const uint32 bossIndex = levelToBossIndex(f.level);
+		const uint32 r = bossIndex * 2 + randomRange(5, 10);
+		const uint32 w = r * 2 + 7;
+		floorResize(f, Vec2i(w));
+
+		// generate circular room
+		for (uint32 y = 0; y < w; y++)
+		{
+			for (uint32 x = 0; x < w; x++)
+			{
+				if (distance(Vec2(x, y), Vec2(w / 2)) > r)
+					f.tile(x, y) = TileEnum::Outside;
+				else
+					f.tile(x, y) = TileEnum::Empty;
+			}
+		}
+
+		// random pillars
+		if (r > 10)
+		{
+			const uint32 cnt = bossIndex / 2 + 1;
+			for (uint32 i = 0; i < cnt; i++)
+			{
+				while (true)
+				{
+					const uint32 x = randomRange(3u, w - 3);
+					const uint32 y = randomRange(3u, w - 3);
+					const Vec2i p = Vec2i(x, y);
+					{
+						const Real d = distance(Vec2(p), Vec2(w / 2));
+						if (d + 3 > r || d < 4)
+							continue;
+					}
+					const Vec2i ps[9] = {
+						p + Vec2i(-1, -1),
+						p + Vec2i(-1, +0),
+						p + Vec2i(-1, +1),
+						p + Vec2i(+0, -1),
+						p + Vec2i(+0, +0),
+						p + Vec2i(+0, +1),
+						p + Vec2i(+1, -1),
+						p + Vec2i(+1, +0),
+						p + Vec2i(+1, +1),
+					};
+					{
+						bool bad = false;
+						for (Vec2i k : ps)
+							if (f.tile(k) != TileEnum::Empty)
+								bad = true;
+						if (bad)
+							continue;
+					}
+					for (Vec2i k : ps)
+						f.tile(k) = TileEnum::Outside;
+					break;
+				}
+			}
+		}
+
+		f.tile(w / 2, 2) = TileEnum::Spawn;
+		f.tile(w / 2, w - 3) = TileEnum::Waypoint;
+		f.tile(2, w / 2) = TileEnum::Stairs;
+		f.tile(w - 3, w / 2) = TileEnum::Chest; // additional loot chest
+		f.tile(3, w / 2) = TileEnum::Door;
+		f.tile(w - 4, w / 2) = TileEnum::Door;
+
+		findOutlineWalls(f);
+
+		f.tile(w / 2, w / 2) = TileEnum::Monster; // the boss
+
+		{ // additional monsters
+			const uint32 cnt = bossIndex * 2;
+			for (uint32 i = 0; i < cnt; i++)
+			{
+				while (true)
+				{
+					const uint32 x = randomRange(3u, w - 3);
+					const uint32 y = randomRange(3u, w - 3);
+					if (f.tile(x, y) != TileEnum::Empty)
+						continue;
+					if (distance(Vec2(x, y), Vec2(w / 2)) + 1 > r)
+						continue;
+					f.tile(x, y) = TileEnum::Monster;
+					break;
+				}
+			}
+		}
+	}
+
 	void generateGenericFloor(Floor &f)
 	{
 		const uint32 w = randomRange(f.level + 20, f.level * 2 + 30);
@@ -249,24 +320,7 @@ namespace
 		}
 
 		{ // find outline walls
-			for (uint32 y = 0; y < f.height; y++)
-			{
-				for (uint32 x = 0; x < f.width; x++)
-				{
-					const Vec2i p = Vec2i(x, y);
-					TileEnum &c = f.tile(p);
-					if (c != TileEnum::Outside)
-						continue;
-					uint32 neighs = 0;
-					for (sint32 j = -1; j < 2; j++)
-						for (sint32 i = -1; i < 2; i++)
-							if (f.inside(p + Vec2i(i, j)))
-								neighs += f.tile(p + Vec2i(i, j)) == TileEnum::Empty;
-					if (neighs > 0)
-						c = TileEnum::Wall;
-				}
-			}
-			CAGE_ASSERT(isConnected(f));
+			findOutlineWalls(f);
 		}
 
 		{ // place stairs
@@ -344,7 +398,7 @@ Floor generateFloor(uint32 level)
 	f.level = level;
 	if (level == 0)
 		generateShopFloor(f);
-	else if (level > 20 && (level % 13) == 0)
+	else if (isLevelBoss(level))
 		generateBossFloor(f);
 	else
 		generateGenericFloor(f);
