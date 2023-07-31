@@ -19,7 +19,7 @@ namespace
 	}
 }
 
-Monster generateMonster(uint32 level, uint32 difficulty)
+Monster generateMonster(uint32 level, sint32 difficultyOffset)
 {
 	Monster mr;
 
@@ -58,6 +58,7 @@ std::string monsterJson(const Monster &monster)
 {
 	std::string json;
 	json += "{\n";
+	json += "\"class\":\"monster\",\n";
 	json += std::string() + "\"name\":\"" + monster.name.c_str() + "\",\n";
 	json += "\"attributes\":" + attributesValueMappingJson(monster.attributes) + ",\n";
 
@@ -75,19 +76,20 @@ std::string monsterJson(const Monster &monster)
 			{
 				using T = std::decay_t<decltype(arg)>;
 				if constexpr (std::is_same_v<T, std::unique_ptr<Skill>>)
-					json += "{\n\"type\":\"skill\",\n\"data\":" + skillJson(*arg) + "},\n";
+					json += skillJson(*arg) + ",\n";
 				else if constexpr (std::is_same_v<T, std::unique_ptr<Item>>)
-					json += "{\n\"type\":\"item\",\n\"data\":" + itemJson(*arg) + "},\n";
+					json += itemJson(*arg) + ",\n";
 				else if constexpr (std::is_same_v<T, std::unique_ptr<Monster>>)
-					json += "{\n\"type\":\"monster\",\n\"data\":" + monsterJson(*arg) + "},\n";
+					json += monsterJson(*arg) + ",\n";
 				else
-					static_assert(false, "non-exhaustive visitor!");
+					static_assert(always_false<T>, "non-exhaustive visitor!");
 			},
 			it);
 	}
 	removeLastComma(json);
-	json += "]\n"; // /onDeath
+	json += "],\n"; // /onDeath
 
+	removeLastComma(json);
 	json += "}"; // /root
 	return json;
 }

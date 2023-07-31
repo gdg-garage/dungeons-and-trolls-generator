@@ -74,13 +74,7 @@ struct Skill : private Noncopyable
 	AttributesValueMapping range, radius, duration, damageAmount;
 	DamageTypeEnum damageType = DamageTypeEnum::None;
 	SkillAttributesEffects casterAttributes, targetAttributes;
-	bool movesCaster = false; // moves the caster to the target position
-	bool movesTarget = false; // moves targeted entity to position of the caster
-	bool knockback = false; // moves targeted entity one tile away from the caster
-	bool stun = false; // prevents the target from any actions for one tick, and grants stun immunity for the following tick
-	bool requiresLineOfSight = true; // the target position must be visible from the caster position
-	bool requiresCasterIsAlone = false; // no other characters may be visible (line of sight check) anywhere from the caster position
-	bool createsGroundEffect = false;
+	std::vector<std::string> casterFlags, targetFlags; // available flags: lineOfSight, alone, moves, stun, knockback, groundEffect
 	ThingPower power;
 };
 
@@ -102,6 +96,7 @@ struct Item : private Noncopyable
 	AttributesValueMapping requirements;
 	AttributesValueMapping attributes;
 	std::vector<Skill> skills;
+	std::vector<std::string> flags;
 	ThingPower power;
 };
 
@@ -206,7 +201,7 @@ Skill generateSkill(uint32 level, SlotEnum slot);
 std::string skillJson(const Skill &skill);
 Item generateItem(uint32 level, SlotEnum slot);
 std::string itemJson(const Item &item);
-Monster generateMonster(uint32 level, uint32 difficulty);
+Monster generateMonster(uint32 level, sint32 difficultyOffset);
 std::string monsterJson(const Monster &monster);
 
 const char *tileName(TileEnum tile);
@@ -217,3 +212,6 @@ uint32 bossIndexToLevel(uint32 index);
 Floor generateFloor(uint32 level);
 FloorExport exportFloor(const Floor &floor);
 void exportDungeon(PointerRange<const Floor> floors);
+
+template<class... T>
+constexpr bool always_false = false;

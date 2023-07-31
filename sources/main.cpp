@@ -12,7 +12,7 @@ int main(int argc, const char *args[])
 		if (argc <= 1)
 		{
 			std::vector<Floor> floors;
-			for (uint32 l = 0; l < 4; l++)
+			for (uint32 l = 0; l < 10; l++)
 				floors.push_back(generateFloor(l));
 			exportDungeon(floors);
 		}

@@ -39,6 +39,7 @@ std::string itemJson(const Item &item)
 {
 	std::string json;
 	json += "{\n";
+	json += "\"class\":\"item\",\n";
 	json += std::string() + "\"name\":\"" + item.name.c_str() + "\",\n";
 	json += std::string() + "\"slot\":\"" + slotName(item.slot) + "\",\n";
 	json += "\"requirements\":" + attributesValueMappingJson(item.requirements) + ",\n";
@@ -48,8 +49,15 @@ std::string itemJson(const Item &item)
 	for (const Skill &skill : item.skills)
 		json += skillJson(skill) + ",\n";
 	removeLastComma(json);
-	json += "]\n"; // /skills
+	json += "],\n"; // /skills
 
+	json += "\"flags\":[\n";
+	for (const std::string &flag : item.flags)
+		json += flag + ",\n";
+	removeLastComma(json);
+	json += "],\n"; // /casterFlags
+
+	removeLastComma(json);
 	json += "}"; // /root
 	return json;
 }

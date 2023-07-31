@@ -17,7 +17,7 @@ namespace
 		switch (neighbors)
 		{
 			case 0:
-				return uni(u8"\u2588");
+				return "X";
 			case 1:
 				return uni(u8"\u2500");
 			case 2:
@@ -61,13 +61,14 @@ namespace
 			switch (f.tile(x, y))
 			{
 				case TileEnum::Empty:
+				case TileEnum::Outside:
 					res += " ";
 					break;
 				case TileEnum::Decoration:
 					res += uni(u8"\u2591");
 					break;
 				case TileEnum::Spawn:
-					res += "+";
+					res += "S";
 					break;
 				case TileEnum::Waypoint:
 					res += "O";
@@ -79,7 +80,7 @@ namespace
 					res += "H";
 					break;
 				case TileEnum::Chest:
-					res += "X";
+					res += "$";
 					break;
 				case TileEnum::Monster:
 					res += "@";
@@ -98,9 +99,6 @@ namespace
 					res += connectedWall(neighbors);
 					break;
 				}
-				case TileEnum::Outside:
-					res += uni(u8"\u2588");
-					break;
 				default:
 					res += "?";
 					break;
@@ -137,7 +135,7 @@ namespace
 				else if constexpr (std::is_same_v<T, std::unique_ptr<Monster>>)
 					json += "\"data\":" + monsterJson(*arg) + ",\n";
 				else
-					static_assert(false, "non-exhaustive visitor!");
+					static_assert(always_false<T>, "non-exhaustive visitor!");
 			},
 			extra);
 		removeLastComma(json);
@@ -168,7 +166,7 @@ FloorExport exportFloor(const Floor &floor)
 	{
 		for (uint32 x = 0; x < floor.width; x++)
 		{
-			if (floor.tile(x, y) == TileEnum::Empty)
+			if (floor.tile(x, y) == TileEnum::Empty || floor.tile(x, y) == TileEnum::Outside)
 				continue;
 			result.json += tileJson(Vec2i(x, y), floor.tile(x, y), floor.extra(x, y));
 			result.json += ",\n";

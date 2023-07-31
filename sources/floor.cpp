@@ -175,6 +175,59 @@ namespace
 		CAGE_ASSERT(isConnected(f));
 	}
 
+	void cutoutFloor(Floor &f)
+	{
+		const auto &rowOutside = [&](uint32 y) -> bool
+		{
+			for (uint32 x = 0; x < f.width; x++)
+				if (f.tile(x, y) != TileEnum::Outside)
+					return false;
+			return true;
+		};
+		const auto &cutRow = [&](uint32 y)
+		{
+			for (; y < f.height - 1; y++)
+			{
+				for (uint32 x = 0; x < f.width; x++)
+				{
+					f.tile(x, y) = f.tile(x, y + 1);
+					f.extra(x, y) = std::move(f.extra(x, y + 1));
+				}
+			}
+			f.height--;
+			f.tiles.resize(f.width * f.height);
+			f.extras.resize(f.width * f.height);
+		};
+		const auto &transpose = [&]
+		{
+			Floor g;
+			g.tiles.resize(f.tiles.size());
+			g.extras.resize(f.extras.size());
+			g.width = f.height;
+			g.height = f.width;
+			for (uint32 y = 0; y < f.height; y++)
+			{
+				for (uint32 x = 0; x < f.width; x++)
+				{
+					g.tile(y, x) = f.tile(x, y);
+					g.extra(y, x) = std::move(f.extra(x, y));
+				}
+			}
+			std::swap(f.width, f.height);
+			std::swap(f.tiles, g.tiles);
+			std::swap(f.extras, g.extras);
+		};
+
+		for (uint32 i = 0; i < 2; i++)
+		{
+			while (rowOutside(0))
+				cutRow(0);
+			while (rowOutside(f.height - 1))
+				cutRow(f.height - 1);
+			transpose();
+		}
+	}
+
 	void generateShopFloor(Floor &f)
 	{
 		static constexpr uint32 w = 17, h = 9;
@@ -200,12 +253,49 @@ namespace
 		f.tile(2 * w / 3, h / 2) = TileEnum::Waypoint;
 	}
 
+	Item generateKeyToAllDoors(const Floor &f)
+	{
+		Item item;
+		item.name = "Key";
+
+		std::vector<Vec2i> doors;
+		const uint32 cnt = f.width * f.height;
+		for (uint32 i = 0; i < cnt; i++)
+			if (f.tiles[i] == TileEnum::Door)
+				doors.push_back(Vec2i(i % f.width, i / f.width));
+		std::string json;
+		json += "{\n";
+		json += "\"class\":\"key\",\n";
+		json += "\"doors\":[\n";
+		for (const Vec2i &door : doors)
+		{
+			json += "{\n";
+			json += (Stringizer() + "\"x\":" + door[0] + ",\n").value.c_str();
+			json += (Stringizer() + "\"y\":" + door[1] + "\n").value.c_str();
+			json += "},"; // /door
+		}
+		removeLastComma(json);
+		json += "]\n"; // /doors
+		json += "}"; // /root
+		item.flags.push_back(std::move(json));
+
+		return item;
+	}
+
+	Monster generateBossMonster(const Floor &f)
+	{
+		Monster mr = generateMonster(f.level, levelToBossIndex(f.level));
+		mr.name = Stringizer() + "Guardian of " + f.level + "th floor";
+		mr.onDeath.push_back(std::make_unique<Item>(generateKeyToAllDoors(f)));
+		return mr;
+	}
+
 	void generateBossFloor(Floor &f)
 	{
 		CAGE_ASSERT(isLevelBoss(f.level));
 		const uint32 bossIndex = levelToBossIndex(f.level);
 		const uint32 r = bossIndex * 2 + randomRange(5, 10);
-		const uint32 w = r * 2 + 7;
+		uint32 w = r * 2 + 7;
 		floorResize(f, Vec2i(w));
 
 		// generate circular room
@@ -270,9 +360,11 @@ namespace
 		f.tile(w - 4, w / 2) = TileEnum::Door;
 
 		findOutlineWalls(f);
+		cutoutFloor(f); // make sure that all coordinates stored in extra jsons are correct
+		w = f.width;
 
 		f.tile(w / 2, w / 2) = TileEnum::Monster; // the boss
-		f.extra(w / 2, w / 2) = std::make_unique<Monster>(generateMonster(f.level, f.level + bossIndex));
+		f.extra(w / 2, w / 2) = std::make_unique<Monster>(generateBossMonster(f));
 
 		{ // additional monsters
 			const uint32 cnt = bossIndex * 2;
@@ -405,67 +497,24 @@ namespace
 		}
 	}
 
-	void cutoutFloor(Floor &f)
-	{
-		const auto &rowOutside = [&](uint32 y) -> bool
-		{
-			for (uint32 x = 0; x < f.width; x++)
-				if (f.tile(x, y) != TileEnum::Outside)
-					return false;
-			return true;
-		};
-		const auto &cutRow = [&](uint32 y)
-		{
-			for (; y < f.height - 1; y++)
-			{
-				for (uint32 x = 0; x < f.width; x++)
-				{
-					f.tile(x, y) = f.tile(x, y + 1);
-					f.extra(x, y) = std::move(f.extra(x, y + 1));
-				}
-			}
-			f.height--;
-			f.tiles.resize(f.width * f.height);
-			f.extras.resize(f.width * f.height);
-		};
-		const auto &transpose = [&]
-		{
-			Floor g;
-			g.tiles.resize(f.tiles.size());
-			g.extras.resize(f.extras.size());
-			g.width = f.height;
-			g.height = f.width;
-			for (uint32 y = 0; y < f.height; y++)
-			{
-				for (uint32 x = 0; x < f.width; x++)
-				{
-					g.tile(y, x) = f.tile(x, y);
-					g.extra(y, x) = std::move(f.extra(x, y));
-				}
-			}
-			std::swap(f.width, f.height);
-			std::swap(f.tiles, g.tiles);
-			std::swap(f.extras, g.extras);
-		};
-
-		for (uint32 i = 0; i < 2; i++)
-		{
-			while (rowOutside(0))
-				cutRow(0);
-			while (rowOutside(f.height - 1))
-				cutRow(f.height - 1);
-			transpose();
-		}
-	}
-
 	void fillExtras(Floor &f)
 	{
 		const uint32 cnt = f.width * f.height;
 		for (uint32 i = 0; i < cnt; i++)
 		{
-			if (f.tiles[i] == TileEnum::Monster && f.extras[i] == TileExtra())
+			switch (f.tiles[i])
 			{
-				f.extras[i] = std::make_unique<Monster>(generateMonster(f.level, 0));
+				case TileEnum::Monster:
+				{
+					if (f.extras[i] == TileExtra())
+						f.extras[i] = std::make_unique<Monster>(generateMonster(f.level, 0));
+					break;
+				}
+				case TileEnum::Chest:
+				{
+					// todo
+					break;
+				}
 			}
 		}
 	}

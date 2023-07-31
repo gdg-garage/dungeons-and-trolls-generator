@@ -1,5 +1,15 @@
 #include "dnt.h"
 
+namespace
+{
+	constexpr const char *Alone = "\"alone\"";
+	constexpr const char *LineOfSight = "\"lineOfSight\"";
+	constexpr const char *Moves = "\"moves\"";
+	constexpr const char *Knockback = "\"knockback\"";
+	constexpr const char *Stun = "\"stun\"";
+	constexpr const char *GroundEffect = "\"groundEffect\"";
+}
+
 Skill generateSkill(uint32 level, SlotEnum slot)
 {
 	Skill sk;
@@ -53,10 +63,31 @@ Skill generateSkill(uint32 level, SlotEnum slot)
 	sk.casterAttributes = sae();
 	sk.targetAttributes = sae();
 
-	sk.movesCaster = randomChance() < 0.3;
-	sk.knockback = randomChance() < 0.1;
-	sk.stun = randomChance() < 0.05;
-	sk.createsGroundEffect = randomChance() < 0.1;
+	if (randomChance() < 0.8)
+		sk.casterFlags.push_back(LineOfSight);
+	if (randomChance() < 0.1)
+		sk.casterFlags.push_back(Alone);
+	if (randomChance() < 0.3)
+		sk.casterFlags.push_back(Moves);
+
+	if (randomChance() < 0.2)
+		sk.targetFlags.push_back(Knockback);
+	if (randomChance() < 0.1)
+		sk.targetFlags.push_back(Stun);
+	if (randomChance() < 0.2)
+		sk.targetFlags.push_back(GroundEffect);
+	if (randomChance() < 0.1)
+		sk.targetFlags.push_back(Moves);
+
+	if (randomChance() < 0.1)
+	{
+		std::string json;
+		json += "{\n";
+		json += "\"class\":\"summon\",\n";
+		json += "\"data\":" + monsterJson(generateMonster(level, 0)) + "\n";
+		json += "}";
+		sk.targetFlags.push_back(std::move(json));
+	}
 
 	return sk;
 }
@@ -65,6 +96,7 @@ std::string skillJson(const Skill &skill)
 {
 	std::string json;
 	json += "{\n";
+	json += "\"class\":\"skill\",\n";
 	json += std::string() + "\"name\":\"" + skill.name.c_str() + "\",\n";
 	json += std::string() + "\"target\":\"" + skillTargetName(skill.target) + "\",\n";
 	json += std::string() + "\"cost\":" + skillCostJson(skill.cost) + ",\n";
@@ -76,15 +108,17 @@ std::string skillJson(const Skill &skill)
 	json += std::string() + "\"casterAttributes\":" + skillAttributesEffectsJson(skill.casterAttributes) + ",\n";
 	json += std::string() + "\"targetAttributes\":" + skillAttributesEffectsJson(skill.targetAttributes) + ",\n";
 
-	// boolean2json, not blowjob ;)
-	const auto &bj = [&](const char *name, bool value) { json += std::string() + "\"" + name + "\":" + (value ? "true" : "false") + ",\n"; };
-	bj("movesCaster", skill.movesCaster);
-	bj("movesTarget", skill.movesTarget);
-	bj("knockback", skill.knockback);
-	bj("stun", skill.stun);
-	bj("requiresLineOfSight", skill.requiresLineOfSight);
-	bj("requiresCasterIsAlone", skill.requiresCasterIsAlone);
-	bj("createsGroundEffect", skill.createsGroundEffect);
+	json += "\"casterFlags\":[\n";
+	for (const std::string &flag : skill.casterFlags)
+		json += flag + ",\n";
+	removeLastComma(json);
+	json += "],\n"; // /casterFlags
+
+	json += "\"targetFlags\":[\n";
+	for (const std::string &flag : skill.targetFlags)
+		json += flag + ",\n";
+	removeLastComma(json);
+	json += "],\n"; // /targetFlags
 
 	removeLastComma(json);
 	json += "}"; // /root
