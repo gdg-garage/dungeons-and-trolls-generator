@@ -64,7 +64,8 @@ enum class AttributeEnum : uint8
 	Scalar,
 };
 
-using AttributesValueMapping = std::map<AttributeEnum, sint16>;
+using AttributesValueMappingInt = std::map<AttributeEnum, sint32>;
+using AttributesValueMappingFloat = std::map<AttributeEnum, Real>;
 
 enum class DamageTypeEnum : uint8
 {
@@ -91,14 +92,14 @@ struct SkillCost
 	uint16 stamina = 0;
 };
 
-using SkillAttributesEffects = std::map<AttributeEnum, AttributesValueMapping>; // contains values in percentages -> value 100 multiplies by 1
+using SkillAttributesEffects = std::map<AttributeEnum, AttributesValueMappingFloat>;
 
 struct Skill : public Thing
 {
 	String name = "<unnamed skill>";
 	SkillTargetEnum target = SkillTargetEnum::None;
 	SkillCost cost;
-	AttributesValueMapping range, radius, duration, damageAmount;
+	AttributesValueMappingFloat range, radius, duration, damageAmount;
 	DamageTypeEnum damageType = DamageTypeEnum::None;
 	SkillAttributesEffects casterAttributes, targetAttributes;
 	std::vector<std::string> casterFlags, targetFlags;
@@ -119,10 +120,11 @@ struct Item : public Thing
 {
 	String name = "<unnamed item>";
 	SlotEnum slot = SlotEnum::None;
-	AttributesValueMapping requirements;
-	AttributesValueMapping attributes;
+	AttributesValueMappingInt requirements;
+	AttributesValueMappingInt attributes;
 	std::vector<Skill> skills;
 	std::vector<std::string> flags;
+	uint32 buyPrice = 0;
 };
 
 struct Monster;
@@ -132,7 +134,7 @@ using OnDeathEffect = std::variant<std::unique_ptr<Skill>, std::unique_ptr<Item>
 struct Monster : public Thing
 {
 	String name = "<unnamed monster>";
-	AttributesValueMapping attributes;
+	AttributesValueMappingInt attributes;
 	std::vector<Item> equippedItems;
 	std::vector<OnDeathEffect> onDeath;
 };
@@ -161,7 +163,7 @@ enum class OccupancyEnum : uint8
 	Block, // walls, non-walkable decorations
 };
 
-using TileExtra = std::variant<std::monostate, std::string, std::unique_ptr<Monster>>;
+using TileExtra = std::variant<std::monostate, std::string, std::vector<Item>, std::unique_ptr<Monster>>;
 
 struct Floor : private Noncopyable
 {
@@ -223,13 +225,14 @@ Item generateDroppedItem(uint32 level);
 Monster generateMonster(uint32 level, sint32 difficultyOffset);
 Monster generateSummonedMinion(uint32 level);
 Monster generateChest(uint32 level);
-Floor generateFloor(uint32 level);
+Floor generateFloor(uint32 level, uint32 maxLevel);
 
 std::string exportSkill(const Skill &skill);
 std::string exportItem(const Item &item);
 std::string exportMonster(const Monster &monster);
 FloorExport exportFloor(const Floor &floor);
 void exportDungeon(PointerRange<const Floor> floors);
+void exportExamples(uint32 maxLevel);
 
 template<class... T>
 constexpr bool always_false = false;

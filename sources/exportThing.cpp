@@ -36,15 +36,15 @@ namespace
 			case AttributeEnum::Constitution:
 				return "constitution";
 			case AttributeEnum::SlashArmor:
-				return "slash_armor";
+				return "slashArmor";
 			case AttributeEnum::PiercingArmor:
-				return "piercing_armor";
+				return "piercingArmor";
 			case AttributeEnum::FireResist:
-				return "fire_resist";
+				return "fireResist";
 			case AttributeEnum::PoisonResist:
-				return "poison_resist";
+				return "poisonResist";
 			case AttributeEnum::ElectricResist:
-				return "electric_resist";
+				return "electricResist";
 			case AttributeEnum::Life:
 				return "life";
 			case AttributeEnum::Mana:
@@ -58,6 +58,8 @@ namespace
 		}
 	}
 
+	template<class AttributesValueMapping>
+	requires(std::is_same_v<AttributesValueMapping, AttributesValueMappingInt> || std::is_same_v<AttributesValueMapping, AttributesValueMappingFloat>)
 	std::string attributesValueMappingJson(const AttributesValueMapping &attributesValues)
 	{
 		std::string r;
@@ -142,9 +144,9 @@ namespace
 			case SlotEnum::None:
 				return "none";
 			case SlotEnum::MainHand:
-				return "main_hand";
+				return "mainHand";
 			case SlotEnum::OffHand:
-				return "off_hand";
+				return "offHand";
 			case SlotEnum::Head:
 				return "head";
 			case SlotEnum::Body:
@@ -214,6 +216,8 @@ std::string exportItem(const Item &item)
 	removeLastComma(json);
 	json += "],\n"; // /casterFlags
 
+	json += (Stringizer() + "\"buyPrice\":" + item.buyPrice + ",").value.c_str();
+
 	json += "\"_debug\":" + thingJson(item) + "\n";
 	json += "}"; // /root
 	return json;
@@ -237,7 +241,7 @@ std::string exportMonster(const Monster &monster)
 	for (const auto &it : monster.onDeath)
 	{
 		std::visit(
-			[&](auto &&arg)
+			[&](const auto &arg)
 			{
 				using T = std::decay_t<decltype(arg)>;
 				if constexpr (std::is_same_v<T, std::unique_ptr<Skill>>)
@@ -247,7 +251,7 @@ std::string exportMonster(const Monster &monster)
 				else if constexpr (std::is_same_v<T, std::unique_ptr<Monster>>)
 					json += exportMonster(*arg) + ",\n";
 				else
-					static_assert(always_false<T>, "non-exhaustive visitor!");
+					static_assert(always_false<T>, "non-exhaustive visitor");
 			},
 			it);
 	}

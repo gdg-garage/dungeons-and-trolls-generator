@@ -12,6 +12,8 @@ namespace
 
 Skill generateMagicSpell(uint32 level, SlotEnum slot)
 {
+	CAGE_ASSERT(level >= 1);
+
 	Skill sk;
 
 	if (randomChance() < 0.3)
@@ -79,7 +81,7 @@ Skill generateMagicSpell(uint32 level, SlotEnum slot)
 	if (randomChance() < 0.1)
 		sk.targetFlags.push_back(Moves);
 
-	if (randomChance() < 0.1)
+	if (randomChance() < 0.02)
 	{
 		std::string json;
 		json += "{\n";
@@ -196,6 +198,7 @@ namespace
 
 Item generateEquippedItem(uint32 level, SlotEnum slot)
 {
+	CAGE_ASSERT(level >= 1);
 	switch (slot)
 	{
 		case SlotEnum::MainHand:
@@ -237,6 +240,8 @@ Item generateDroppedItem(uint32 level)
 
 Monster generateMonster(uint32 level, sint32 difficultyOffset)
 {
+	CAGE_ASSERT(level >= 1);
+
 	Monster mr;
 
 	if (randomChance() < 0.5)
@@ -289,7 +294,7 @@ Monster generateChest(uint32 level)
 	mr.name = "Chest";
 	mr.attributes[AttributeEnum::Life] = 1;
 
-	const uint32 cnt = randomRange(3u, level / 3 + 3);
+	const uint32 cnt = randomRange(3u, level / 3 + 4);
 	for (uint32 i = 0; i < cnt; i++)
 		mr.onDeath.push_back(std::make_unique<Item>(generateDroppedItem(level)));
 

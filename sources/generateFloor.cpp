@@ -228,12 +228,26 @@ namespace
 		}
 	}
 
-	void generateShopFloor(Floor &f)
+	std::vector<Item> makeShopItems(uint32 maxLevel)
 	{
-		static constexpr uint32 w = 17, h = 9;
+		std::vector<Item> r;
+		// todo increase number of generated items
+		for (uint32 i = 0; i < 1; i++)
+		{
+			Item item = generateDroppedItem(randomRange(1u, maxLevel));
+			item.buyPrice = numeric_cast<uint32>(item.goldCost);
+			r.push_back(std::move(item));
+		}
+		return r;
+	}
+
+	void generateShopFloor(Floor &f, uint32 maxLevel)
+	{
+		const uint32 portals = levelToBossIndex(maxLevel);
+		const uint32 w = 11 + portals * 2, h = 9;
 		floorResize(f, Vec2i(w, h));
 
-		const auto &isDecoration = [](uint32 x, uint32 y) -> bool { return ((x == 2 || x == w - 3) && (y >= 2 && y <= h - 3)) || ((y == 2 || y == h - 3) && (x >= 2 && x <= w - 3)); };
+		const auto &isDecoration = [=](uint32 x, uint32 y) -> bool { return ((x == 2 || x == w - 3) && (y >= 2 && y <= h - 3)) || ((y == 2 || y == h - 3) && (x >= 2 && x <= w - 3)); };
 
 		for (uint32 y = 0; y < h; y++)
 		{
@@ -242,15 +256,22 @@ namespace
 				if (y == 0 || x == 0 || y + 1 == h || x + 1 == w)
 					f.tile(x, y) = TileEnum::Wall;
 				else if (isDecoration(x, y))
+				{
 					f.tile(x, y) = TileEnum::Decoration;
+					f.extra(x, y) = makeShopItems(maxLevel);
+				}
 				else
 					f.tile(x, y) = TileEnum::Empty;
 			}
 		}
 
-		f.tile(w / 3, h / 2) = TileEnum::Stairs;
-		f.tile(w / 2, h / 2) = TileEnum::Spawn;
-		f.tile(2 * w / 3, h / 2) = TileEnum::Waypoint;
+		f.tile(4, h / 2) = TileEnum::Spawn;
+		f.tile(6, h / 2) = TileEnum::Stairs;
+		for (uint32 i = 0; i < portals; i++)
+		{
+			f.tile(8 + i * 2, h / 2) = TileEnum::Waypoint;
+			f.extra(8 + i * 2, h / 2) = std::string() + (Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + bossIndexToLevel(i + 1) + "}").value.c_str();
+		}
 	}
 
 	Item generateKeyToAllDoors(const Floor &f)
@@ -353,11 +374,12 @@ namespace
 		}
 
 		f.tile(w / 2, 2) = TileEnum::Spawn;
-		f.tile(w / 2, w - 3) = TileEnum::Waypoint;
-		f.tile(2, w / 2) = TileEnum::Stairs;
-		f.tile(w - 3, w / 2) = TileEnum::Chest; // additional loot chest
+		f.tile(w / 2, w - 4) = TileEnum::Door;
+		f.tile(w / 2, w - 3) = TileEnum::Stairs;
 		f.tile(3, w / 2) = TileEnum::Door;
+		f.tile(2, w / 2) = TileEnum::Chest;
 		f.tile(w - 4, w / 2) = TileEnum::Door;
+		f.tile(w - 3, w / 2) = TileEnum::Chest;
 
 		findOutlineWalls(f);
 		cutoutFloor(f); // make sure that all coordinates stored in extra jsons are correct
@@ -506,13 +528,13 @@ namespace
 			{
 				case TileEnum::Monster:
 				{
-					if (f.extras[i] == TileExtra())
+					if (f.extras[i].index() == 0)
 						f.extras[i] = std::make_unique<Monster>(generateMonster(f.level, 0));
 					break;
 				}
 				case TileEnum::Chest:
 				{
-					if (f.extras[i] == TileExtra())
+					if (f.extras[i].index() == 0)
 						f.extras[i] = std::make_unique<Monster>(generateChest(f.level));
 					break;
 				}
@@ -521,12 +543,12 @@ namespace
 	}
 }
 
-Floor generateFloor(uint32 level)
+Floor generateFloor(uint32 level, uint32 maxLevel)
 {
 	Floor f;
 	f.level = level;
 	if (level == 0)
-		generateShopFloor(f);
+		generateShopFloor(f, maxLevel);
 	else if (isLevelBoss(level))
 		generateBossFloor(f);
 	else if (level > 10 && level < 90 && randomChance() < 0.05)
