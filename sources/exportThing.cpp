@@ -161,6 +161,26 @@ namespace
 	}
 }
 
+std::string exportVariant(const Variant &variant)
+{
+	return std::visit(
+		[](const auto &arg) -> std::string
+		{
+			using T = std::decay_t<decltype(arg)>;
+			if constexpr (std::is_same_v<T, std::string>)
+				return arg;
+			else if constexpr (std::is_same_v<T, Skill>)
+				return exportSkill(arg) + "\n";
+			else if constexpr (std::is_same_v<T, Item>)
+				return exportItem(arg) + "\n";
+			else if constexpr (std::is_same_v<T, Monster>)
+				return exportMonster(arg) + "\n";
+			else
+				static_assert(always_false<T>, "non-exhaustive visitor");
+		},
+		variant);
+}
+
 std::string exportSkill(const Skill &skill)
 {
 	std::string json;
@@ -239,24 +259,9 @@ std::string exportMonster(const Monster &monster)
 
 	json += "\"onDeath\":[\n";
 	for (const auto &it : monster.onDeath)
-	{
-		std::visit(
-			[&](const auto &arg)
-			{
-				using T = std::decay_t<decltype(arg)>;
-				if constexpr (std::is_same_v<T, std::unique_ptr<Skill>>)
-					json += exportSkill(*arg) + ",\n";
-				else if constexpr (std::is_same_v<T, std::unique_ptr<Item>>)
-					json += exportItem(*arg) + ",\n";
-				else if constexpr (std::is_same_v<T, std::unique_ptr<Monster>>)
-					json += exportMonster(*arg) + ",\n";
-				else
-					static_assert(always_false<T>, "non-exhaustive visitor");
-			},
-			it);
-	}
+		json += exportVariant(it) + ",\n";
 	removeLastComma(json);
-	json += "],\n"; // /onDeath
+	json += "],\n"; // onDeath
 
 	json += "\"_debug\":" + thingJson(monster) + "\n";
 	json += "}"; // /root

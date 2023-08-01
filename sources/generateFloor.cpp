@@ -228,17 +228,16 @@ namespace
 		}
 	}
 
-	std::vector<Item> makeShopItems(uint32 maxLevel)
+	void makeShopItems(TileExtra &extra, uint32 maxLevel)
 	{
-		std::vector<Item> r;
 		// todo increase number of generated items
 		for (uint32 i = 0; i < 1; i++)
 		{
-			Item item = generateDroppedItem(randomRange(1u, maxLevel));
+			Generate gen;
+			Item item = generateItem(Generate(randomRange(1u, maxLevel)));
 			item.buyPrice = numeric_cast<uint32>(item.goldCost);
-			r.push_back(std::move(item));
+			extra.push_back(std::move(item));
 		}
-		return r;
 	}
 
 	void generateShopFloor(Floor &f, uint32 maxLevel)
@@ -258,7 +257,7 @@ namespace
 				else if (isDecoration(x, y))
 				{
 					f.tile(x, y) = TileEnum::Decoration;
-					f.extra(x, y) = makeShopItems(maxLevel);
+					makeShopItems(f.extra(x, y), maxLevel);
 				}
 				else
 					f.tile(x, y) = TileEnum::Empty;
@@ -270,7 +269,7 @@ namespace
 		for (uint32 i = 0; i < portals; i++)
 		{
 			f.tile(8 + i * 2, h / 2) = TileEnum::Waypoint;
-			f.extra(8 + i * 2, h / 2) = std::string() + (Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + bossIndexToLevel(i + 1) + "}").value.c_str();
+			f.extra(8 + i * 2, h / 2).push_back(std::string() + (Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + bossIndexToLevel(i + 1) + "}").value.c_str());
 		}
 	}
 
@@ -305,9 +304,9 @@ namespace
 
 	Monster generateBossMonster(const Floor &f)
 	{
-		Monster mr = generateMonster(f.level, levelToBossIndex(f.level));
+		Monster mr = generateMonster(Generate(f.level, levelToBossIndex(f.level)));
 		mr.name = Stringizer() + "Guardian of " + f.level + "th floor";
-		mr.onDeath.push_back(std::make_unique<Item>(generateKeyToAllDoors(f)));
+		mr.onDeath.push_back(generateKeyToAllDoors(f));
 		return mr;
 	}
 
@@ -386,7 +385,7 @@ namespace
 		w = f.width;
 
 		f.tile(w / 2, w / 2) = TileEnum::Monster; // the boss
-		f.extra(w / 2, w / 2) = std::make_unique<Monster>(generateBossMonster(f));
+		f.extra(w / 2, w / 2).push_back(generateBossMonster(f));
 
 		{ // additional monsters
 			const uint32 cnt = bossIndex * 2;
@@ -528,14 +527,14 @@ namespace
 			{
 				case TileEnum::Monster:
 				{
-					if (f.extras[i].index() == 0)
-						f.extras[i] = std::make_unique<Monster>(generateMonster(f.level, 0));
+					if (f.extras[i].empty())
+						f.extras[i].push_back(generateMonster(Generate(f.level)));
 					break;
 				}
 				case TileEnum::Chest:
 				{
-					if (f.extras[i].index() == 0)
-						f.extras[i] = std::make_unique<Monster>(generateChest(f.level));
+					if (f.extras[i].empty())
+						f.extras[i].push_back(generateChest(Generate(f.level)));
 					break;
 				}
 			}

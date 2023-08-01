@@ -2,13 +2,17 @@
 
 #include <array>
 #include <map>
-#include <memory>
-#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
 
 using namespace cage;
+
+struct Skill;
+struct Item;
+struct Monster;
+
+using Variant = std::variant<std::string, Skill, Item, Monster>;
 
 enum class AffixEnum : uint8
 {
@@ -20,7 +24,7 @@ enum class AffixEnum : uint8
 
 struct Affix
 {
-	String name;
+	detail::StringBase<120> name;
 	Real relevance;
 };
 
@@ -31,7 +35,7 @@ struct Thing : private Noncopyable
 	uint32 powersCount = 0;
 	Real powerWeight; // sum of weights
 	Real powerTotal; // sum of weighted rolls
-	Real goldCost;
+	Real goldCost = 1;
 
 	Real addPower(Real weight);
 	Real addPower(Real roll, Real weight);
@@ -87,9 +91,9 @@ enum class SkillTargetEnum : uint8
 
 struct SkillCost
 {
-	uint16 life = 0;
-	uint16 mana = 0;
-	uint16 stamina = 0;
+	uint32 life = 0;
+	uint32 mana = 0;
+	uint32 stamina = 0;
 };
 
 using SkillAttributesEffects = std::map<AttributeEnum, AttributesValueMappingFloat>;
@@ -127,16 +131,12 @@ struct Item : public Thing
 	uint32 buyPrice = 0;
 };
 
-struct Monster;
-
-using OnDeathEffect = std::variant<std::unique_ptr<Skill>, std::unique_ptr<Item>, std::unique_ptr<Monster>>;
-
 struct Monster : public Thing
 {
 	String name = "<unnamed monster>";
 	AttributesValueMappingInt attributes;
 	std::vector<Item> equippedItems;
-	std::vector<OnDeathEffect> onDeath;
+	std::vector<Variant> onDeath;
 };
 
 enum class TileEnum : uint8
@@ -163,7 +163,7 @@ enum class OccupancyEnum : uint8
 	Block, // walls, non-walkable decorations
 };
 
-using TileExtra = std::variant<std::monostate, std::string, std::vector<Item>, std::unique_ptr<Monster>>;
+using TileExtra = std::vector<Variant>;
 
 struct Floor : private Noncopyable
 {
@@ -213,20 +213,35 @@ struct FloorExport
 	std::string json;
 };
 
+struct Generate
+{
+	Real magic = Real::Nan(); // 0 = warrior, 1 = sorcerer
+	Real ranged = Real::Nan(); // 0 = melee, 1 = ranged
+	Real support = Real::Nan(); // 0 = combat, 1 = support
+	uint32 level = 0;
+	sint32 difficultyOffset = 0;
+	SlotEnum slot = SlotEnum::None;
+
+	Generate() = default;
+	explicit Generate(uint32 level, sint32 difficultyOffset = 0);
+	explicit Generate(SlotEnum slot, uint32 level, sint32 difficultyOffset = 0);
+	void randomize();
+	uint32 ll() const;
+};
+
 void removeLastComma(std::string &json);
 OccupancyEnum occupancy(TileEnum tile);
 bool isLevelBoss(uint32 level);
 uint32 levelToBossIndex(uint32 level);
 uint32 bossIndexToLevel(uint32 index);
 
-Skill generateMagicSpell(uint32 level, SlotEnum slot);
-Item generateEquippedItem(uint32 level, SlotEnum slot);
-Item generateDroppedItem(uint32 level);
-Monster generateMonster(uint32 level, sint32 difficultyOffset);
-Monster generateSummonedMinion(uint32 level);
-Monster generateChest(uint32 level);
+Skill generateSkill(const Generate &generate);
+Item generateItem(const Generate &generate);
+Monster generateMonster(const Generate &generate);
+Monster generateChest(const Generate &generate);
 Floor generateFloor(uint32 level, uint32 maxLevel);
 
+std::string exportVariant(const Variant &variant);
 std::string exportSkill(const Skill &skill);
 std::string exportItem(const Item &item);
 std::string exportMonster(const Monster &monster);

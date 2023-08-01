@@ -67,11 +67,39 @@ String Thing::makeName(const String &basicName, Real relevance) const
 	{
 		if (a.name.empty())
 			continue;
+		if (a.relevance < 0.4)
+			continue;
 		if (!r.empty())
 			r += " ";
 		r += a.name;
 	}
+	if (r.empty())
+		r = t.affixes[(uint32)AffixEnum::Infix].name;
 	return r;
+}
+
+Generate::Generate(uint32 level, sint32 difficultyOffset) : level(level), difficultyOffset(difficultyOffset)
+{
+	randomize();
+}
+
+Generate::Generate(SlotEnum slot, uint32 level, sint32 difficultyOffset) : slot(slot), level(level), difficultyOffset(difficultyOffset)
+{
+	randomize();
+}
+
+void Generate::randomize()
+{
+	magic = randomChance();
+	ranged = randomChance();
+	support = randomChance();
+}
+
+uint32 Generate::ll() const
+{
+	const sint32 l = (sint32)level + difficultyOffset;
+	CAGE_ASSERT(l >= 1);
+	return l;
 }
 
 void removeLastComma(std::string &json)

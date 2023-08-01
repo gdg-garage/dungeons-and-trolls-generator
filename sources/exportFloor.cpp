@@ -151,30 +151,16 @@ namespace
 		json += (Stringizer() + "\"x\":" + position[0] + ",\n").value.c_str();
 		json += (Stringizer() + "\"y\":" + position[1] + ",\n").value.c_str();
 		json += (Stringizer() + "\"type\":\"" + tileName(type) + "\",\n").value.c_str();
-		std::visit(
-			[&](const auto &arg)
-			{
-				using T = std::decay_t<decltype(arg)>;
-				if constexpr (std::is_same_v<T, std::monostate>)
-				{
-					// nothing
-				}
-				else if constexpr (std::is_same_v<T, std::string>)
-					json += "\"data\":" + arg + ",\n";
-				else if constexpr (std::is_same_v<T, std::vector<Item>>)
-				{
-					json += "\"data\":[\n";
-					for (const Item &item : arg)
-						json += exportItem(item) + ",\n";
-					removeLastComma(json);
-					json += "],\n";
-				}
-				else if constexpr (std::is_same_v<T, std::unique_ptr<Monster>>)
-					json += "\"data\":" + exportMonster(*arg) + ",\n";
-				else
-					static_assert(always_false<T>, "non-exhaustive visitor");
-			},
-			extra);
+
+		if (!extra.empty())
+		{
+			json += "\"data\":[\n";
+			for (const auto &it : extra)
+				json += exportVariant(it) + ",\n";
+			removeLastComma(json);
+			json += "],\n"; // data
+		}
+
 		removeLastComma(json);
 		json += "}"; // /root
 		return json;
@@ -261,7 +247,7 @@ void exportExamples(uint32 maxLevel)
 		Holder<File> json = writeFile("items.json");
 		for (uint32 i = 1; i < maxLevel; i++)
 		{
-			json->write(exportItem(generateDroppedItem(i)));
+			json->write(exportItem(generateItem(Generate(i))));
 			json->writeLine("");
 			json->writeLine("");
 		}
@@ -271,7 +257,7 @@ void exportExamples(uint32 maxLevel)
 		Holder<File> json = writeFile("monsters.json");
 		for (uint32 i = 1; i < maxLevel; i++)
 		{
-			json->write(exportMonster(generateMonster(i, 0)));
+			json->write(exportMonster(generateMonster(Generate(i))));
 			json->writeLine("");
 			json->writeLine("");
 		}
