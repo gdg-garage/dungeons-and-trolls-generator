@@ -512,7 +512,8 @@ namespace
 				}
 				case TileEnum::Chest:
 				{
-					// todo
+					if (f.extras[i] == TileExtra())
+						f.extras[i] = std::make_unique<Monster>(generateChest(f.level));
 					break;
 				}
 			}

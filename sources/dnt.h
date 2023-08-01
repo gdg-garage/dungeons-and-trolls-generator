@@ -1,5 +1,6 @@
 #include <cage-core/math.h>
 
+#include <array>
 #include <map>
 #include <memory>
 #include <optional>
@@ -9,10 +10,36 @@
 
 using namespace cage;
 
-struct ThingPower
+enum class AffixEnum : uint8
 {
-	Real relative; // usually in range 0 .. 1 -> defines how good were random rolls from various ranges
-	Real absolute; // estimated value of this thing in gold
+	Prefix,
+	Infix,
+	Suffix,
+	_Total
+};
+
+struct Affix
+{
+	String name;
+	Real relevance;
+};
+
+struct Thing : private Noncopyable
+{
+	std::array<Affix, (uint32)AffixEnum::_Total> affixes;
+
+	uint32 powersCount = 0;
+	Real powerWeight; // sum of weights
+	Real powerTotal; // sum of weighted rolls
+	Real goldCost;
+
+	Real addPower(Real weight);
+	Real addPower(Real roll, Real weight);
+	Real addPower(Real weight, AffixEnum affix, const String &name);
+	Real addPower(Real roll, Real weight, AffixEnum affix, const String &name);
+	void addPower(const Thing &other, Real weight);
+	void addAffix(Real relevance, AffixEnum affix, const String &name);
+	String makeName(const String &basicName, Real relevance = 0.5) const;
 };
 
 enum class AttributeEnum : uint8
@@ -20,7 +47,7 @@ enum class AttributeEnum : uint8
 	// primary
 	Strength,
 	Dexterity,
-	Inteligence,
+	Intelligence,
 	Willpower,
 	Constitution,
 	// secondary
@@ -66,7 +93,7 @@ struct SkillCost
 
 using SkillAttributesEffects = std::map<AttributeEnum, AttributesValueMapping>; // contains values in percentages -> value 100 multiplies by 1
 
-struct Skill : private Noncopyable
+struct Skill : public Thing
 {
 	String name = "<unnamed skill>";
 	SkillTargetEnum target = SkillTargetEnum::None;
@@ -74,8 +101,7 @@ struct Skill : private Noncopyable
 	AttributesValueMapping range, radius, duration, damageAmount;
 	DamageTypeEnum damageType = DamageTypeEnum::None;
 	SkillAttributesEffects casterAttributes, targetAttributes;
-	std::vector<std::string> casterFlags, targetFlags; // available flags: lineOfSight, alone, moves, stun, knockback, groundEffect
-	ThingPower power;
+	std::vector<std::string> casterFlags, targetFlags;
 };
 
 enum class SlotEnum : uint8
@@ -89,7 +115,7 @@ enum class SlotEnum : uint8
 	Neck,
 };
 
-struct Item : private Noncopyable
+struct Item : public Thing
 {
 	String name = "<unnamed item>";
 	SlotEnum slot = SlotEnum::None;
@@ -97,20 +123,18 @@ struct Item : private Noncopyable
 	AttributesValueMapping attributes;
 	std::vector<Skill> skills;
 	std::vector<std::string> flags;
-	ThingPower power;
 };
 
 struct Monster;
 
 using OnDeathEffect = std::variant<std::unique_ptr<Skill>, std::unique_ptr<Item>, std::unique_ptr<Monster>>;
 
-struct Monster : private Noncopyable
+struct Monster : public Thing
 {
 	String name = "<unnamed monster>";
 	AttributesValueMapping attributes;
 	std::vector<Item> equippedItems;
 	std::vector<OnDeathEffect> onDeath;
-	ThingPower power;
 };
 
 enum class TileEnum : uint8
@@ -188,28 +212,22 @@ struct FloorExport
 };
 
 void removeLastComma(std::string &json);
-
-const char *attributeName(AttributeEnum attribute);
-std::string attributesValueMappingJson(const AttributesValueMapping &attributesValues);
-const char *damageTypeName(DamageTypeEnum damageType);
-const char *skillTargetName(SkillTargetEnum skillTarget);
-std::string skillCostJson(const SkillCost &cost);
-std::string skillAttributesEffectsJson(const SkillAttributesEffects &effects);
-const char *slotName(SlotEnum slot);
-
-Skill generateSkill(uint32 level, SlotEnum slot);
-std::string skillJson(const Skill &skill);
-Item generateItem(uint32 level, SlotEnum slot);
-std::string itemJson(const Item &item);
-Monster generateMonster(uint32 level, sint32 difficultyOffset);
-std::string monsterJson(const Monster &monster);
-
-const char *tileName(TileEnum tile);
 OccupancyEnum occupancy(TileEnum tile);
 bool isLevelBoss(uint32 level);
 uint32 levelToBossIndex(uint32 level);
 uint32 bossIndexToLevel(uint32 index);
+
+Skill generateMagicSpell(uint32 level, SlotEnum slot);
+Item generateEquippedItem(uint32 level, SlotEnum slot);
+Item generateDroppedItem(uint32 level);
+Monster generateMonster(uint32 level, sint32 difficultyOffset);
+Monster generateSummonedMinion(uint32 level);
+Monster generateChest(uint32 level);
 Floor generateFloor(uint32 level);
+
+std::string exportSkill(const Skill &skill);
+std::string exportItem(const Item &item);
+std::string exportMonster(const Monster &monster);
 FloorExport exportFloor(const Floor &floor);
 void exportDungeon(PointerRange<const Floor> floors);
 

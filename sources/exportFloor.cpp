@@ -115,6 +115,35 @@ namespace
 		return cnt;
 	}
 
+	const char *tileName(TileEnum tile)
+	{
+		switch (tile)
+		{
+			case TileEnum::Empty:
+				return "empty";
+			case TileEnum::Decoration:
+				return "decoration";
+			case TileEnum::Spawn:
+				return "spawn";
+			case TileEnum::Waypoint:
+				return "waypoint";
+			case TileEnum::Stairs:
+				return "stairs";
+			case TileEnum::Door:
+				return "door";
+			case TileEnum::Chest:
+				return "chest";
+			case TileEnum::Monster:
+				return "monster";
+			case TileEnum::Wall:
+				return "wall";
+			case TileEnum::Outside:
+				return "outside";
+			default:
+				CAGE_THROW_CRITICAL(Exception, "unknown tile enum");
+		}
+	}
+
 	std::string tileJson(Vec2i position, TileEnum type, const TileExtra &extra)
 	{
 		std::string json;
@@ -133,7 +162,7 @@ namespace
 				else if constexpr (std::is_same_v<T, std::string>)
 					json += "\"data\":" + arg + ",\n";
 				else if constexpr (std::is_same_v<T, std::unique_ptr<Monster>>)
-					json += "\"data\":" + monsterJson(*arg) + ",\n";
+					json += "\"data\":" + exportMonster(*arg) + ",\n";
 				else
 					static_assert(always_false<T>, "non-exhaustive visitor!");
 			},
