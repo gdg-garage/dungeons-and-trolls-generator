@@ -242,7 +242,7 @@ namespace
 
 	void generateShopFloor(Floor &f, uint32 maxLevel)
 	{
-		const uint32 portals = levelToBossIndex(maxLevel);
+		const uint32 portals = levelToBossIndex(maxLevel - 1);
 		const uint32 w = 11 + portals * 2, h = 9;
 		floorResize(f, Vec2i(w, h));
 
@@ -269,7 +269,7 @@ namespace
 		for (uint32 i = 0; i < portals; i++)
 		{
 			f.tile(8 + i * 2, h / 2) = TileEnum::Waypoint;
-			f.extra(8 + i * 2, h / 2).push_back(std::string() + (Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + bossIndexToLevel(i + 1) + "}").value.c_str());
+			f.extra(8 + i * 2, h / 2).push_back(std::string() + (Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + (bossIndexToLevel(i + 1) + 1) + "}").value.c_str());
 		}
 	}
 
@@ -506,6 +506,28 @@ namespace
 			f.tile(c) = TileEnum::Stairs;
 		}
 
+		if (randomChance() < 0.05)
+		{ // place waypoint
+			const Vec2i a = findAny(f, TileEnum::Empty);
+			uint32 neighs = 0;
+			for (sint32 j = -1; j < 2; j++)
+			{
+				for (sint32 i = -1; i < 2; i++)
+				{
+					const Vec2i b = a + Vec2i(i, j);
+					CAGE_ASSERT(f.inside(b));
+					neighs += f.tile(b) == TileEnum::Empty;
+				}
+			}
+			if (neighs == 9)
+			{
+				CAGE_ASSERT(f.tile(a) == TileEnum::Empty);
+				CAGE_ASSERT(f.extra(a).empty());
+				f.tile(a) = TileEnum::Waypoint;
+				f.extra(a).push_back(std::string() + (Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + (randomChance() < 0.3 ? 0 : f.level / 2) + "}").value.c_str());
+			}
+		}
+
 		{ // place some monsters
 			const uint32 cnt = randomRange(f.level / 6, f.level / 3 + 1) + 1;
 			for (uint32 i = 0; i < cnt; i++)
@@ -544,6 +566,8 @@ namespace
 
 Floor generateFloor(uint32 level, uint32 maxLevel)
 {
+	if (maxLevel == 0 || level > maxLevel)
+		CAGE_THROW_ERROR(Exception, "invalid floor level");
 	Floor f;
 	f.level = level;
 	if (level == 0)

@@ -471,6 +471,8 @@ Monster generateMonster(const Generate &generate)
 	if (randomChance() < 0.1)
 		mr.onDeath.push_back(generateSkill(Generate(SlotEnum::MainHand, generate.level, generate.difficultyOffset)));
 
+	mr.score = numeric_cast<uint32>(mr.goldCost);
+
 	return mr;
 }
 

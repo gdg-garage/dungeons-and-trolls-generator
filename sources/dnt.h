@@ -137,6 +137,7 @@ struct Monster : public Thing
 	AttributesValueMappingInt attributes;
 	std::vector<Item> equippedItems;
 	std::vector<Variant> onDeath;
+	uint32 score = 0;
 };
 
 enum class TileEnum : uint8

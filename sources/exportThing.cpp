@@ -209,7 +209,11 @@ std::string exportSkill(const Skill &skill)
 	removeLastComma(json);
 	json += "],\n"; // /targetFlags
 
-	json += "\"_debug\":" + thingJson(skill) + "\n";
+#ifdef CAGE_DEBUG
+	json += "\"_debug\":" + thingJson(skill) + ",\n";
+#endif // CAGE_DEBUG
+
+	removeLastComma(json);
 	json += "}"; // /root
 	return json;
 }
@@ -238,7 +242,11 @@ std::string exportItem(const Item &item)
 
 	json += (Stringizer() + "\"buyPrice\":" + item.buyPrice + ",").value.c_str();
 
-	json += "\"_debug\":" + thingJson(item) + "\n";
+#ifdef CAGE_DEBUG
+	json += "\"_debug\":" + thingJson(item) + ",\n";
+#endif // CAGE_DEBUG
+
+	removeLastComma(json);
 	json += "}"; // /root
 	return json;
 }
@@ -263,7 +271,13 @@ std::string exportMonster(const Monster &monster)
 	removeLastComma(json);
 	json += "],\n"; // onDeath
 
-	json += "\"_debug\":" + thingJson(monster) + "\n";
+	json += (Stringizer() + "\"score\":" + monster.score + ",").value.c_str();
+
+#ifdef CAGE_DEBUG
+	json += "\"_debug\":" + thingJson(monster) + ",\n";
+#endif // CAGE_DEBUG
+
+	removeLastComma(json);
 	json += "}"; // /root
 	return json;
 }
