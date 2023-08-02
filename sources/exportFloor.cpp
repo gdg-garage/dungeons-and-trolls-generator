@@ -12,8 +12,18 @@ namespace
 		return r;
 	}
 
-	String connectedWall(uint32 neighbors)
+	String connectedWall(const Floor &f, uint32 x, uint32 y)
 	{
+		uint32 neighbors = 0;
+		if (x == 0 || f.tile(x - 1, y) == TileEnum::Wall || f.tile(x - 1, y) == TileEnum::Outside)
+			neighbors += 1; // left
+		if (y == 0 || f.tile(x, y - 1) == TileEnum::Wall || f.tile(x, y - 1) == TileEnum::Outside)
+			neighbors += 2; // top
+		if (x + 1 == f.width || f.tile(x + 1, y) == TileEnum::Wall || f.tile(x + 1, y) == TileEnum::Outside)
+			neighbors += 4; // right
+		if (y + 1 == f.height || f.tile(x, y + 1) == TileEnum::Wall || f.tile(x, y + 1) == TileEnum::Outside)
+			neighbors += 8; // bottom
+
 		switch (neighbors)
 		{
 			case 0:
@@ -53,60 +63,33 @@ namespace
 		}
 	}
 
-	String convertToAscii(const Floor &f, uint32 y)
+	String tileAscii(const Floor &f, uint32 x, uint32 y)
 	{
-		String res;
-		for (uint32 x = 0; x < f.width; x++)
+		switch (f.tile(x, y))
 		{
-			switch (f.tile(x, y))
-			{
-				case TileEnum::Empty:
-					res += " ";
-					break;
-				case TileEnum::Decoration:
-					res += uni(u8"\u2591");
-					break;
-				case TileEnum::Spawn:
-					res += "S";
-					break;
-				case TileEnum::Waypoint:
-					res += "O";
-					break;
-				case TileEnum::Stairs:
-					res += "#";
-					break;
-				case TileEnum::Door:
-					res += "H";
-					break;
-				case TileEnum::Chest:
-					res += "$";
-					break;
-				case TileEnum::Monster:
-					res += "@";
-					break;
-				case TileEnum::Wall:
-				{
-					uint32 neighbors = 0;
-					if (x == 0 || f.tile(x - 1, y) == TileEnum::Wall || f.tile(x - 1, y) == TileEnum::Outside)
-						neighbors += 1; // left
-					if (y == 0 || f.tile(x, y - 1) == TileEnum::Wall || f.tile(x, y - 1) == TileEnum::Outside)
-						neighbors += 2; // top
-					if (x + 1 == f.width || f.tile(x + 1, y) == TileEnum::Wall || f.tile(x + 1, y) == TileEnum::Outside)
-						neighbors += 4; // right
-					if (y + 1 == f.height || f.tile(x, y + 1) == TileEnum::Wall || f.tile(x, y + 1) == TileEnum::Outside)
-						neighbors += 8; // bottom
-					res += connectedWall(neighbors);
-					break;
-				}
-				case TileEnum::Outside:
-					res += "´";
-					break;
-				default:
-					res += "?";
-					break;
-			}
+			case TileEnum::Empty:
+				return " ";
+			case TileEnum::Decoration:
+				return uni(u8"\u2591");
+			case TileEnum::Spawn:
+				return "S";
+			case TileEnum::Waypoint:
+				return "O";
+			case TileEnum::Stairs:
+				return "#";
+			case TileEnum::Door:
+				return "H";
+			case TileEnum::Chest:
+				return "$";
+			case TileEnum::Monster:
+				return "@";
+			case TileEnum::Wall:
+				return connectedWall(f, x, y);
+			case TileEnum::Outside:
+				return "´";
+			default:
+				return "?";
 		}
-		return res;
 	}
 
 	uint32 countTiles(const Floor &f, TileEnum tile)
@@ -148,6 +131,9 @@ namespace
 
 	std::string tileJson(Vec2i position, TileEnum type, const TileExtra &extra)
 	{
+		if (type == TileEnum::Empty || type == TileEnum::Outside)
+			return {};
+
 		std::string json;
 		json += "{\n";
 		json += (Stringizer() + "\"x\":" + position[0] + ",\n").value.c_str();
@@ -167,21 +153,41 @@ namespace
 		json += "}"; // /root
 		return json;
 	}
+
+	void replaceAll(std::string &str, const std::string &from, const std::string &to)
+	{
+		size_t start = 0;
+		while (true)
+		{
+			start = str.find(from, start);
+			if (start == std::string::npos)
+				break;
+			str.replace(start, from.length(), to);
+			start += to.length();
+		}
+	}
+
+	std::string tileHtml(const Floor &f, uint32 x, uint32 y, std::string json)
+	{
+		if (json.empty())
+			return tileAscii(f, x, y).c_str();
+
+		replaceAll(json, "<", "&lt;");
+		replaceAll(json, ">", "&gt;");
+		replaceAll(json, "\"", "&quot;");
+
+		std::string r;
+		r += "<span data-json=\"" + json + "\">";
+		r += tileAscii(f, x, y).c_str();
+		r += "</span>";
+		return r;
+	}
 }
 
 FloorExport exportFloor(const Floor &floor)
 {
 	FloorExport result;
-
 	result.html += "<div><pre>\n";
-	for (uint32 y = 0; y < floor.height; y++)
-	{
-		const String line = convertToAscii(floor, y);
-		result.html += line.c_str();
-		result.html += "\n";
-	}
-	result.html += "</pre></div>\n";
-
 	result.json += "{\n";
 	result.json += (Stringizer() + "\"level\":" + floor.level + ",\n").value.c_str();
 	result.json += (Stringizer() + "\"width\":" + floor.width + ",\n").value.c_str();
@@ -191,22 +197,27 @@ FloorExport exportFloor(const Floor &floor)
 	{
 		for (uint32 x = 0; x < floor.width; x++)
 		{
-			if (floor.tile(x, y) == TileEnum::Empty || floor.tile(x, y) == TileEnum::Outside)
-				continue;
-			result.json += tileJson(Vec2i(x, y), floor.tile(x, y), floor.extra(x, y));
-			result.json += ",\n";
+			const std::string j = tileJson(Vec2i(x, y), floor.tile(x, y), floor.extra(x, y));
+			result.html += tileHtml(floor, x, y, j);
+			if (!j.empty())
+			{
+				result.json += j;
+				result.json += ",\n";
+			}
 		}
+		result.html += "\n";
 	}
 	removeLastComma(result.json);
 	result.json += "]\n"; // /tiles
 	result.json += "}\n"; // /root
-
+	result.html += "</pre></div>\n";
 	return result;
 }
 
 void exportDungeon(PointerRange<const Floor> floors)
 {
 	Holder<File> html = writeFile("dungeon.html");
+	html->writeLine("<!DOCTYPE html>");
 	html->writeLine("<html>");
 	html->writeLine("<head>");
 	html->writeLine("<title>D&T dungeon</title>");
@@ -235,7 +246,26 @@ void exportDungeon(PointerRange<const Floor> floors)
 		json->write(e.json);
 	}
 
+	html->write(R"html(
+<dialog id="dialog">
+<pre>
+<code id="code">
+</code>
+</pre>
+</dialog>
+)html");
 	html->writeLine("</body>");
+	html->write(R"html(
+<script>
+document.body.addEventListener("click", function(event) {
+	let d = event.target.getAttribute("data-json");
+	if (!d)
+		return;
+	document.getElementById("code").innerHTML = JSON.stringify(JSON.parse(d), null, 10);
+	document.getElementById("dialog").showModal();
+});
+</script>
+)html");
 	html->close();
 
 	json->writeLine("]"); // /floors
