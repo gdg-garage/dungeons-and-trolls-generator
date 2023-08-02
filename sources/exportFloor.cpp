@@ -61,7 +61,6 @@ namespace
 			switch (f.tile(x, y))
 			{
 				case TileEnum::Empty:
-				case TileEnum::Outside:
 					res += " ";
 					break;
 				case TileEnum::Decoration:
@@ -88,17 +87,20 @@ namespace
 				case TileEnum::Wall:
 				{
 					uint32 neighbors = 0;
-					if (x > 0 && f.tile(x - 1, y) == TileEnum::Wall)
+					if (x == 0 || f.tile(x - 1, y) == TileEnum::Wall || f.tile(x - 1, y) == TileEnum::Outside)
 						neighbors += 1; // left
-					if (y > 0 && f.tile(x, y - 1) == TileEnum::Wall)
+					if (y == 0 || f.tile(x, y - 1) == TileEnum::Wall || f.tile(x, y - 1) == TileEnum::Outside)
 						neighbors += 2; // top
-					if (x + 1 < f.width && f.tile(x + 1, y) == TileEnum::Wall)
+					if (x + 1 == f.width || f.tile(x + 1, y) == TileEnum::Wall || f.tile(x + 1, y) == TileEnum::Outside)
 						neighbors += 4; // right
-					if (y + 1 < f.height && f.tile(x, y + 1) == TileEnum::Wall)
+					if (y + 1 == f.height || f.tile(x, y + 1) == TileEnum::Wall || f.tile(x, y + 1) == TileEnum::Outside)
 						neighbors += 8; // bottom
 					res += connectedWall(neighbors);
 					break;
 				}
+				case TileEnum::Outside:
+					res += "´";
+					break;
 				default:
 					res += "?";
 					break;
