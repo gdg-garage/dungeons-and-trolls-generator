@@ -100,7 +100,8 @@ using SkillAttributesEffects = std::map<AttributeEnum, AttributesValueMappingFlo
 
 struct Skill : public Thing
 {
-	String name = "<unnamed skill>";
+	String name = "unnamed skill";
+	detail::StringBase<30> icon = "skill";
 	SkillTargetEnum target = SkillTargetEnum::None;
 	SkillCost cost;
 	AttributesValueMappingFloat range, radius, duration, damageAmount;
@@ -122,7 +123,8 @@ enum class SlotEnum : uint8
 
 struct Item : public Thing
 {
-	String name = "<unnamed item>";
+	String name = "unnamed item";
+	detail::StringBase<30> icon = "item";
 	SlotEnum slot = SlotEnum::None;
 	AttributesValueMappingInt requirements;
 	AttributesValueMappingInt attributes;
@@ -133,7 +135,10 @@ struct Item : public Thing
 
 struct Monster : public Thing
 {
-	String name = "<unnamed monster>";
+	String name = "unnamed monster";
+	detail::StringBase<30> icon = "monster";
+	detail::StringBase<30> aiAlgoritmus = "default";
+	detail::StringBase<30> faction = "monster";
 	AttributesValueMappingInt attributes;
 	std::vector<Item> equippedItems;
 	std::vector<Variant> onDeath;
@@ -155,6 +160,8 @@ enum class TileEnum : uint8
 	// blocking
 	Wall,
 	Outside,
+	// other
+	Placeholder, // used temporarily in some algorithms
 };
 
 enum class OccupancyEnum : uint8

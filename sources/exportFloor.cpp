@@ -92,14 +92,6 @@ namespace
 		}
 	}
 
-	uint32 countTiles(const Floor &f, TileEnum tile)
-	{
-		uint32 cnt = 0;
-		for (auto it : f.tiles)
-			cnt += it == tile;
-		return cnt;
-	}
-
 	const char *tileName(TileEnum tile)
 	{
 		switch (tile)
@@ -162,9 +154,17 @@ namespace
 			start = str.find(from, start);
 			if (start == std::string::npos)
 				break;
-			str.replace(start, from.length(), to);
+			str = str.replace(start, from.length(), to);
 			start += to.length();
 		}
+	}
+
+	uint32 countTiles(const Floor &f, TileEnum tile)
+	{
+		uint32 cnt = 0;
+		for (auto it : f.tiles)
+			cnt += it == tile;
+		return cnt;
 	}
 
 	std::string tileHtml(const Floor &f, uint32 x, uint32 y, std::string json)
@@ -172,12 +172,12 @@ namespace
 		if (json.empty())
 			return tileAscii(f, x, y).c_str();
 
-		replaceAll(json, "<", "&lt;");
-		replaceAll(json, ">", "&gt;");
+		//replaceAll(json, "<", "&lt;");
+		//replaceAll(json, ">", "&gt;");
 		replaceAll(json, "\"", "&quot;");
 
 		std::string r;
-		r += "<span data-json=\"" + json + "\">";
+		r += "<span data-json=\"" + json + "\" style=\"cursor:help;\">";
 		r += tileAscii(f, x, y).c_str();
 		r += "</span>";
 		return r;
@@ -187,7 +187,7 @@ namespace
 FloorExport exportFloor(const Floor &floor)
 {
 	FloorExport result;
-	result.html += "<div><pre>\n";
+	result.html += "<div><pre style=\"cursor:default;\">\n";
 	result.json += "{\n";
 	result.json += (Stringizer() + "\"level\":" + floor.level + ",\n").value.c_str();
 	result.json += (Stringizer() + "\"width\":" + floor.width + ",\n").value.c_str();
