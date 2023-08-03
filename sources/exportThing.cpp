@@ -260,7 +260,7 @@ std::string exportMonster(const Monster &monster)
 	json += "\"class\":\"monster\",\n";
 	json += std::string() + "\"name\":\"" + monster.name.c_str() + "\",\n";
 	json += std::string() + "\"icon\":\"" + monster.icon.c_str() + "\",\n";
-	json += std::string() + "\"aiAlgoritmus\":\"" + monster.aiAlgoritmus.c_str() + "\",\n";
+	json += std::string() + "\"algorithm\":\"" + monster.algorithm.c_str() + "\",\n";
 	json += std::string() + "\"faction\":\"" + monster.faction.c_str() + "\",\n";
 	json += "\"attributes\":" + attributesValueMappingJson(monster.attributes) + ",\n";
 

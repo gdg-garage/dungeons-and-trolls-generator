@@ -494,18 +494,17 @@ Monster generateMonster(const Generate &generate)
 
 Monster generateChest(const Generate &generate)
 {
-	CAGE_ASSERT(valid(generate.magic) && valid(generate.ranged) && valid(generate.support));
 	CAGE_ASSERT(generate.slot == SlotEnum::None);
 
 	Monster mr;
 
 	mr.name = "Chest";
 	mr.icon = "chest";
-	mr.aiAlgoritmus = "none";
+	mr.algorithm = "none";
 	mr.faction = "neutral";
 	mr.attributes[AttributeEnum::Life] = 1;
 
-	const uint32 cnt = randomRange(3u, 6u);
+	const uint32 cnt = randomRange(5u, 10u);
 	for (uint32 i = 0; i < cnt; i++)
 		mr.onDeath.push_back(generateItem(Generate(generate.level, generate.difficultyOffset)));
 

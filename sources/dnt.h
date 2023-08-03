@@ -137,7 +137,7 @@ struct Monster : public Thing
 {
 	String name = "unnamed monster";
 	detail::StringBase<30> icon = "monster";
-	detail::StringBase<30> aiAlgoritmus = "default";
+	detail::StringBase<30> algorithm = "default";
 	detail::StringBase<30> faction = "monster";
 	AttributesValueMappingInt attributes;
 	std::vector<Item> equippedItems;
