@@ -78,28 +78,33 @@ String Thing::makeName(const String &basicName, Real relevance) const
 	return r;
 }
 
-Generate::Generate(uint32 level, sint32 difficultyOffset) : level(level), difficultyOffset(difficultyOffset)
+Generate::Generate(uint32 level, sint32 powerOffset, SlotEnum slot) : level(level), power(level + powerOffset), slot(slot)
 {
-	randomize();
-}
-
-Generate::Generate(SlotEnum slot, uint32 level, sint32 difficultyOffset) : slot(slot), level(level), difficultyOffset(difficultyOffset)
-{
+	CAGE_ASSERT((sint32)level + powerOffset > 0);
 	randomize();
 }
 
 void Generate::randomize()
 {
-	magic = randomChance();
-	ranged = randomChance();
-	support = randomChance();
+	const auto &gen = [this](uint32 minLevel, Real probability) -> Real
+	{
+		const Real tg = randomChance() < probability ? 1 : 0;
+		return level > minLevel ? randomRange(min(0.5, tg), max(0.5, tg)) : 0;
+	};
+	magic = gen(15, 0.3);
+	ranged = gen(6, 0.5);
+	defensive = gen(21, 0.3);
+	support = gen(28, 0.2);
 }
 
-uint32 Generate::ll() const
+bool Generate::valid() const
 {
-	const sint32 l = (sint32)level + difficultyOffset;
-	CAGE_ASSERT(l >= 1);
-	return l;
+	return cage::valid(magic) && cage::valid(ranged) && cage::valid(defensive) && cage::valid(support) && level > 0 && power > 0;
+}
+
+sint32 Generate::powerOffset() const
+{
+	return (sint32)power - (sint32)level;
 }
 
 void removeLastComma(std::string &json)

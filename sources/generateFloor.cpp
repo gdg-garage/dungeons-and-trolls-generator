@@ -237,7 +237,7 @@ namespace
 		}
 	}
 
-	void placeMonsters(Floor &f, sint32 difficultyOffset)
+	void placeMonsters(Floor &f, sint32 powerOffset)
 	{
 		const uint32 a = f.level / 2 + 1;
 		const uint32 b = f.width * f.height / 50;
@@ -247,7 +247,7 @@ namespace
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
-			f.extra(p).push_back(generateMonster(Generate(f.level, difficultyOffset)));
+			f.extra(p).push_back(generateMonster(Generate(f.level, powerOffset)));
 		}
 	}
 
@@ -268,12 +268,26 @@ namespace
 
 		const auto &isDecoration = [=](uint32 x, uint32 y) -> bool { return ((x == 2 || x == w - 3) && (y >= 2 && y <= h - 3)) || ((y == 2 || y == h - 3) && (x >= 2 && x <= w - 3)); };
 
-		const auto &makeShopItems = [](TileExtra &extra, uint32 maxLevel)
+		const auto &makeShopItems = [&](TileExtra &extra)
 		{
 			for (uint32 i = 0; i < 10; i++)
 			{
 				Generate gen;
-				Item item = generateItem(Generate(randomRange(1u, maxLevel)));
+				switch (randomRange(0u, 4u))
+				{
+					case 0:
+						gen = Generate(randomRange(1u, maxLevel)); // default
+						break;
+					case 1:
+					case 2:
+						gen = Generate(randomRange(max(maxLevel * 3 / 4, 1u), maxLevel)); // stronger than default
+						break;
+					case 3:
+						gen = Generate(maxLevel, -randomRange(0u, maxLevel)); // any features, but possibly weak
+						break;
+				}
+				CAGE_ASSERT(gen.level > 0);
+				Item item = generateItem(gen);
 				item.buyPrice = numeric_cast<uint32>(item.goldCost);
 				extra.push_back(std::move(item));
 			}
@@ -288,7 +302,7 @@ namespace
 				else if (isDecoration(x, y))
 				{
 					f.tile(x, y) = TileEnum::Decoration;
-					makeShopItems(f.extra(x, y), maxLevel);
+					makeShopItems(f.extra(x, y));
 				}
 				else
 					f.tile(x, y) = TileEnum::Empty;
@@ -302,16 +316,6 @@ namespace
 			f.tile(8 + i * 2, h / 2) = TileEnum::Waypoint;
 			f.extra(8 + i * 2, h / 2).push_back(std::string() + (Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + (bossIndexToLevel(i + 1) + 1) + "}").value.c_str());
 		}
-	}
-
-	void generateSimpleRoomFloor(Floor &f)
-	{
-		const auto [w, h] = defaultFloorSize(f.level);
-		resizeFloor(f, Vec2i(w, h));
-		rectReplace(f, Vec2i(1), Vec2i(w, h) - 1, TileEnum::Outside, TileEnum::Empty);
-		findOutlineWalls(f);
-		placeSpawnAndStairs(f);
-		placeMonsters(f, 0);
 	}
 
 	void generateBossFloor(Floor &f)
@@ -445,6 +449,16 @@ namespace
 		placeMonsters(f, f.level / 20);
 	}
 
+	void generateSingleRoomFloor(Floor &f)
+	{
+		const auto [w, h] = defaultFloorSize(f.level);
+		resizeFloor(f, Vec2i(w, h));
+		rectReplace(f, Vec2i(1), Vec2i(w, h) - 1, TileEnum::Outside, TileEnum::Empty);
+		findOutlineWalls(f);
+		placeSpawnAndStairs(f);
+		placeMonsters(f, 0);
+	}
+
 	void generateMazeFloor(Floor &f)
 	{
 		auto [w, h] = defaultFloorSize(f.level);
@@ -567,8 +581,16 @@ namespace
 
 		placeSpawnAndStairs(f);
 
+		// random chest
+		if (f.level > 15 && randomChance() < 0.5)
+		{
+			const Vec2i p = findAny(f, TileEnum::Empty);
+			f.tile(p) = TileEnum::Chest;
+			f.extra(p).push_back(generateChest(Generate(f.level, f.level / 20)));
+		}
+
 		// place waypoint
-		if (f.level > 10 && randomChance() < 0.05)
+		if (f.level > 25 && randomChance() < 0.05)
 		{
 			const Vec2i a = findAny(f, TileEnum::Empty);
 			uint32 neighs = 0;
@@ -606,14 +628,6 @@ namespace
 			f.extra(p).push_back(std::move(mr));
 		}
 
-		// random chest
-		if (f.level > 15 && randomChance() < 0.5)
-		{
-			const Vec2i p = findAny(f, TileEnum::Empty);
-			f.tile(p) = TileEnum::Chest;
-			f.extra(p).push_back(generateChest(Generate(f.level, f.level / 20)));
-		}
-
 		placeMonsters(f, 0);
 	}
 }
@@ -626,10 +640,10 @@ Floor generateFloor(uint32 level, uint32 maxLevel)
 	f.level = level;
 	if (level == 0)
 		generateShopFloor(f, maxLevel);
-	else if (level < 4)
-		generateSimpleRoomFloor(f);
 	else if (isLevelBoss(level))
 		generateBossFloor(f);
+	else if (level < 4 || (level > 30 && randomChance() < 0.03))
+		generateSingleRoomFloor(f);
 	else if (level > 20 && randomChance() < 0.03)
 		generateMazeFloor(f);
 	else if (level > 10 && randomChance() < 0.03)

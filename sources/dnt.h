@@ -98,6 +98,13 @@ struct SkillCost
 
 using SkillAttributesEffects = std::map<AttributeEnum, AttributesValueMappingFloat>;
 
+constexpr const char *Alone = "\"alone\""; // requires that the caster is alone (no other creature (player or monster) are visible in 15 range)
+constexpr const char *LineOfSight = "\"lineOfSight\""; // requires the target position is visible from the caster position
+constexpr const char *Moves = "\"moves\""; // moves the caster to the target position, or the target to the caster position
+constexpr const char *Knockback = "\"knockback\""; // moves the caster/target one tile away from the other
+constexpr const char *Stun = "\"stun\""; // prevents the caster/target from performing any actions for one tick, and grants immunity to stun for the following tick
+constexpr const char *GroundEffect = "\"groundEffect\""; // creates ground effect at caster/target position, which applies the effects of the skill
+
 struct Skill : public Thing
 {
 	String name = "unnamed skill";
@@ -223,18 +230,20 @@ struct FloorExport
 
 struct Generate
 {
-	Real magic = Real::Nan(); // 0 = warrior, 1 = sorcerer
-	Real ranged = Real::Nan(); // 0 = melee, 1 = ranged
-	Real support = Real::Nan(); // 0 = combat, 1 = support
 	uint32 level = 0;
-	sint32 difficultyOffset = 0;
+	uint32 power = 0;
 	SlotEnum slot = SlotEnum::None;
 
+	Real magic = Real::Nan(); // 0 = warrior, 1 = sorcerer
+	Real ranged = Real::Nan(); // 0 = melee, 1 = ranged
+	Real defensive = Real::Nan(); // 0 = offensive, 1 = defensive
+	Real support = Real::Nan(); // 0 = combat, 1 = support
+
 	Generate() = default;
-	explicit Generate(uint32 level, sint32 difficultyOffset = 0);
-	explicit Generate(SlotEnum slot, uint32 level, sint32 difficultyOffset = 0);
+	explicit Generate(uint32 level, sint32 powerOffset = 0, SlotEnum slot = SlotEnum::None);
 	void randomize();
-	uint32 ll() const;
+	bool valid() const;
+	sint32 powerOffset() const;
 };
 
 void removeLastComma(std::string &json);
