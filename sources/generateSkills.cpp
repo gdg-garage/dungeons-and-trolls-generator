@@ -2,7 +2,7 @@
 
 Skill generateSkill(const Generate &generate)
 {
-	CAGE_ASSERT(valid(generate.magic) && valid(generate.ranged) && valid(generate.support));
+	generate.valid();
 
 	Skill sk;
 
@@ -12,9 +12,9 @@ Skill generateSkill(const Generate &generate)
 		sk.target = SkillTargetEnum::Position;
 
 	if (randomChance() < 0.6)
-		sk.cost.stamina = randomRange(2, 5);
+		sk.cost[AttributeEnum::Stamina] = randomRange(2, 5);
 	if (randomChance() < 0.4)
-		sk.cost.mana = randomRange(2, 5);
+		sk.cost[AttributeEnum::Mana] = randomRange(2, 5);
 
 	if (randomChance() < 0.8)
 		sk.range[AttributeEnum::Scalar] = randomRange(20, 100);
@@ -41,9 +41,9 @@ Skill generateSkill(const Generate &generate)
 	else if (randomChance() < 0.5)
 		sk.damageType = DamageTypeEnum::Fire;
 
-	const auto &sae = []() -> SkillAttributesEffects
+	const auto &sae = []() -> SkillAttributes
 	{
-		SkillAttributesEffects r;
+		SkillAttributes r;
 		auto &k = r[AttributeEnum(randomRange(0u, (uint32)AttributeEnum::Scalar))];
 		if (randomChance() < 0.4)
 			k[AttributeEnum(randomRange(0, 5))] = randomRange(20, 50);
@@ -76,7 +76,7 @@ Skill generateSkill(const Generate &generate)
 		std::string json;
 		json += "{\n";
 		json += "\"class\":\"summon\",\n";
-		json += "\"data\":" + exportMonster(generateMonster(Generate(generate.level))) + "\n";
+		json += "\"data\":" + exportMonster(generateMonster(Generate(generate.level, generate.powerOffset()))) + "\n";
 		json += "}";
 		sk.targetFlags.push_back(std::move(json));
 	}

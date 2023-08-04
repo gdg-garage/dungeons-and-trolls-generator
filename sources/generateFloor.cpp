@@ -276,11 +276,11 @@ namespace
 				switch (randomRange(0u, 4u))
 				{
 					case 0:
-						gen = Generate(randomRange(1u, maxLevel)); // default
+						gen = Generate(randomRange(1u, maxLevel), 0); // default
 						break;
 					case 1:
 					case 2:
-						gen = Generate(randomRange(max(maxLevel * 3 / 4, 1u), maxLevel)); // stronger than default
+						gen = Generate(randomRange(max(maxLevel * 3 / 4, 1u), maxLevel), 0); // stronger than default
 						break;
 					case 3:
 						gen = Generate(maxLevel, -randomRange(0u, maxLevel)); // any features, but possibly weak

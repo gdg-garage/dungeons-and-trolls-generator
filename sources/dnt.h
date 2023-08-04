@@ -68,9 +68,6 @@ enum class AttributeEnum : uint8
 	Scalar,
 };
 
-using AttributesValueMappingInt = std::map<AttributeEnum, sint32>;
-using AttributesValueMappingFloat = std::map<AttributeEnum, Real>;
-
 enum class DamageTypeEnum : uint8
 {
 	None,
@@ -89,14 +86,9 @@ enum class SkillTargetEnum : uint8
 	Item,
 };
 
-struct SkillCost
-{
-	uint32 life = 0;
-	uint32 mana = 0;
-	uint32 stamina = 0;
-};
-
-using SkillAttributesEffects = std::map<AttributeEnum, AttributesValueMappingFloat>;
+using AttributesValuesList = std::map<AttributeEnum, sint32>;
+using AttributesEquationFactors = std::map<AttributeEnum, Real>;
+using SkillAttributes = std::map<AttributeEnum, AttributesEquationFactors>;
 
 constexpr const char *Alone = "\"alone\""; // requires that the caster is alone (no other creature (player or monster) are visible in 15 range)
 constexpr const char *LineOfSight = "\"lineOfSight\""; // requires the target position is visible from the caster position
@@ -104,16 +96,17 @@ constexpr const char *Moves = "\"moves\""; // moves the caster to the target pos
 constexpr const char *Knockback = "\"knockback\""; // moves the caster/target one tile away from the other
 constexpr const char *Stun = "\"stun\""; // prevents the caster/target from performing any actions for one tick, and grants immunity to stun for the following tick
 constexpr const char *GroundEffect = "\"groundEffect\""; // creates ground effect at caster/target position, which applies the effects of the skill
+constexpr const char *Passive = "\"passive\""; // the effects of the skill are automatically applied every tick, assuming the cost can be paid; multiple passive skills are allowed
 
 struct Skill : public Thing
 {
 	String name = "unnamed skill";
 	detail::StringBase<30> icon = "skill";
 	SkillTargetEnum target = SkillTargetEnum::None;
-	SkillCost cost;
-	AttributesValueMappingFloat range, radius, duration, damageAmount;
+	AttributesValuesList cost;
+	AttributesEquationFactors range, radius, duration, damageAmount;
 	DamageTypeEnum damageType = DamageTypeEnum::None;
-	SkillAttributesEffects casterAttributes, targetAttributes;
+	SkillAttributes casterAttributes, targetAttributes;
 	std::vector<std::string> casterFlags, targetFlags;
 };
 
@@ -133,8 +126,8 @@ struct Item : public Thing
 	String name = "unnamed item";
 	detail::StringBase<30> icon = "item";
 	SlotEnum slot = SlotEnum::None;
-	AttributesValueMappingInt requirements;
-	AttributesValueMappingInt attributes;
+	AttributesValuesList requirements;
+	AttributesValuesList attributes;
 	std::vector<Skill> skills;
 	std::vector<std::string> flags;
 	uint32 buyPrice = 0;
@@ -146,7 +139,7 @@ struct Monster : public Thing
 	detail::StringBase<30> icon = "monster";
 	detail::StringBase<30> algorithm = "default";
 	detail::StringBase<30> faction = "monster";
-	AttributesValueMappingInt attributes;
+	AttributesValuesList attributes;
 	std::vector<Item> equippedItems;
 	std::vector<Variant> onDeath;
 	uint32 score = 0;
@@ -240,7 +233,7 @@ struct Generate
 	Real support = Real::Nan(); // 0 = combat, 1 = support
 
 	Generate() = default;
-	explicit Generate(uint32 level, sint32 powerOffset = 0, SlotEnum slot = SlotEnum::None);
+	explicit Generate(uint32 level, sint32 powerOffset, SlotEnum slot = SlotEnum::None);
 	void randomize();
 	bool valid() const;
 	sint32 powerOffset() const;

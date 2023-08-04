@@ -14,7 +14,7 @@ namespace
 		{
 			Skill sk;
 			sk.goldCost = randomRange(3, 5);
-			sk.cost.stamina = randomRange(5, 10);
+			sk.cost[AttributeEnum::Stamina] = randomRange(5, 10);
 			sk.damageAmount[AttributeEnum::Strength] = sk.addPower(2, AffixEnum::Prefix, "Strong") + 0.5;
 			sk.damageAmount[AttributeEnum::Scalar] = interpolate(1u, generate.power, sk.addPower(1, AffixEnum::Prefix, "Powerful"));
 			sk.damageType = DamageTypeEnum::Slash;
@@ -43,7 +43,7 @@ namespace
 		{
 			Skill sk;
 			sk.goldCost = randomRange(3, 5);
-			sk.cost.stamina = randomRange(8, 13);
+			sk.cost[AttributeEnum::Stamina] = randomRange(8, 13);
 			sk.damageAmount[AttributeEnum::Dexterity] = sk.addPower(2, AffixEnum::Prefix, "Swift") + 0.5;
 			sk.damageAmount[AttributeEnum::Scalar] = interpolate(1u, generate.power, sk.addPower(1, AffixEnum::Prefix, "Powerful"));
 			sk.damageType = DamageTypeEnum::Piercing;
@@ -78,7 +78,7 @@ namespace
 		{
 			Skill sk;
 			sk.goldCost = randomRange(3, 5);
-			sk.cost.stamina = randomRange(1, 6);
+			sk.cost[AttributeEnum::Stamina] = randomRange(1, 6);
 			sk.range[AttributeEnum::Scalar] = 1;
 			sk.target = SkillTargetEnum::Character;
 			sk.casterFlags.push_back(LineOfSight);
@@ -224,7 +224,7 @@ namespace
 		{
 			Skill sk;
 			sk.goldCost = randomRange(3, 5);
-			sk.cost.stamina = randomRange(2, 4);
+			sk.cost[AttributeEnum::Stamina] = randomRange(2, 4);
 			sk.range[AttributeEnum::Strength] = sk.addPower(0.5) * 0.1;
 			sk.range[AttributeEnum::Scalar] = 2;
 			sk.target = SkillTargetEnum::Position;
@@ -238,7 +238,7 @@ namespace
 		{
 			Skill sk;
 			sk.goldCost = randomRange(3, 5);
-			sk.cost.stamina = randomRange(3, 6);
+			sk.cost[AttributeEnum::Stamina] = randomRange(3, 6);
 			sk.range[AttributeEnum::Constitution] = sk.addPower(0.5) * 0.1;
 			sk.range[AttributeEnum::Scalar] = 3;
 			sk.target = SkillTargetEnum::Position;

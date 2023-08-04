@@ -279,7 +279,7 @@ void exportExamples(uint32 maxLevel)
 		Holder<File> json = writeFile("items.json");
 		for (uint32 i = 1; i < maxLevel; i++)
 		{
-			json->write(exportItem(generateItem(Generate(i))));
+			json->write(exportItem(generateItem(Generate(i, 0))));
 			json->writeLine("");
 			json->writeLine("");
 		}
@@ -289,7 +289,7 @@ void exportExamples(uint32 maxLevel)
 		Holder<File> json = writeFile("monsters.json");
 		for (uint32 i = 1; i < maxLevel; i++)
 		{
-			json->write(exportMonster(generateMonster(Generate(i))));
+			json->write(exportMonster(generateMonster(Generate(i, 0))));
 			json->writeLine("");
 			json->writeLine("");
 		}

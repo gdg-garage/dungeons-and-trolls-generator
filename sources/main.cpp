@@ -12,7 +12,7 @@ namespace
 
 	void generateAll()
 	{
-		constexpr uint32 maxLevel = 30;
+		constexpr uint32 maxLevel = 20;
 		std::vector<Floor> floors;
 		floors.reserve(maxLevel);
 		for (uint32 l = 0; l <= maxLevel; l++)

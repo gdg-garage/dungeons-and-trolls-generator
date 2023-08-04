@@ -59,7 +59,7 @@ namespace
 	}
 
 	template<class AttributesValueMapping>
-	requires(std::is_same_v<AttributesValueMapping, AttributesValueMappingInt> || std::is_same_v<AttributesValueMapping, AttributesValueMappingFloat>)
+	requires(std::is_same_v<AttributesValueMapping, AttributesValuesList> || std::is_same_v<AttributesValueMapping, AttributesEquationFactors>)
 	std::string attributesValueMappingJson(const AttributesValueMapping &attributesValues)
 	{
 		std::string r;
@@ -111,20 +111,7 @@ namespace
 		}
 	}
 
-	std::string skillCostJson(const SkillCost &cost)
-	{
-		std::string r;
-		if (cost.life != 0)
-			r += (Stringizer() + "\"life\":" + cost.life + ",").value.c_str();
-		if (cost.mana != 0)
-			r += (Stringizer() + "\"mana\":" + cost.mana + ",").value.c_str();
-		if (cost.stamina != 0)
-			r += (Stringizer() + "\"stamina\":" + cost.stamina + ",").value.c_str();
-		removeLastComma(r);
-		return "{" + r + "}";
-	}
-
-	std::string skillAttributesEffectsJson(const SkillAttributesEffects &effects)
+	std::string skillAttributesJson(const SkillAttributes &effects)
 	{
 		std::string r;
 		for (const auto &it : effects)
@@ -189,14 +176,14 @@ std::string exportSkill(const Skill &skill)
 	json += std::string() + "\"name\":\"" + skill.name.c_str() + "\",\n";
 	json += std::string() + "\"icon\":\"" + skill.icon.c_str() + "\",\n";
 	json += std::string() + "\"target\":\"" + skillTargetName(skill.target) + "\",\n";
-	json += std::string() + "\"cost\":" + skillCostJson(skill.cost) + ",\n";
+	json += std::string() + "\"cost\":" + attributesValueMappingJson(skill.cost) + ",\n";
 	json += std::string() + "\"range\":" + attributesValueMappingJson(skill.range) + ",\n";
 	json += std::string() + "\"radius\":" + attributesValueMappingJson(skill.radius) + ",\n";
 	json += std::string() + "\"duration\":" + attributesValueMappingJson(skill.duration) + ",\n";
 	json += std::string() + "\"damageAmount\":" + attributesValueMappingJson(skill.damageAmount) + ",\n";
 	json += std::string() + "\"damageType\":\"" + damageTypeName(skill.damageType) + "\",\n";
-	json += std::string() + "\"casterAttributes\":" + skillAttributesEffectsJson(skill.casterAttributes) + ",\n";
-	json += std::string() + "\"targetAttributes\":" + skillAttributesEffectsJson(skill.targetAttributes) + ",\n";
+	json += std::string() + "\"casterAttributes\":" + skillAttributesJson(skill.casterAttributes) + ",\n";
+	json += std::string() + "\"targetAttributes\":" + skillAttributesJson(skill.targetAttributes) + ",\n";
 
 	json += "\"casterFlags\":[\n";
 	for (const std::string &flag : skill.casterFlags)
