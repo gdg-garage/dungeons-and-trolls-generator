@@ -256,8 +256,7 @@ std::string exportSkill(const Skill &skill);
 std::string exportItem(const Item &item);
 std::string exportMonster(const Monster &monster);
 FloorExport exportFloor(const Floor &floor);
-void exportDungeon(PointerRange<const Floor> floors);
-void exportExamples(uint32 maxLevel);
+void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, const String &htmlPath);
 
 template<class... T>
 constexpr bool always_false = false;

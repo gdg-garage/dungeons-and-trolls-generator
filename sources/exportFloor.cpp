@@ -214,9 +214,9 @@ FloorExport exportFloor(const Floor &floor)
 	return result;
 }
 
-void exportDungeon(PointerRange<const Floor> floors)
+void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, const String &htmlPath)
 {
-	Holder<File> html = writeFile("dungeon.html");
+	Holder<File> html = htmlPath.empty() ? newFileBuffer() : writeFile(htmlPath);
 	html->writeLine("<!DOCTYPE html>");
 	html->writeLine("<html>");
 	html->writeLine("<head>");
@@ -224,7 +224,7 @@ void exportDungeon(PointerRange<const Floor> floors)
 	html->writeLine("</head>");
 	html->writeLine("<body>");
 
-	Holder<File> json = writeFile("dungeon.json");
+	Holder<File> json = jsonPath.empty() ? newFileBuffer() : writeFile(jsonPath);
 	json->writeLine("{");
 	json->writeLine("\"floors\":[");
 
@@ -271,28 +271,4 @@ document.body.addEventListener("click", function(event) {
 	json->writeLine("]"); // /floors
 	json->writeLine("}"); // /root
 	json->close();
-}
-
-void exportExamples(uint32 maxLevel)
-{
-	{ // items
-		Holder<File> json = writeFile("items.json");
-		for (uint32 i = 1; i < maxLevel; i++)
-		{
-			json->write(exportItem(generateItem(Generate(i, 0))));
-			json->writeLine("");
-			json->writeLine("");
-		}
-		json->close();
-	}
-	{ // monsters
-		Holder<File> json = writeFile("monsters.json");
-		for (uint32 i = 1; i < maxLevel; i++)
-		{
-			json->write(exportMonster(generateMonster(Generate(i, 0))));
-			json->writeLine("");
-			json->writeLine("");
-		}
-		json->close();
-	}
 }

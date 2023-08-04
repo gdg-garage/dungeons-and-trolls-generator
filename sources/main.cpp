@@ -1,26 +1,7 @@
 #include "dnt.h"
+#include <cage-core/ini.h>
 #include <cage-core/logger.h>
 #include <cage-core/string.h>
-
-namespace
-{
-	void generateSingle(uint32 level, uint32 maxLevel)
-	{
-		const Floor f = generateFloor(level, maxLevel);
-		exportDungeon(PointerRange(&f, &f + 1));
-	}
-
-	void generateAll()
-	{
-		constexpr uint32 maxLevel = 20;
-		std::vector<Floor> floors;
-		floors.reserve(maxLevel);
-		for (uint32 l = 0; l <= maxLevel; l++)
-			floors.push_back(generateFloor(l, maxLevel));
-		exportDungeon(floors);
-		exportExamples(maxLevel);
-	}
-}
 
 int main(int argc, const char *args[])
 {
@@ -29,20 +10,28 @@ int main(int argc, const char *args[])
 	log1->output.bind<logOutputStdOut>();
 	try
 	{
-		if (argc == 3)
+		Holder<Ini> cmd = newIni();
+		cmd->parseCmd(argc, args);
+		const uint32 s = cmd->cmdUint32('s', "start", 0);
+		const uint32 e = cmd->cmdUint32('e', "end", s);
+		const uint32 m = cmd->cmdUint32('m', "max", e);
+		const String j = cmd->cmdString('j', "json", "dungeon.json");
+		const String h = cmd->cmdString('h', "html", "dungeon.html");
+		if (cmd->cmdBool('?', "help", false))
 		{
-			const uint32 l = toUint32(String(args[1]));
-			const uint32 t = toUint32(String(args[2]));
-			generateSingle(l, t);
+			cmd->logHelp();
+			return 0;
 		}
-		else if (argc == 1)
-		{
-			generateAll();
-		}
-		else
-		{
-			CAGE_THROW_ERROR(Exception, "invalid number of cmd parameters");
-		}
+		cmd->checkUnusedWithHelp();
+
+		if (e < s || m < e || m == 0)
+			CAGE_THROW_ERROR(Exception, "invalid input range parameters");
+
+		std::vector<Floor> floors;
+		floors.reserve(m);
+		for (uint32 l = s; l <= e; l++)
+			floors.push_back(generateFloor(l, m));
+		exportDungeon(floors, j, h);
 		return 0;
 	}
 	catch (...)
