@@ -59,7 +59,8 @@ namespace
 	{
 		Monster mr = generateRandomMonster(generate);
 		mr.name = "Undead";
-		mr.faction = "undead";
+		mr.icon = "undead";
+		mr.faction = "hell";
 		return mr;
 	}
 
@@ -67,7 +68,8 @@ namespace
 	{
 		Monster mr = generateRandomMonster(generate);
 		mr.name = "Demon";
-		mr.faction = "demon";
+		mr.icon = "demon";
+		mr.faction = "hell";
 		return mr;
 	}
 
@@ -75,6 +77,7 @@ namespace
 	{
 		Monster mr = generateRandomMonster(generate);
 		mr.name = "Bandit";
+		mr.icon = "bandit";
 		mr.faction = "bandit";
 		return mr;
 	}

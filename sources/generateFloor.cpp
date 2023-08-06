@@ -131,13 +131,16 @@ namespace
 		return cnt;
 	}
 
+	// verify that all walkable areas are connected together
 	bool isConnected(const Floor &f_)
 	{
-		CAGE_ASSERT(countCells(f_, TileEnum::Placeholder) == 0);
 		Floor f;
 		f.width = f_.width;
 		f.height = f_.height;
 		f.tiles = f_.tiles;
+		for (TileEnum &t : f.tiles)
+			if (occupancy(t) != OccupancyEnum::Block)
+				t = TileEnum::Empty;
 		seedReplace(f, findAny(f, TileEnum::Empty), TileEnum::Empty, TileEnum::Placeholder);
 		return countCells(f, TileEnum::Empty) == 0;
 	}
@@ -181,7 +184,6 @@ namespace
 					c = TileEnum::Wall;
 			}
 		}
-		CAGE_ASSERT(isConnected(f));
 	}
 
 	void cutoutFloor(Floor &f)
@@ -302,6 +304,7 @@ namespace
 				else if (isDecoration(x, y))
 				{
 					f.tile(x, y) = TileEnum::Decoration;
+					f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"pedestal\"}");
 					makeShopItems(f.extra(x, y));
 				}
 				else
@@ -327,7 +330,7 @@ namespace
 		uint32 h = r + 4;
 		resizeFloor(f, Vec2i(w, h));
 
-		const auto &dist = [&](Vec2i p) -> Real { return distance(Vec2(p[0], p[1] * 2), Vec2(w / 2)); };
+		const auto &dist = [=](Vec2i p) -> Real { return distance(Vec2(p[0], p[1] * 2), Vec2(w / 2)); };
 
 		// generate circular room
 		for (uint32 y = 0; y < h; y++)
@@ -386,9 +389,9 @@ namespace
 
 		f.tile(w / 2, 1) = TileEnum::Spawn;
 
-		f.tile(w / 2 - 1, h - 3) = TileEnum::Wall;
+		//f.tile(w / 2 - 1, h - 3) = TileEnum::Wall; // assume 4-neighborhood
 		f.tile(w / 2, h - 3) = TileEnum::Door;
-		f.tile(w / 2 + 1, h - 3) = TileEnum::Wall;
+		//f.tile(w / 2 + 1, h - 3) = TileEnum::Wall;
 		f.tile(w / 2, h - 2) = TileEnum::Stairs;
 
 		f.tile(3, h / 2) = TileEnum::Door;
@@ -440,6 +443,7 @@ namespace
 			Monster mr = generateMonster(Generate(f.level, f.level / 5));
 			mr.name = Stringizer() + "Guardian of " + f.level + "th floor";
 			mr.icon = "boss";
+			mr.algorithm = "boss";
 			mr.onDeath.push_back(generateKeyToAllDoors());
 			return mr;
 		};
@@ -454,6 +458,40 @@ namespace
 		const auto [w, h] = defaultFloorSize(f.level);
 		resizeFloor(f, Vec2i(w, h));
 		rectReplace(f, Vec2i(1), Vec2i(w, h) - 1, TileEnum::Outside, TileEnum::Empty);
+
+		// random pillars
+		if (w > 20 && h > 10)
+		{
+			const uint32 cnt = randomRange(5u, 15u);
+			for (uint32 i = 0; i < cnt; i++)
+			{
+				const uint32 x = randomRange(3u, w - 3);
+				const uint32 y = randomRange(3u, h - 3);
+				const Vec2i p = Vec2i(x, y);
+				const Vec2i ps[9] = {
+					p + Vec2i(-1, -1),
+					p + Vec2i(-1, +0),
+					p + Vec2i(-1, +1),
+					p + Vec2i(+0, -1),
+					p + Vec2i(+0, +0),
+					p + Vec2i(+0, +1),
+					p + Vec2i(+1, -1),
+					p + Vec2i(+1, +0),
+					p + Vec2i(+1, +1),
+				};
+				{
+					bool bad = false;
+					for (Vec2i k : ps)
+						if (f.tile(k) != TileEnum::Empty)
+							bad = true;
+					if (bad)
+						continue;
+				}
+				for (Vec2i k : ps)
+					f.tile(k) = TileEnum::Outside;
+			}
+		}
+
 		findOutlineWalls(f);
 		placeSpawnAndStairs(f);
 		placeMonsters(f, 0);
@@ -558,8 +596,66 @@ namespace
 			rectReplace(f, a, b, TileEnum::Empty, TileEnum::Outside);
 		}
 
+		// occultist
+		if (f.level > 60 && randomChance() < 0.05)
+		{
+			const uint32 r = randomRange(6u, 10u);
+			CAGE_ASSERT(r * 2 + 6 < w && r * 2 + 6 < h);
+			const Vec2i c = Vec2i(randomRange(r + 3, w - r - 4), randomRange(r + 3, h - r - 4));
+			const Vec2i a = Vec2i(c - r - 3);
+			const Vec2i b = Vec2i(c + r + 3);
+
+			// generate circular room
+			const auto &dist = [=](Vec2i p) -> Real { return distance(Vec2(p), Vec2(c)); };
+			for (uint32 y = a[1]; y < b[1]; y++)
+			{
+				for (uint32 x = a[0]; x < b[0]; x++)
+				{
+					const Vec2i p = Vec2i(x, y);
+					const Real d = dist(p);
+					if (d > r)
+						f.tile(x, y) = TileEnum::Outside;
+					else if (d > r - 1)
+					{
+						f.tile(x, y) = TileEnum::Decoration;
+						f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"rune\"}");
+					}
+					else
+						f.tile(x, y) = TileEnum::Empty;
+				}
+			}
+
+			// cauldron
+			f.tile(c) = TileEnum::Decoration;
+			f.extra(c).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"cauldron\"}");
+
+			// occultists
+			for (uint32 i = 0; i < 4; i++)
+			{
+				Generate g = Generate(f.level, f.level / 10);
+				g.magic = 1;
+				g.ranged = 1;
+				g.defensive = 0;
+				g.support = 0;
+				Monster mr = generateMonster(g);
+				mr.name = "Occultist";
+				mr.icon = "occultist";
+				mr.algorithm = "occultist";
+				const Vec2i ps[4] = {
+					c + Vec2i(0, -1),
+					c + Vec2i(0, +1),
+					c + Vec2i(-1, 0),
+					c + Vec2i(+1, 0),
+				};
+				Vec2i p = ps[i];
+				f.tile(p) = TileEnum::Monster;
+				f.extra(p).push_back(std::move(mr));
+			}
+		}
+
 		{ // corridors
-			static constexpr TileEnum tmp = TileEnum::Monster;
+			static constexpr TileEnum tmp = TileEnum::Placeholder;
+			CAGE_ASSERT(countCells(f, tmp) == 0);
 			seedReplace(f, findAny(f, TileEnum::Empty), TileEnum::Empty, tmp);
 			while (countCells(f, TileEnum::Empty) > 0)
 			{
@@ -581,6 +677,45 @@ namespace
 
 		placeSpawnAndStairs(f);
 
+		// highlight path
+		/*
+		if (f.level > 30 && randomChance() < 0.05)
+		{
+			pathReplace(f, findAny(f, TileEnum::Spawn), findAny(f, TileEnum::Stairs), TileEnum::Empty, TileEnum::Decoration);
+		}
+		*/
+
+		// the butcher
+		if (f.level > 40 && randomChance() < 0.05)
+		{
+			Generate g = Generate(f.level, f.level / 3);
+			g.magic = 0;
+			g.ranged = 0;
+			g.defensive = 0;
+			g.support = 0;
+			Monster mr = generateMonster(g);
+			mr.name = "The Butcher";
+			mr.icon = "butcher";
+			mr.algorithm = "butcher";
+			const Vec2i p = findAny(f, TileEnum::Empty);
+			f.tile(p) = TileEnum::Monster;
+			f.extra(p).push_back(std::move(mr));
+			const Vec2i ps[4] = {
+				p + Vec2i(-1, -1),
+				p + Vec2i(-1, +1),
+				p + Vec2i(+1, -1),
+				p + Vec2i(+1, +1),
+			};
+			for (Vec2i i : ps)
+			{
+				if (f.tile(i) == TileEnum::Empty)
+				{
+					f.tile(i) = TileEnum::Decoration;
+					f.extra(i).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"blood\"}");
+				}
+			}
+		}
+
 		// random chest
 		if (f.level > 15 && randomChance() < 0.5)
 		{
@@ -590,7 +725,7 @@ namespace
 		}
 
 		// place waypoint
-		if (f.level > 25 && randomChance() < 0.05)
+		if (f.level > 25 && randomChance() < 0.1)
 		{
 			const Vec2i a = findAny(f, TileEnum::Empty);
 			uint32 neighs = 0;
@@ -612,22 +747,6 @@ namespace
 			}
 		}
 
-		// the butcher
-		if (f.level > 40 && randomChance() < 0.03)
-		{
-			Generate g = Generate(f.level, f.level / 3);
-			g.magic = 0;
-			g.ranged = 0;
-			g.support = 0;
-			Monster mr = generateMonster(g);
-			mr.name = "The Butcher";
-			mr.icon = "boss";
-			mr.algorithm = "butcher";
-			const Vec2i p = findAny(f, TileEnum::Empty);
-			f.tile(p) = TileEnum::Monster;
-			f.extra(p).push_back(std::move(mr));
-		}
-
 		placeMonsters(f, 0);
 	}
 }
@@ -642,15 +761,16 @@ Floor generateFloor(uint32 level, uint32 maxLevel)
 		generateShopFloor(f, maxLevel);
 	else if (isLevelBoss(level))
 		generateBossFloor(f);
-	else if (level < 4 || (level > 30 && randomChance() < 0.03))
+	else if (level < 4 || (level > 30 && randomChance() < 0.05))
 		generateSingleRoomFloor(f);
-	else if (level > 20 && randomChance() < 0.03)
+	else if (level > 20 && randomChance() < 0.05)
 		generateMazeFloor(f);
-	else if (level > 10 && randomChance() < 0.03)
+	else if (level > 10 && randomChance() < 0.05)
 		generateStripesFloor(f);
 	else
 		generateGenericFloor(f);
 	CAGE_ASSERT(countCells(f, TileEnum::Spawn) == 1);
 	CAGE_ASSERT(countCells(f, TileEnum::Stairs) == 1);
+	CAGE_ASSERT(isConnected(f));
 	return f;
 }

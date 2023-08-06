@@ -86,7 +86,7 @@ namespace
 			case TileEnum::Wall:
 				return connectedWall(f, x, y);
 			case TileEnum::Outside:
-				return "´";
+				return "~";
 			default:
 				return "?";
 		}
@@ -177,7 +177,7 @@ namespace
 		replaceAll(json, "\"", "&quot;");
 
 		std::string r;
-		r += "<span data-json=\"" + json + "\" style=\"cursor:help;\">";
+		r += "<span data-json=\"" + json + "\">";
 		r += tileAscii(f, x, y).c_str();
 		r += "</span>";
 		return r;
@@ -187,7 +187,7 @@ namespace
 FloorExport exportFloor(const Floor &floor)
 {
 	FloorExport result;
-	result.html += "<div><pre style=\"cursor:default;\">\n";
+	result.html += "<div class=\"floor\">\n";
 	result.json += "{\n";
 	result.json += (Stringizer() + "\"level\":" + floor.level + ",\n").value.c_str();
 	result.json += (Stringizer() + "\"width\":" + floor.width + ",\n").value.c_str();
@@ -210,7 +210,7 @@ FloorExport exportFloor(const Floor &floor)
 	removeLastComma(result.json);
 	result.json += "]\n"; // /tiles
 	result.json += "}\n"; // /root
-	result.html += "</pre></div>\n";
+	result.html += "</div>\n";
 	return result;
 }
 
@@ -221,6 +221,19 @@ void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, con
 	html->writeLine("<html>");
 	html->writeLine("<head>");
 	html->writeLine("<title>D&T dungeon</title>");
+	html->write(R"html(
+<style>
+.floor {
+	font-family: monospace;
+	white-space: pre;
+	cursor: default;
+	transform: translateX(50%) scaleX(2);
+}
+.floor span {
+	cursor: crosshair;
+}
+</style>
+)html");
 	html->writeLine("</head>");
 	html->writeLine("<body>");
 
