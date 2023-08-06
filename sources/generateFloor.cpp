@@ -315,11 +315,23 @@ namespace
 
 	void placeSpawnAndStairs(Floor &f)
 	{
-		const Vec2i a = findAny(f, TileEnum::Empty);
-		const Vec2i b = findFarthest(f, a, TileEnum::Empty);
-		const Vec2i c = findFarthest(f, b, TileEnum::Empty);
-		f.tile(b) = TileEnum::Spawn;
-		f.tile(c) = TileEnum::Stairs;
+		if (f.level > 15 && randomChance() < 0.3)
+		{
+			Vec2i a = findAny(f, TileEnum::Empty);
+			Vec2i b = findFarthest(f, a, TileEnum::Empty);
+			if (randomChance() < 0.5)
+				std::swap(a, b);
+			f.tile(a) = TileEnum::Stairs;
+			f.tile(b) = TileEnum::Spawn;
+		}
+		else
+		{
+			const Vec2i a = findAny(f, TileEnum::Empty);
+			const Vec2i b = findFarthest(f, a, TileEnum::Empty);
+			const Vec2i c = findFarthest(f, b, TileEnum::Empty);
+			f.tile(b) = TileEnum::Spawn;
+			f.tile(c) = TileEnum::Stairs;
+		}
 	}
 
 	void generateShopFloor(Floor &f, uint32 maxLevel)
@@ -449,9 +461,7 @@ namespace
 
 		f.tile(w / 2, 1) = TileEnum::Spawn;
 
-		//f.tile(w / 2 - 1, h - 3) = TileEnum::Wall; // assume 4-neighborhood
 		f.tile(w / 2, h - 3) = TileEnum::Door;
-		//f.tile(w / 2 + 1, h - 3) = TileEnum::Wall;
 		f.tile(w / 2, h - 2) = TileEnum::Stairs;
 
 		f.tile(3, h / 2) = TileEnum::Door;
@@ -502,7 +512,7 @@ namespace
 
 			Monster mr = generateMonster(Generate(f.level, f.level / 5));
 			mr.name = Stringizer() + "Guardian of " + f.level + "th floor";
-			mr.icon = "boss";
+			mr.icon = "guardian";
 			mr.algorithm = "boss";
 			mr.onDeath.push_back(generateKeyToAllDoors());
 			return mr;
@@ -655,12 +665,7 @@ namespace
 		w = f.width;
 		h = f.height;
 
-		{ // place stairs
-			const Vec2i a = findAny(f, TileEnum::Empty);
-			const Vec2i b = findFarthest(f, a, TileEnum::Empty);
-			f.tile(a) = TileEnum::Stairs;
-			f.tile(b) = TileEnum::Spawn;
-		}
+		placeSpawnAndStairs(f);
 
 		placeMonsters(f, 2);
 	}
@@ -718,7 +723,7 @@ namespace
 			rectReplace(f, a, b, TileEnum::Empty, TileEnum::Outside);
 		}
 
-		// occultist
+		// witches
 		if (f.level > 60 && randomChance() < 0.05)
 		{
 			const uint32 r = randomRange(6u, 10u);
@@ -760,9 +765,9 @@ namespace
 				g.defensive = 0;
 				g.support = 0;
 				Monster mr = generateMonster(g);
-				mr.name = "Occultist";
-				mr.icon = "occultist";
-				mr.algorithm = "occultist";
+				mr.name = "Witch";
+				mr.icon = "witch";
+				mr.algorithm = "boss";
 				const Vec2i ps[4] = {
 					c + Vec2i(0, -1),
 					c + Vec2i(0, +1),
@@ -806,8 +811,6 @@ namespace
 			const Vec2i a = findAny(f, TileEnum::Spawn);
 			const Vec2i b = findAny(f, TileEnum::Stairs);
 			shortestPathReplace(f, a, b, TileEnum::Empty, TileEnum::Placeholder);
-			f.tile(a) = TileEnum::Spawn;
-			f.tile(b) = TileEnum::Stairs;
 			for (uint32 i = 0; i < f.tiles.size(); i++)
 			{
 				if (f.tiles[i] == TileEnum::Placeholder)
@@ -829,7 +832,7 @@ namespace
 			Monster mr = generateMonster(g);
 			mr.name = "The Butcher";
 			mr.icon = "butcher";
-			mr.algorithm = "butcher";
+			mr.algorithm = "boss";
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
 			f.extra(p).push_back(std::move(mr));
@@ -850,7 +853,7 @@ namespace
 		}
 
 		// random chest
-		if (f.level > 15 && randomChance() < 0.5)
+		if (f.level > 15 && randomChance() < 0.4)
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Chest;
@@ -871,12 +874,28 @@ namespace
 					neighs += f.tile(b) == TileEnum::Empty;
 				}
 			}
-			if (neighs == 9)
+			if (neighs == 9) // make sure there is a path around the waypoint
 			{
 				CAGE_ASSERT(f.tile(a) == TileEnum::Empty);
 				CAGE_ASSERT(f.extra(a).empty());
 				f.tile(a) = TileEnum::Waypoint;
-				f.extra(a).push_back(std::string() + (Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + (randomChance() < 0.3 ? 0 : f.level / 2) + "}").value.c_str());
+				const auto &dest = [](uint32 level) -> uint32
+				{
+					switch (randomRange(0, 4))
+					{
+						case 0:
+							return 0;
+						case 1:
+							return randomRange(0u, level + 1);
+						case 2:
+							return bossIndexToLevel(level);
+						case 3:
+							return bossIndexToLevel(levelToBossIndex(level) + 1);
+						default:
+							CAGE_THROW_CRITICAL(Exception, "invalid value");
+					}
+				};
+				f.extra(a).push_back(std::string() + (Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + dest(f.level) + "}").value.c_str());
 			}
 		}
 

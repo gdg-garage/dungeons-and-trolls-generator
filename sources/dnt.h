@@ -244,10 +244,12 @@ OccupancyEnum occupancy(TileEnum tile);
 bool isLevelBoss(uint32 level);
 uint32 levelToBossIndex(uint32 level);
 uint32 bossIndexToLevel(uint32 index);
+Real isHellFloor(uint32 level);
 
 Skill generateSkill(const Generate &generate);
 Item generateItem(const Generate &generate);
-Monster generateMonster(const Generate &generate);
+Monster generateMonster(Generate generate);
+Monster generateMinion(const Generate &generate);
 Monster generateChest(const Generate &generate);
 Floor generateFloor(uint32 level, uint32 maxLevel);
 

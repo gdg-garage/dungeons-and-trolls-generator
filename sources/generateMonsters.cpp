@@ -46,58 +46,428 @@ namespace
 		if (randomChance() < 0.5)
 			mr.onDeath.push_back(generateItem(generate));
 		if (randomChance() < 0.1)
-			mr.onDeath.push_back(generateMonster(generate));
+			mr.onDeath.push_back(generateMinion(generate));
 		if (randomChance() < 0.1)
 			mr.onDeath.push_back(generateSkill(Generate(generate.level, generate.powerOffset(), SlotEnum::MainHand)));
 
-		mr.score = numeric_cast<uint32>(mr.goldCost);
-
 		return mr;
 	}
+}
 
-	Monster generateUndead(const Generate &generate)
+namespace
+{
+	// mundane melee offensive combat
+	// teeth, poison
+	// slashing armor, poison resist
+	Monster generateZombie(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Undead";
-		mr.icon = "undead";
+		mr.name = "Zombie";
+		mr.icon = "zombie";
 		mr.faction = "hell";
 		return mr;
 	}
 
-	Monster generateDemon(const Generate &generate)
+	// mundane ranged offensive combat
+	// bow, fire arrows
+	// piercing armor, poison resist
+	Monster generateSkeleton(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Demon";
-		mr.icon = "demon";
+		mr.name = "Skeleton";
+		mr.icon = "skeleton";
 		mr.faction = "hell";
 		return mr;
 	}
 
+	// mundane melee defensive combat
+	// mace + shield
+	// knockback stomp
+	Monster generateOgre(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Ogre";
+		mr.icon = "ogre";
+		mr.faction = "hell";
+		return mr;
+	}
+
+	// mundane ranged defensive combat
+	// speer
+	// regeneration
+	Monster generateTroll(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Troll";
+		mr.icon = "troll";
+		mr.faction = "hell";
+		return mr;
+	}
+
+	// mundane melee --- support
+	// teeth, lifeleech
+	// healing
+	Monster generateVampire(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Vampire";
+		mr.icon = "vampire";
+		mr.faction = "hell";
+		return mr;
+	}
+
+	// mundane ranged --- support
+	// bow
+	// aoe stun stare
+	Monster generateMedusa(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Medusa";
+		mr.icon = "medusa";
+		mr.faction = "hell";
+		return mr;
+	}
+
+	// magic melee offensive combat
+	// claws, poison, pull enemy
+	//
+	Monster generateSuccubus(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Succubus";
+		mr.icon = "succubus";
+		mr.faction = "hell";
+		return mr;
+	}
+
+	// magic ranged offensive combat
+	// fireballs
+	// fire resist
+	Monster generateImp(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Imp";
+		mr.icon = "imp";
+		mr.faction = "hell";
+		return mr;
+	}
+
+	// magic --- defensive combat
+	// electric shock
+	// slashing and piercing armor
+	Monster generateGhost(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Ghost";
+		mr.icon = "ghost";
+		mr.faction = "hell";
+		return mr;
+	}
+
+	// magic --- offensive support
+	// curses
+	// electric resist
+	Monster generateBanshee(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Banshee";
+		mr.icon = "banshee";
+		mr.faction = "hell";
+		return mr;
+	}
+
+	// magic --- defensive support
+	// buffs
+	// fire resist
+	Monster generateLich(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Lich";
+		mr.icon = "lich";
+		mr.faction = "hell";
+		return mr;
+	}
+
+	Monster generateHell(const Generate &generate)
+	{
+		if (generate.magic < 0.5)
+		{ // mundane
+			if (generate.support < 0.5)
+			{ // combat
+				if (generate.defensive < 0.5)
+				{ // offensive
+					if (generate.ranged < 0.5)
+					{ // melee
+						return generateZombie(generate);
+					}
+					else
+					{ // ranged
+						return generateSkeleton(generate);
+					}
+				}
+				else
+				{ // defensive
+					if (generate.ranged < 0.5)
+					{ // melee
+						return generateOgre(generate);
+					}
+					else
+					{ // ranged
+						return generateTroll(generate);
+					}
+				}
+			}
+			else
+			{ // support
+				if (generate.ranged < 0.5)
+				{ // melee
+					return generateVampire(generate);
+				}
+				else
+				{ // ranged
+					return generateMedusa(generate);
+				}
+			}
+		}
+		else
+		{ // magic
+			if (generate.support < 0.5)
+			{ // combat
+				if (generate.defensive < 0.5)
+				{ // offensive
+					if (generate.ranged < 0.5)
+					{ // melee
+						return generateSuccubus(generate);
+					}
+					else
+					{ // ranged
+						return generateImp(generate);
+					}
+				}
+				else
+				{ // defensive
+					return generateGhost(generate);
+				}
+			}
+			else
+			{ // support
+				if (generate.defensive < 0.5)
+				{ // offensive
+					return generateBanshee(generate);
+				}
+				else
+				{ // defensive
+					return generateLich(generate);
+				}
+			}
+		}
+	}
+}
+
+namespace
+{
+	// mundane melee offensive combat
+	Monster generateBarbarian(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Barbarian";
+		mr.icon = "barbarian";
+		mr.faction = "outlaw";
+		return mr;
+	}
+
+	// mundane ranged offensive combat
+	Monster generateAssassin(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Assassin";
+		mr.icon = "assassin";
+		mr.faction = "outlaw";
+		return mr;
+	}
+
+	// mundane --- defensive combat
 	Monster generateBandit(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
 		mr.name = "Bandit";
 		mr.icon = "bandit";
-		mr.faction = "bandit";
+		mr.faction = "outlaw";
 		return mr;
+	}
+
+	// mundane melee --- support
+	Monster generateRogue(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Rogue";
+		mr.icon = "rogue";
+		mr.faction = "outlaw";
+		return mr;
+	}
+
+	// mundane ranged --- support
+	Monster generateSaboteur(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Saboteur";
+		mr.icon = "saboteur";
+		mr.faction = "outlaw";
+		return mr;
+	}
+
+	// magic melee --- combat
+	Monster generateDruid(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Druid";
+		mr.icon = "druid";
+		mr.faction = "outlaw";
+		return mr;
+	}
+
+	// magic ranged offensive combat
+	Monster generateWarlock(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Warlock";
+		mr.icon = "warlock";
+		mr.faction = "outlaw";
+		return mr;
+	}
+
+	// magic ranged offensive support
+	Monster generateOccultist(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Occultist";
+		mr.icon = "occultist";
+		mr.faction = "outlaw";
+		return mr;
+	}
+
+	// magic ranged defensive support
+	Monster generateShaman(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Shaman";
+		mr.icon = "shaman";
+		mr.faction = "outlaw";
+		return mr;
+	}
+
+	// magic --- --- support
+	Monster generateNecromancer(const Generate &generate)
+	{
+		Monster mr = generateRandomMonster(generate);
+		mr.name = "Necromancer";
+		mr.icon = "necromancer";
+		mr.faction = "outlaw";
+		return mr;
+	}
+
+	Monster generateOutlaw(const Generate &generate)
+	{
+		if (generate.magic < 0.5)
+		{ // mundane
+			if (generate.support < 0.5)
+			{ // combat
+				if (generate.defensive < 0.5)
+				{ // offensive
+					if (generate.ranged < 0.5)
+					{ // melee
+						return generateBarbarian(generate);
+					}
+					else
+					{ // ranged
+						return generateAssassin(generate);
+					}
+				}
+				else
+				{ // defensive
+					return generateBandit(generate);
+				}
+			}
+			else
+			{ // support
+				if (generate.ranged < 0.5)
+				{ // melee
+					return generateRogue(generate);
+				}
+				else
+				{ // ranged
+					return generateSaboteur(generate);
+				}
+			}
+		}
+		else
+		{ // magic
+			if (generate.support < 0.5)
+			{ // combat
+				return generateWarlock(generate);
+			}
+			else
+			{ // support
+				if (randomChance() > 0.2)
+				{ // likely
+					if (generate.defensive < 0.5)
+					{ // offensive
+						return generateOccultist(generate);
+					}
+					else
+					{ // defensive
+						return generateShaman(generate);
+					}
+				}
+				else
+				{ // unlikely
+					return generateNecromancer(generate);
+				}
+			}
+		}
 	}
 }
 
-Monster generateMonster(const Generate &generate)
+Monster generateMonster(Generate generate)
 {
 	CAGE_ASSERT(generate.valid());
 	CAGE_ASSERT(generate.slot == SlotEnum::None);
 
-	// https://www.wolframalpha.com/input?i=plot+sin%28floor%28x%2B89%29+*+2+*+pi+*+0.029%29+-+sin%28floor%28x%2B69%29+*+2+*+pi+*+0.017%29+%3B+x+%3D+0+..+20
-	const Real hellish = cage::sin((generate.level + 89) * Rads::Full() * 0.029) - cage::sin((generate.level + 69) * Rads::Full() * 0.017) + (randomChance() - 0.5) * 0.2;
-	if (hellish > 0)
+	const auto generator = isHellFloor(generate.level) > 0.5 ? &generateHell : &generateOutlaw;
+
+	// 0 .. 39 -> 1 attempt
+	// 40 .. 59 -> 2 attempts
+	// 60 .. 79 -> 3 attempts
+	// 80 .. 99 -> 4 attempts
+	// 100 and more -> 5 attempts
+	const uint32 attempts = min(generate.power / 20, 5u);
+
+	// additional empower
+	// https://www.wolframalpha.com/input?i=plot+exp%28%28x+-+100%29+%2F+200%29%3B+x+%3D+100+..+1000
+	const Real empower = max(pow((Real(generate.power) - 100) / 200), 1);
+	generate.power = numeric_cast<uint32>(generate.power * empower);
+
+	// generate several monsters and pick the strongest
+	Monster mr = generator(generate);
+	for (uint32 i = 1; i < attempts; i++) // starting from one -> one attempt has already been generated above
 	{
-		if (generate.magic < 0.5)
-			return generateUndead(generate);
-		else
-			return generateDemon(generate);
+		Monster mr2 = generator(generate);
+		if (mr2.goldCost > mr.goldCost)
+			std::swap(mr, mr2);
 	}
-	return generateBandit(generate);
+
+	mr.score = numeric_cast<uint32>(mr.goldCost / empower);
+	return mr;
+}
+
+Monster generateMinion(const Generate &generate)
+{
+	CAGE_ASSERT(generate.valid());
+	CAGE_ASSERT(generate.slot == SlotEnum::None);
+	// no empower
+	// no rerolls
+	// no score
+	return isHellFloor(generate.level) > 0.5 ? generateHell(generate) : generateOutlaw(generate);
 }
 
 Monster generateChest(const Generate &generate)

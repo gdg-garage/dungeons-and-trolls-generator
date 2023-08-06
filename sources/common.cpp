@@ -155,6 +155,13 @@ uint32 bossIndexToLevel(uint32 index)
 	return index * (index + 1) / 2;
 }
 
+Real isHellFloor(uint32 level)
+{
+	// https://www.wolframalpha.com/input?i=plot+sin%28floor%28x%2B89%29+*+2+*+pi+*+0.029%29+-+sin%28floor%28x%2B69%29+*+2+*+pi+*+0.017%29+%3B+x+%3D+0+..+20
+	const Real hellish = cage::sin((level + 89) * Rads::Full() * 0.029) - cage::sin((level + 69) * Rads::Full() * 0.017) + (randomChance() - 0.5) * 0.2;
+	return hellish * 0.5 + 0.5;
+}
+
 namespace
 {
 	struct BossLevelTest

@@ -76,7 +76,7 @@ Skill generateSkill(const Generate &generate)
 		std::string json;
 		json += "{\n";
 		json += "\"class\":\"summon\",\n";
-		json += "\"data\":" + exportMonster(generateMonster(Generate(generate.level, generate.powerOffset()))) + "\n";
+		json += "\"data\":" + exportMonster(generateMinion(Generate(generate.level, generate.powerOffset()))) + "\n";
 		json += "}";
 		sk.targetFlags.push_back(std::move(json));
 	}
