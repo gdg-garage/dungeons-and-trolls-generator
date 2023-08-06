@@ -1,5 +1,16 @@
 #include "dnt.h"
 
+#include <unordered_map>
+
+namespace std
+{
+	template<>
+	struct hash<Vec2i>
+	{
+		std::size_t operator()(Vec2i x) const noexcept { return cage::hash(x[0]) ^ cage::hash(x[1]); }
+	};
+}
+
 namespace
 {
 	uint32 distance(Vec2i a, Vec2i b)
@@ -75,7 +86,8 @@ namespace
 		}
 	}
 
-	void pathReplace(Floor &f, Vec2i a, Vec2i b, TileEnum what, TileEnum with)
+	// makes path toward the goal irrespective of any tiles in the way
+	void directPathReplace(Floor &f, Vec2i a, Vec2i b, TileEnum what, TileEnum with)
 	{
 		const auto &move = [](sint32 a, sint32 b) -> sint32
 		{
@@ -100,6 +112,54 @@ namespace
 			}
 			else
 				a[1] = move(a[1], b[1]);
+		}
+	}
+
+	// finds shortest walkable path
+	void shortestPathReplace(Floor &f, Vec2i a, Vec2i b, TileEnum what, TileEnum with)
+	{
+		CAGE_ASSERT(occupancy(f.tile(a)) != OccupancyEnum::Block);
+		CAGE_ASSERT(occupancy(f.tile(b)) != OccupancyEnum::Block);
+		std::vector<Vec2i> open;
+		open.reserve(f.tiles.size());
+		open.push_back(a);
+		std::vector<bool> visited;
+		visited.resize(f.tiles.size(), false);
+		std::unordered_map<Vec2i, Vec2i> prev;
+		const auto &idx = [&](Vec2i i) -> uint32 { return i[1] * f.width + i[0]; };
+		while (!open.empty())
+		{
+			const Vec2i p = open[0];
+			open.erase(open.begin());
+			CAGE_ASSERT(occupancy(f.tile(p)) != OccupancyEnum::Block);
+			if (p == b)
+				break;
+			if (visited[idx(p)])
+				continue;
+			visited[idx(p)] = true;
+			const Vec2i ps[4] = {
+				p + Vec2i(0, -1),
+				p + Vec2i(0, +1),
+				p + Vec2i(-1, 0),
+				p + Vec2i(+1, 0),
+			};
+			for (Vec2i n : ps)
+			{
+				if (visited[idx(n)])
+					continue;
+				if (occupancy(f.tile(n)) == OccupancyEnum::Block)
+					continue;
+				if (prev.count(n) == 0)
+					prev[n] = p;
+				open.push_back(n);
+			}
+		}
+		CAGE_ASSERT(prev.count(b) == 1);
+		while (prev.count(b) == 1)
+		{
+			if (f.tile(b) == what)
+				f.tile(b) = with;
+			b = prev[b];
 		}
 	}
 
@@ -492,6 +552,51 @@ namespace
 			}
 		}
 
+		// floor is lava
+		if (f.level > 50)
+		{
+			uint32 x1 = randomRange(5u, w - 15);
+			uint32 x2 = x1 + randomRange(3u, 10u);
+			CAGE_ASSERT(x2 < w - 5);
+			for (uint32 y = 0; y < h; y++)
+			{
+				for (uint32 x = x1; x < x2; x++)
+				{
+					if (f.tile(x, y) != TileEnum::Empty)
+						continue;
+					f.tile(x, y) = TileEnum::Decoration;
+					f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"lava\"}");
+					Skill sk;
+					sk.name = "Lava";
+					sk.icon = "lava";
+					sk.damageType = DamageTypeEnum::Fire;
+					sk.damageAmount[AttributeEnum::Scalar] = randomRange(5u, 20u);
+					sk.duration[AttributeEnum::Scalar] = 1000000;
+					sk.casterFlags.push_back(GroundEffect);
+					f.extra(x, y).push_back(std::move(sk));
+				}
+				switch (randomRange(0u, 5u))
+				{
+					case 0:
+						if (x1 > 5)
+						{
+							x1--;
+							x2--;
+						}
+						break;
+					case 1:
+						if (x2 < w - 5)
+						{
+							x1++;
+							x2++;
+						}
+						break;
+					default:
+						break;
+				}
+			}
+		}
+
 		findOutlineWalls(f);
 		placeSpawnAndStairs(f);
 		placeMonsters(f, 0);
@@ -503,27 +608,44 @@ namespace
 		resizeFloor(f, Vec2i(w, h));
 
 		{ // carve out the maze
+			static constexpr Vec2i ns[4] = {
+				Vec2i(-1, 0),
+				Vec2i(+1, 0),
+				Vec2i(0, -1),
+				Vec2i(0, +1),
+			};
+
 			f.tile(w / 2, h / 2) = TileEnum::Empty;
-			while (countCells(f, TileEnum::Empty) < w * h * 9 / 20)
+			std::vector<Vec2i> open;
+			open.reserve(f.tiles.size());
+			open.push_back(Vec2i(w / 2 + 0, h / 2 + 1));
+			open.push_back(Vec2i(w / 2 + 1, h / 2 + 0));
+			open.push_back(Vec2i(w / 2 + 0, h / 2 - 1));
+			open.push_back(Vec2i(w / 2 - 1, h / 2 + 0));
+			while (!open.empty())
 			{
-				const Vec2i p = findAny(f, TileEnum::Empty);
-				if (p[0] < 2 || p[0] > w - 3 || p[1] < 2 || p[1] > h - 3)
+				const uint32 j = randomRange(std::size_t(0), open.size());
+				const Vec2i p = open[j];
+				open.erase(open.begin() + j);
+				if (f.tile(p) != TileEnum::Outside)
 					continue;
-				static constexpr Vec2i ns[4] = {
-					Vec2i(-1, 0),
-					Vec2i(+1, 0),
-					Vec2i(0, -1),
-					Vec2i(0, +1),
-				};
-				const Vec2i c = p + ns[randomRange(0, 4)];
-				if (f.tile(c) != TileEnum::Outside)
-					continue;
-				uint32 en = 0;
+				{
+					uint32 en = 0;
+					for (Vec2i n : ns)
+						en += f.tile(p + n) == TileEnum::Empty;
+					if (en != 1)
+						continue;
+				}
+				f.tile(p) = TileEnum::Empty;
 				for (Vec2i n : ns)
-					en += f.tile(c + n) == TileEnum::Empty;
-				if (en != 1)
-					continue;
-				f.tile(c) = TileEnum::Empty;
+				{
+					const Vec2i c = p + n;
+					if (c[0] < 2 || c[0] > w - 3 || c[1] < 2 || c[1] > h - 3)
+						continue;
+					if (f.tile(c) != TileEnum::Outside)
+						continue;
+					open.push_back(c);
+				}
 			}
 		}
 
@@ -662,7 +784,7 @@ namespace
 				const Vec2i a = findAny(f, TileEnum::Empty);
 				const Vec2i b = findNearest(f, a, tmp);
 				const Vec2i c = findNearest(f, b, TileEnum::Empty);
-				pathReplace(f, b, c, TileEnum::Outside, tmp);
+				directPathReplace(f, b, c, TileEnum::Outside, tmp);
 				f.tile(c) = TileEnum::Empty;
 				seedReplace(f, c, TileEnum::Empty, tmp);
 			}
@@ -678,12 +800,23 @@ namespace
 		placeSpawnAndStairs(f);
 
 		// highlight path
-		/*
 		if (f.level > 30 && randomChance() < 0.05)
 		{
-			pathReplace(f, findAny(f, TileEnum::Spawn), findAny(f, TileEnum::Stairs), TileEnum::Empty, TileEnum::Decoration);
+			CAGE_ASSERT(countCells(f, TileEnum::Placeholder) == 0);
+			const Vec2i a = findAny(f, TileEnum::Spawn);
+			const Vec2i b = findAny(f, TileEnum::Stairs);
+			shortestPathReplace(f, a, b, TileEnum::Empty, TileEnum::Placeholder);
+			f.tile(a) = TileEnum::Spawn;
+			f.tile(b) = TileEnum::Stairs;
+			for (uint32 i = 0; i < f.tiles.size(); i++)
+			{
+				if (f.tiles[i] == TileEnum::Placeholder)
+				{
+					f.tiles[i] = TileEnum::Decoration;
+					f.extras[i].push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"rope\"}");
+				}
+			}
 		}
-		*/
 
 		// the butcher
 		if (f.level > 40 && randomChance() < 0.05)

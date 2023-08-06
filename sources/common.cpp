@@ -1,7 +1,5 @@
 #include "dnt.h"
 
-#include <cmath>
-
 namespace
 {
 	Real skewedChance()
@@ -137,7 +135,7 @@ bool isLevelBoss(uint32 level)
 {
 	if (level < 6)
 		return false;
-	const uint32 k = std::sqrt(8 * level + 1);
+	const uint32 k = sqrt(8 * level + 1);
 	return k * k == 8 * level + 1;
 }
 
@@ -145,7 +143,7 @@ uint32 levelToBossIndex(uint32 level)
 {
 	if (level < 6)
 		return 0;
-	const uint32 k = std::sqrt(8 * level + 1);
+	const uint32 k = sqrt(8 * level + 1);
 	return (k - 1) / 2 - 2;
 }
 
