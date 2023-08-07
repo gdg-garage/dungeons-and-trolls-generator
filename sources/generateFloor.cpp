@@ -484,7 +484,6 @@ namespace
 			{
 				Item item;
 				item.name = "Key";
-				item.icon = "key";
 
 				std::vector<Vec2i> doors;
 				const uint32 cnt = f.width * f.height;
@@ -578,7 +577,6 @@ namespace
 					f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"lava\"}");
 					Skill sk;
 					sk.name = "Lava";
-					sk.icon = "lava";
 					sk.damageType = DamageTypeEnum::Fire;
 					sk.damageAmount[AttributeEnum::Scalar] = randomRange(5u, 20u);
 					sk.duration[AttributeEnum::Scalar] = 1000000;

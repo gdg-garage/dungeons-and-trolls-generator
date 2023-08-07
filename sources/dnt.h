@@ -101,7 +101,6 @@ constexpr const char *Passive = "\"passive\""; // the effects of the skill are a
 struct Skill : public Thing
 {
 	String name = "unnamed skill";
-	detail::StringBase<30> icon = "skill";
 	SkillTargetEnum target = SkillTargetEnum::None;
 	AttributesValuesList cost;
 	AttributesEquationFactors range, radius, duration, damageAmount;
@@ -124,7 +123,6 @@ enum class SlotEnum : uint8
 struct Item : public Thing
 {
 	String name = "unnamed item";
-	detail::StringBase<30> icon = "item";
 	SlotEnum slot = SlotEnum::None;
 	AttributesValuesList requirements;
 	AttributesValuesList attributes;

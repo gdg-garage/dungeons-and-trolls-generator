@@ -174,7 +174,6 @@ std::string exportSkill(const Skill &skill)
 	json += "{\n";
 	json += "\"class\":\"skill\",\n";
 	json += std::string() + "\"name\":\"" + skill.name.c_str() + "\",\n";
-	json += std::string() + "\"icon\":\"" + skill.icon.c_str() + "\",\n";
 	json += std::string() + "\"target\":\"" + skillTargetName(skill.target) + "\",\n";
 	json += std::string() + "\"cost\":" + attributesValueMappingJson(skill.cost) + ",\n";
 	json += std::string() + "\"range\":" + attributesValueMappingJson(skill.range) + ",\n";
@@ -212,7 +211,6 @@ std::string exportItem(const Item &item)
 	json += "{\n";
 	json += "\"class\":\"item\",\n";
 	json += std::string() + "\"name\":\"" + item.name.c_str() + "\",\n";
-	json += std::string() + "\"icon\":\"" + item.icon.c_str() + "\",\n";
 	json += std::string() + "\"slot\":\"" + slotName(item.slot) + "\",\n";
 	json += "\"requirements\":" + attributesValueMappingJson(item.requirements) + ",\n";
 	json += "\"attributes\":" + attributesValueMappingJson(item.attributes) + ",\n";

@@ -86,13 +86,15 @@ void Generate::randomize()
 {
 	const auto &gen = [this](uint32 minLevel, Real probability) -> Real
 	{
+		if (level < minLevel)
+			return 0;
 		const Real tg = randomChance() < probability ? 1 : 0;
-		return level > minLevel ? randomRange(min(0.5, tg), max(0.5, tg)) : 0;
+		return randomRange(min(0.5, tg), max(0.5, tg));
 	};
-	magic = gen(15, 0.3);
+	magic = gen(15, 0.35);
 	ranged = gen(6, 0.5);
-	defensive = gen(21, 0.3);
-	support = gen(28, 0.2);
+	defensive = gen(21, 0.25);
+	support = gen(28, 0.15);
 }
 
 bool Generate::valid() const

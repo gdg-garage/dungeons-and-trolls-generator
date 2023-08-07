@@ -7,7 +7,6 @@ namespace
 		CAGE_ASSERT(generate.slot == SlotEnum::MainHand);
 
 		Item item;
-		item.icon = "sword";
 		item.slot = SlotEnum::MainHand;
 		item.goldCost = randomRange(20, 30);
 
@@ -22,7 +21,6 @@ namespace
 			sk.target = SkillTargetEnum::Character;
 			sk.casterFlags.push_back(LineOfSight);
 			sk.name = "Attack";
-			sk.icon = "attack";
 			item.addPower(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
@@ -36,7 +34,6 @@ namespace
 		CAGE_ASSERT(generate.slot == SlotEnum::MainHand);
 
 		Item item;
-		item.icon = "bow";
 		item.slot = SlotEnum::MainHand;
 		item.goldCost = randomRange(25, 35);
 
@@ -52,7 +49,6 @@ namespace
 			sk.target = SkillTargetEnum::Character;
 			sk.casterFlags.push_back(LineOfSight);
 			sk.name = "Attack";
-			sk.icon = "attack";
 			item.addPower(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
@@ -66,7 +62,6 @@ namespace
 		CAGE_ASSERT(generate.slot == SlotEnum::OffHand);
 
 		Item item;
-		item.icon = "shield";
 		item.slot = SlotEnum::OffHand;
 		item.goldCost = randomRange(10, 15);
 
@@ -84,7 +79,6 @@ namespace
 			sk.casterFlags.push_back(LineOfSight);
 			sk.targetFlags.push_back(Knockback);
 			sk.name = "Push";
-			sk.icon = "attack";
 			item.addPower(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
@@ -98,7 +92,6 @@ namespace
 		CAGE_ASSERT(generate.slot == SlotEnum::MainHand || generate.slot == SlotEnum::OffHand);
 
 		Item item;
-		item.icon = "wand";
 		item.slot = generate.slot;
 		item.goldCost = randomRange(30, 60);
 
@@ -117,7 +110,6 @@ namespace
 		CAGE_ASSERT(generate.slot == SlotEnum::Head);
 
 		Item item;
-		item.icon = "helmet";
 		item.slot = SlotEnum::Head;
 		item.goldCost = randomRange(15, 25);
 
@@ -137,7 +129,6 @@ namespace
 		CAGE_ASSERT(generate.slot == SlotEnum::Body);
 
 		Item item;
-		item.icon = "bodyArmor";
 		item.slot = SlotEnum::Body;
 		item.goldCost = randomRange(30, 50);
 
@@ -160,7 +151,6 @@ namespace
 			sk.casterAttributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = interpolate(0.5, 1.0, sk.addPower(1));
 			sk.casterAttributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = interpolate(1, 10, sk.addPower(0.5));
 			sk.name = "Rest";
-			sk.icon = "rest";
 			item.addPower(sk, 0.5);
 			item.skills.push_back(std::move(sk));
 		}
@@ -174,7 +164,6 @@ namespace
 		CAGE_ASSERT(generate.slot == SlotEnum::Body);
 
 		Item item;
-		item.icon = "cape";
 		item.slot = SlotEnum::Body;
 		item.goldCost = randomRange(25, 55);
 
@@ -197,7 +186,6 @@ namespace
 			sk.casterAttributes[AttributeEnum::Mana][AttributeEnum::Willpower] = interpolate(0.5, 1.0, sk.addPower(1));
 			sk.casterAttributes[AttributeEnum::Mana][AttributeEnum::Scalar] = interpolate(1, 10, sk.addPower(0.5));
 			sk.name = "Meditate";
-			sk.icon = "rest";
 			item.addPower(sk, 0.5);
 			item.skills.push_back(std::move(sk));
 		}
@@ -211,7 +199,6 @@ namespace
 		CAGE_ASSERT(generate.slot == SlotEnum::Legs);
 
 		Item item;
-		item.icon = "boots";
 		item.slot = SlotEnum::Legs;
 		item.goldCost = randomRange(20, 30);
 
@@ -230,7 +217,6 @@ namespace
 			sk.target = SkillTargetEnum::Position;
 			sk.casterFlags.push_back(LineOfSight);
 			sk.name = "Walk";
-			sk.icon = "move";
 			item.addPower(sk, 0.5);
 			item.skills.push_back(std::move(sk));
 		}
@@ -244,7 +230,6 @@ namespace
 			sk.target = SkillTargetEnum::Position;
 			sk.casterFlags.push_back(LineOfSight);
 			sk.name = "Run";
-			sk.icon = "move";
 			item.addPower(sk, 0.5);
 			item.skills.push_back(std::move(sk));
 		}
@@ -258,7 +243,6 @@ namespace
 		CAGE_ASSERT(generate.slot == SlotEnum::Neck);
 
 		Item item;
-		item.icon = "amulet";
 		item.slot = SlotEnum::Neck;
 		item.goldCost = randomRange(40, 60);
 
