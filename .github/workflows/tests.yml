@@ -8,7 +8,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os-version: [2019]
+        os-version: [2019, 2022]
         build-config: [debug, relwithdebinfo]
         build-arch: [x64]
 
@@ -42,6 +42,14 @@ jobs:
         cd build/result/${{ matrix.build-config }}
         ./dntgenerator.exe
 
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: dntgenerator
+        path: |
+          build/result/${{ matrix.build-config }}/cage-core.dll
+          build/result/${{ matrix.build-config }}/dntgenerator.exe
+
 
   Ubuntu:
     name: ubuntu-${{ matrix.os-version }}-${{ matrix.build-config }}-${{ matrix.compiler.cc }}
@@ -53,12 +61,17 @@ jobs:
       fail-fast: false
       matrix:
         os-version: [22]
-        build-config: [debug, relwithdebinfo]
+        build-config: [debug, relwithdebinfo, release]
         compiler:
         - {
-            cc: gcc-12,
-            cxx: g++-12,
-            install: gcc-12 g++-12
+            cc: gcc-13,
+            cxx: g++-13,
+            install: gcc-13 g++-13
+          }
+        - {
+            cc: clang-14,
+            cxx: clang++-14,
+            install: clang-14
           }
 
     steps:
@@ -94,4 +107,12 @@ jobs:
       run: |
         cd build/result/${{ matrix.build-config }}
         ./dntgenerator
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: dntgenerator
+        path: |
+          build/result/${{ matrix.build-config }}/cage-core.so
+          build/result/${{ matrix.build-config }}/dntgenerator
 

@@ -334,6 +334,52 @@ namespace
 		}
 	}
 
+	void placeLavaRiver(Floor &f)
+	{
+		const uint32 w = f.width;
+		const uint32 h = f.height;
+
+		uint32 x1 = randomRange(5u, w - 15);
+		uint32 x2 = x1 + randomRange(3u, 10u);
+		CAGE_ASSERT(x2 < w - 5);
+		for (uint32 y = 0; y < h; y++)
+		{
+			for (uint32 x = x1; x < x2; x++)
+			{
+				if (f.tile(x, y) != TileEnum::Empty)
+					continue;
+				f.tile(x, y) = TileEnum::Decoration;
+				f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"lava\"}");
+				Skill sk;
+				sk.name = "Lava";
+				sk.damageType = DamageTypeEnum::Fire;
+				sk.damageAmount[AttributeEnum::Scalar] = randomRange(5u, 20u);
+				sk.duration[AttributeEnum::Scalar] = 1000000;
+				sk.casterFlags.push_back(GroundEffect);
+				f.extra(x, y).push_back(std::move(sk));
+			}
+			switch (randomRange(0u, 5u))
+			{
+				case 0:
+					if (x1 > 5)
+					{
+						x1--;
+						x2--;
+					}
+					break;
+				case 1:
+					if (x2 < w - 5)
+					{
+						x1++;
+						x2++;
+					}
+					break;
+				default:
+					break;
+			}
+		}
+	}
+
 	void generateShopFloor(Floor &f, uint32 maxLevel)
 	{
 		const uint32 portals = levelToBossIndex(maxLevel - 1);
@@ -522,186 +568,10 @@ namespace
 		placeMonsters(f, f.level / 20);
 	}
 
-	void generateSingleRoomFloor(Floor &f)
+	void generateDungeonLayout(Floor &f)
 	{
-		const auto [w, h] = defaultFloorSize(f.level);
-		resizeFloor(f, Vec2i(w, h));
-		rectReplace(f, Vec2i(1), Vec2i(w, h) - 1, TileEnum::Outside, TileEnum::Empty);
-
-		// random pillars
-		if (w > 20 && h > 10)
-		{
-			const uint32 cnt = randomRange(5u, 15u);
-			for (uint32 i = 0; i < cnt; i++)
-			{
-				const uint32 x = randomRange(3u, w - 3);
-				const uint32 y = randomRange(3u, h - 3);
-				const Vec2i p = Vec2i(x, y);
-				const Vec2i ps[9] = {
-					p + Vec2i(-1, -1),
-					p + Vec2i(-1, +0),
-					p + Vec2i(-1, +1),
-					p + Vec2i(+0, -1),
-					p + Vec2i(+0, +0),
-					p + Vec2i(+0, +1),
-					p + Vec2i(+1, -1),
-					p + Vec2i(+1, +0),
-					p + Vec2i(+1, +1),
-				};
-				{
-					bool bad = false;
-					for (Vec2i k : ps)
-						if (f.tile(k) != TileEnum::Empty)
-							bad = true;
-					if (bad)
-						continue;
-				}
-				for (Vec2i k : ps)
-					f.tile(k) = TileEnum::Outside;
-			}
-		}
-
-		// floor is lava
-		if (f.level > 50)
-		{
-			uint32 x1 = randomRange(5u, w - 15);
-			uint32 x2 = x1 + randomRange(3u, 10u);
-			CAGE_ASSERT(x2 < w - 5);
-			for (uint32 y = 0; y < h; y++)
-			{
-				for (uint32 x = x1; x < x2; x++)
-				{
-					if (f.tile(x, y) != TileEnum::Empty)
-						continue;
-					f.tile(x, y) = TileEnum::Decoration;
-					f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"lava\"}");
-					Skill sk;
-					sk.name = "Lava";
-					sk.damageType = DamageTypeEnum::Fire;
-					sk.damageAmount[AttributeEnum::Scalar] = randomRange(5u, 20u);
-					sk.duration[AttributeEnum::Scalar] = 1000000;
-					sk.casterFlags.push_back(GroundEffect);
-					f.extra(x, y).push_back(std::move(sk));
-				}
-				switch (randomRange(0u, 5u))
-				{
-					case 0:
-						if (x1 > 5)
-						{
-							x1--;
-							x2--;
-						}
-						break;
-					case 1:
-						if (x2 < w - 5)
-						{
-							x1++;
-							x2++;
-						}
-						break;
-					default:
-						break;
-				}
-			}
-		}
-
-		findOutlineWalls(f);
-		placeSpawnAndStairs(f);
-		placeMonsters(f, 0);
-	}
-
-	void generateMazeFloor(Floor &f)
-	{
-		auto [w, h] = defaultFloorSize(f.level);
-		resizeFloor(f, Vec2i(w, h));
-
-		{ // carve out the maze
-			static constexpr Vec2i ns[4] = {
-				Vec2i(-1, 0),
-				Vec2i(+1, 0),
-				Vec2i(0, -1),
-				Vec2i(0, +1),
-			};
-
-			f.tile(w / 2, h / 2) = TileEnum::Empty;
-			std::vector<Vec2i> open;
-			open.reserve(f.tiles.size());
-			open.push_back(Vec2i(w / 2 + 0, h / 2 + 1));
-			open.push_back(Vec2i(w / 2 + 1, h / 2 + 0));
-			open.push_back(Vec2i(w / 2 + 0, h / 2 - 1));
-			open.push_back(Vec2i(w / 2 - 1, h / 2 + 0));
-			while (!open.empty())
-			{
-				const uint32 j = randomRange(std::size_t(0), open.size());
-				const Vec2i p = open[j];
-				open.erase(open.begin() + j);
-				if (f.tile(p) != TileEnum::Outside)
-					continue;
-				{
-					uint32 en = 0;
-					for (Vec2i n : ns)
-						en += f.tile(p + n) == TileEnum::Empty;
-					if (en != 1)
-						continue;
-				}
-				f.tile(p) = TileEnum::Empty;
-				for (Vec2i n : ns)
-				{
-					const Vec2i c = p + n;
-					if (c[0] < 2 || c[0] > w - 3 || c[1] < 2 || c[1] > h - 3)
-						continue;
-					if (f.tile(c) != TileEnum::Outside)
-						continue;
-					open.push_back(c);
-				}
-			}
-		}
-
-		findOutlineWalls(f);
-
-		cutoutFloor(f);
-		w = f.width;
-		h = f.height;
-
-		placeSpawnAndStairs(f);
-
-		placeMonsters(f, 2);
-	}
-
-	void generateStripesFloor(Floor &f)
-	{
-		auto [w, h] = defaultFloorSize(f.level);
-		resizeFloor(f, Vec2i(w, h));
-
-		{ // rooms
-			uint32 x = 1;
-			while (x + 5 < w)
-			{
-				const uint32 s = randomRange(1, 5);
-				rectReplace(f, Vec2i(x, 1), Vec2i(x + s, h - 1), TileEnum::Outside, TileEnum::Empty);
-				if (x > 1)
-				{
-					const uint32 y = randomRange(3u, h - 5);
-					f.tile(x - 1, y) = TileEnum::Empty;
-				}
-				x += s + 1;
-			}
-		}
-
-		findOutlineWalls(f);
-
-		cutoutFloor(f);
-		w = f.width;
-		h = f.height;
-
-		placeSpawnAndStairs(f);
-		placeMonsters(f, 0);
-	}
-
-	void generateGenericFloor(Floor &f)
-	{
-		auto [w, h] = defaultFloorSize(f.level);
-		resizeFloor(f, Vec2i(w, h));
+		const uint32 w = f.width;
+		const uint32 h = f.height;
 
 		// add rooms
 		while (countCells(f, TileEnum::Empty) < w * h / 2)
@@ -722,7 +592,7 @@ namespace
 		}
 
 		// witches
-		if (f.level > 60 && randomChance() < 0.05)
+		if (f.level > 60 && randomChance() < 0.10)
 		{
 			const uint32 r = randomRange(6u, 10u);
 			CAGE_ASSERT(r * 2 + 6 < w && r * 2 + 6 < h);
@@ -793,14 +663,157 @@ namespace
 			}
 			rectReplace(f, Vec2i(), Vec2i(f.width, f.height), tmp, TileEnum::Empty); // restore back
 		}
+	}
+
+	void generateSingleRoomLayout(Floor &f)
+	{
+		if (f.level >= 4 && f.level <= 30)
+			return generateDungeonLayout(f);
+
+		const uint32 w = f.width;
+		const uint32 h = f.height;
+
+		rectReplace(f, Vec2i(1), Vec2i(w, h) - 1, TileEnum::Outside, TileEnum::Empty);
+
+		// random pillars
+		if (w > 20 && h > 10)
+		{
+			const uint32 cnt = randomRange(5u, 15u);
+			for (uint32 i = 0; i < cnt; i++)
+			{
+				const uint32 x = randomRange(3u, w - 3);
+				const uint32 y = randomRange(3u, h - 3);
+				const Vec2i p = Vec2i(x, y);
+				const Vec2i ps[9] = {
+					p + Vec2i(-1, -1),
+					p + Vec2i(-1, +0),
+					p + Vec2i(-1, +1),
+					p + Vec2i(+0, -1),
+					p + Vec2i(+0, +0),
+					p + Vec2i(+0, +1),
+					p + Vec2i(+1, -1),
+					p + Vec2i(+1, +0),
+					p + Vec2i(+1, +1),
+				};
+				{
+					bool bad = false;
+					for (Vec2i k : ps)
+						if (f.tile(k) != TileEnum::Empty)
+							bad = true;
+					if (bad)
+						continue;
+				}
+				for (Vec2i k : ps)
+					f.tile(k) = TileEnum::Outside;
+			}
+		}
+
+		if (f.level > 50)
+			placeLavaRiver(f);
+	}
+
+	void generateMazeLayout(Floor &f)
+	{
+		if (f.level <= 20)
+			return generateDungeonLayout(f);
+
+		const uint32 w = f.width;
+		const uint32 h = f.height;
+
+		static constexpr Vec2i ns[4] = {
+			Vec2i(-1, 0),
+			Vec2i(+1, 0),
+			Vec2i(0, -1),
+			Vec2i(0, +1),
+		};
+
+		f.tile(w / 2, h / 2) = TileEnum::Empty;
+		std::vector<Vec2i> open;
+		open.reserve(f.tiles.size());
+		open.push_back(Vec2i(w / 2 + 0, h / 2 + 1));
+		open.push_back(Vec2i(w / 2 + 1, h / 2 + 0));
+		open.push_back(Vec2i(w / 2 + 0, h / 2 - 1));
+		open.push_back(Vec2i(w / 2 - 1, h / 2 + 0));
+		while (!open.empty())
+		{
+			const uint32 j = randomRange(std::size_t(0), open.size());
+			const Vec2i p = open[j];
+			open.erase(open.begin() + j);
+			if (f.tile(p) != TileEnum::Outside)
+				continue;
+			{
+				uint32 en = 0;
+				for (Vec2i n : ns)
+					en += f.tile(p + n) == TileEnum::Empty;
+				if (en != 1)
+					continue;
+			}
+			f.tile(p) = TileEnum::Empty;
+			for (Vec2i n : ns)
+			{
+				const Vec2i c = p + n;
+				if (c[0] < 2 || c[0] > w - 3 || c[1] < 2 || c[1] > h - 3)
+					continue;
+				if (f.tile(c) != TileEnum::Outside)
+					continue;
+				open.push_back(c);
+			}
+		}
+	}
+
+	void generateStripesLayout(Floor &f)
+	{
+		if (f.level <= 10)
+			return generateDungeonLayout(f);
+
+		uint32 x = 1;
+		while (x + 5 < f.width)
+		{
+			const uint32 s = randomRange(1, 5);
+			rectReplace(f, Vec2i(x, 1), Vec2i(x + s, f.height - 1), TileEnum::Outside, TileEnum::Empty);
+			if (x > 1)
+			{
+				const uint32 y = randomRange(3u, f.height - 5);
+				f.tile(x - 1, y) = TileEnum::Empty;
+			}
+			x += s + 1;
+		}
+	}
+
+	void generateGenericFloor(Floor &f)
+	{
+		{
+			auto [w, h] = defaultFloorSize(f.level);
+			resizeFloor(f, Vec2i(w, h));
+		}
+
+		if (f.level < 4)
+			generateSingleRoomLayout(f);
+		else
+		{
+			switch (randomRange(0u, 10u))
+			{
+				case 0:
+					generateSingleRoomLayout(f);
+					break;
+				case 1:
+					generateMazeLayout(f);
+					break;
+				case 2:
+					generateStripesLayout(f);
+					break;
+				default:
+					generateDungeonLayout(f);
+					break;
+			}
+		}
 
 		findOutlineWalls(f);
-
 		cutoutFloor(f);
-		w = f.width;
-		h = f.height;
-
 		placeSpawnAndStairs(f);
+
+		if (f.level > 50 && randomChance() < 0.05)
+			placeLavaRiver(f);
 
 		// highlight path
 		if (f.level > 30 && randomChance() < 0.05)
@@ -859,7 +872,7 @@ namespace
 		}
 
 		// place waypoint
-		if (f.level > 25 && randomChance() < 0.1)
+		if (f.level > 25 && randomChance() < 0.05)
 		{
 			const Vec2i a = findAny(f, TileEnum::Empty);
 			uint32 neighs = 0;
@@ -911,12 +924,6 @@ Floor generateFloor(uint32 level, uint32 maxLevel)
 		generateShopFloor(f, maxLevel);
 	else if (isLevelBoss(level))
 		generateBossFloor(f);
-	else if (level < 4 || (level > 30 && randomChance() < 0.05))
-		generateSingleRoomFloor(f);
-	else if (level > 20 && randomChance() < 0.05)
-		generateMazeFloor(f);
-	else if (level > 10 && randomChance() < 0.05)
-		generateStripesFloor(f);
 	else
 		generateGenericFloor(f);
 	CAGE_ASSERT(countCells(f, TileEnum::Spawn) == 1);
