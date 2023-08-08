@@ -19,7 +19,6 @@ namespace
 			sk.damageType = DamageTypeEnum::Slash;
 			sk.range[AttributeEnum::Scalar] = 1;
 			sk.target = SkillTargetEnum::Character;
-			sk.casterFlags.push_back(LineOfSight);
 			sk.name = "Attack";
 			item.addPower(sk, 1);
 			item.skills.push_back(std::move(sk));
@@ -47,7 +46,6 @@ namespace
 			sk.range[AttributeEnum::Strength] = sk.addPower(1, AffixEnum::Prefix, "Long") * 0.2;
 			sk.range[AttributeEnum::Scalar] = 3;
 			sk.target = SkillTargetEnum::Character;
-			sk.casterFlags.push_back(LineOfSight);
 			sk.name = "Attack";
 			item.addPower(sk, 1);
 			item.skills.push_back(std::move(sk));
@@ -76,7 +74,6 @@ namespace
 			sk.cost[AttributeEnum::Stamina] = randomRange(1, 6);
 			sk.range[AttributeEnum::Scalar] = 1;
 			sk.target = SkillTargetEnum::Character;
-			sk.casterFlags.push_back(LineOfSight);
 			sk.targetFlags.push_back(Knockback);
 			sk.name = "Push";
 			item.addPower(sk, 1);
@@ -215,7 +212,6 @@ namespace
 			sk.range[AttributeEnum::Strength] = sk.addPower(0.5) * 0.1;
 			sk.range[AttributeEnum::Scalar] = 2;
 			sk.target = SkillTargetEnum::Position;
-			sk.casterFlags.push_back(LineOfSight);
 			sk.name = "Walk";
 			item.addPower(sk, 0.5);
 			item.skills.push_back(std::move(sk));
@@ -228,7 +224,6 @@ namespace
 			sk.range[AttributeEnum::Constitution] = sk.addPower(0.5) * 0.1;
 			sk.range[AttributeEnum::Scalar] = 3;
 			sk.target = SkillTargetEnum::Position;
-			sk.casterFlags.push_back(LineOfSight);
 			sk.name = "Run";
 			item.addPower(sk, 0.5);
 			item.skills.push_back(std::move(sk));

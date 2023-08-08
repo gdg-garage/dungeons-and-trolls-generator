@@ -91,7 +91,8 @@ using AttributesEquationFactors = std::map<AttributeEnum, Real>;
 using SkillAttributes = std::map<AttributeEnum, AttributesEquationFactors>;
 
 constexpr const char *Alone = "\"alone\""; // requires that the caster is alone (no other creature (player or monster) are visible in 15 range)
-constexpr const char *LineOfSight = "\"lineOfSight\""; // requires the target position is visible from the caster position
+constexpr const char *NoLineOfSight = "\"noLineOfSight\""; // does not require the target position be visible from the caster position
+constexpr const char *AllowSelf = "\"allowSelf\""; // allows skills that target a character to target oneself
 constexpr const char *Moves = "\"moves\""; // moves the caster to the target position, or the target to the caster position
 constexpr const char *Knockback = "\"knockback\""; // moves the caster/target one tile away from the other
 constexpr const char *Stun = "\"stun\""; // prevents the caster/target from performing any actions for one tick, and grants immunity to stun for the following tick
@@ -246,7 +247,7 @@ Real isHellFloor(uint32 level);
 
 Skill generateSkill(const Generate &generate);
 Item generateItem(const Generate &generate);
-Monster generateMonster(Generate generate);
+Monster generateMonster(const Generate &generate);
 Monster generateMinion(const Generate &generate);
 Monster generateChest(const Generate &generate);
 Floor generateFloor(uint32 level, uint32 maxLevel);

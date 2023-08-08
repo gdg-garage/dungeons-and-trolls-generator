@@ -43,8 +43,6 @@ namespace
 		if (randomChance() < 0.1)
 			equip(SlotEnum::Neck);
 
-		if (randomChance() < 0.5)
-			mr.onDeath.push_back(generateItem(generate));
 		if (randomChance() < 0.1)
 			mr.onDeath.push_back(generateMinion(generate));
 		if (randomChance() < 0.1)
@@ -428,27 +426,27 @@ namespace
 	}
 }
 
-Monster generateMonster(Generate generate)
+Monster generateMonster(const Generate &generate_)
 {
-	CAGE_ASSERT(generate.valid());
-	CAGE_ASSERT(generate.slot == SlotEnum::None);
+	CAGE_ASSERT(generate_.valid());
+	CAGE_ASSERT(generate_.slot == SlotEnum::None);
 
-	const auto generator = isHellFloor(generate.level) > 0.5 ? &generateHell : &generateOutlaw;
+	const auto generator = isHellFloor(generate_.level) > 0.5 ? &generateHell : &generateOutlaw;
 
+	// additional empower
+	// https://www.wolframalpha.com/input?i=plot+exp%28%28x+-+100%29+%2F+200%29%3B+x+%3D+100+..+1000
+	const Real empower = max(pow((Real(generate_.power) - 100) / 200), 1);
+	Generate generate = generate_;
+	generate.power = numeric_cast<uint32>(generate_.power * empower);
+
+	// generate several monsters and pick the strongest
 	// 0 .. 39 -> 1 attempt
 	// 40 .. 59 -> 2 attempts
 	// 60 .. 79 -> 3 attempts
 	// 80 .. 99 -> 4 attempts
 	// 100 and more -> 5 attempts
-	const uint32 attempts = min(generate.power / 20, 5u);
-
-	// additional empower
-	// https://www.wolframalpha.com/input?i=plot+exp%28%28x+-+100%29+%2F+200%29%3B+x+%3D+100+..+1000
-	const Real empower = max(pow((Real(generate.power) - 100) / 200), 1);
-	generate.power = numeric_cast<uint32>(generate.power * empower);
-
-	// generate several monsters and pick the strongest
 	Monster mr = generator(generate);
+	const uint32 attempts = min(generate_.power / 20, 5u); // use the original power
 	for (uint32 i = 1; i < attempts; i++) // starting from one -> one attempt has already been generated above
 	{
 		Monster mr2 = generator(generate);
@@ -456,7 +454,11 @@ Monster generateMonster(Generate generate)
 			std::swap(mr, mr2);
 	}
 
+	// loot
+	if (randomChance() < 0.4)
+		mr.onDeath.push_back(generateItem(Generate(generate.level, generate_.powerOffset()))); // use the original power
 	mr.score = numeric_cast<uint32>(mr.goldCost / empower);
+
 	return mr;
 }
 
@@ -466,8 +468,11 @@ Monster generateMinion(const Generate &generate)
 	CAGE_ASSERT(generate.slot == SlotEnum::None);
 	// no empower
 	// no rerolls
+	// no loot
 	// no score
-	return isHellFloor(generate.level) > 0.5 ? generateHell(generate) : generateOutlaw(generate);
+	Monster mr = isHellFloor(generate.level) > 0.5 ? generateHell(generate) : generateOutlaw(generate);
+	mr.faction = "inherited";
+	return mr;
 }
 
 Monster generateChest(const Generate &generate)
@@ -476,16 +481,20 @@ Monster generateChest(const Generate &generate)
 	CAGE_ASSERT(generate.slot == SlotEnum::None);
 
 	Monster mr;
-
 	mr.name = "Chest";
 	mr.icon = "chest";
 	mr.algorithm = "none";
 	mr.faction = "neutral";
 	mr.attributes[AttributeEnum::Life] = 1;
 
+	// loot
 	const uint32 cnt = randomRange(5u, 10u);
 	for (uint32 i = 0; i < cnt; i++)
 		mr.onDeath.push_back(generateItem(Generate(generate.level, generate.powerOffset())));
+
+	// trap
+	if (randomChance() < 0.05)
+		mr.onDeath.push_back(generateMonster(Generate(generate.level, generate.powerOffset()))); // empowered monster
 
 	return mr;
 }
