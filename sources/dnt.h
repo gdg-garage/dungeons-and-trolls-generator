@@ -250,6 +250,9 @@ Item generateItem(const Generate &generate);
 Monster generateMonster(const Generate &generate);
 Monster generateMinion(const Generate &generate);
 Monster generateChest(const Generate &generate);
+Monster generateButcher(uint32 level);
+Monster generateWitch(uint32 level);
+Monster generateTemplar(uint32 level);
 Floor generateFloor(uint32 level, uint32 maxLevel);
 
 std::string exportVariant(const Variant &variant);

@@ -624,18 +624,9 @@ namespace
 			f.tile(c) = TileEnum::Decoration;
 			f.extra(c).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"cauldron\"}");
 
-			// occultists
+			// witches
 			for (uint32 i = 0; i < 4; i++)
 			{
-				Generate g = Generate(f.level, f.level / 10);
-				g.magic = 1;
-				g.ranged = 1;
-				g.defensive = 0;
-				g.support = 0;
-				Monster mr = generateMonster(g);
-				mr.name = "Witch";
-				mr.icon = "witch";
-				mr.algorithm = "boss";
 				const Vec2i ps[4] = {
 					c + Vec2i(0, -1),
 					c + Vec2i(0, +1),
@@ -644,7 +635,7 @@ namespace
 				};
 				Vec2i p = ps[i];
 				f.tile(p) = TileEnum::Monster;
-				f.extra(p).push_back(std::move(mr));
+				f.extra(p).push_back(generateWitch(f.level));
 			}
 		}
 
@@ -812,6 +803,7 @@ namespace
 		cutoutFloor(f);
 		placeSpawnAndStairs(f);
 
+		// lava river
 		if (f.level > 50 && randomChance() < 0.05)
 			placeLavaRiver(f);
 
@@ -835,22 +827,18 @@ namespace
 		// the butcher
 		if (f.level > 40 && randomChance() < 0.05)
 		{
-			Generate g = Generate(f.level, f.level / 3);
-			g.magic = 0;
-			g.ranged = 0;
-			g.defensive = 0;
-			g.support = 0;
-			Monster mr = generateMonster(g);
-			mr.name = "The Butcher";
-			mr.icon = "butcher";
-			mr.algorithm = "boss";
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
-			f.extra(p).push_back(std::move(mr));
-			const Vec2i ps[4] = {
+			f.extra(p).push_back(generateButcher(f.level));
+
+			const Vec2i ps[] = {
 				p + Vec2i(-1, -1),
+				p + Vec2i(-1, +0),
 				p + Vec2i(-1, +1),
+				p + Vec2i(+0, -1),
+				p + Vec2i(+0, +1),
 				p + Vec2i(+1, -1),
+				p + Vec2i(+1, +0),
 				p + Vec2i(+1, +1),
 			};
 			for (Vec2i i : ps)
@@ -859,6 +847,44 @@ namespace
 				{
 					f.tile(i) = TileEnum::Decoration;
 					f.extra(i).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"blood\"}");
+				}
+			}
+		}
+
+		// templars
+		if (f.level > 70 && randomChance() < 0.05)
+		{
+			const Vec2i spawn = findAny(f, TileEnum::Spawn);
+			const uint32 cnt = randomRange(3u, 7u);
+			for (uint32 i = 0; i < cnt; i++)
+			{
+				Vec2i p;
+				for (uint32 a = 0; a < 100; a++)
+				{
+					p = findAny(f, TileEnum::Empty);
+					if (distance(p, spawn) < 20)
+						break;
+				}
+
+				f.tile(p) = TileEnum::Monster;
+				f.extra(p).push_back(generateTemplar(f.level));
+
+				Vec2i ps[4] = {
+					p + Vec2i(-1, +0),
+					p + Vec2i(+0, -1),
+					p + Vec2i(+1, +0),
+					p + Vec2i(+0, +1),
+				};
+				for (uint32 a = 0; a < 3; a++)
+					std::swap(ps[randomRange(0, 4)], ps[randomRange(0, 4)]);
+				for (Vec2i n : ps)
+				{
+					if (f.tile(n) == TileEnum::Empty)
+					{
+						f.tile(n) = TileEnum::Decoration;
+						f.extra(n).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"cross\"}");
+						break;
+					}
 				}
 			}
 		}

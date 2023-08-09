@@ -40,7 +40,7 @@ jobs:
       shell: bash
       run: |
         cd build/result/${{ matrix.build-config }}
-        ./dntgenerator.exe
+        ./dntgenerator.exe -s 20 -e 22 -m 30
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v3
@@ -106,7 +106,7 @@ jobs:
       shell: bash
       run: |
         cd build/result/${{ matrix.build-config }}
-        ./dntgenerator
+        ./dntgenerator -s 20 -e 22 -m 30
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v3

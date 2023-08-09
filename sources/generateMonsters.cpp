@@ -264,10 +264,15 @@ namespace
 
 namespace
 {
+	Monster generateOutlawBase(const Generate &generate)
+	{
+		return generateRandomMonster(generate);
+	}
+
 	// mundane melee offensive combat
 	Monster generateBarbarian(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr = generateOutlawBase(generate);
 		mr.name = "Barbarian";
 		mr.icon = "barbarian";
 		mr.faction = "outlaw";
@@ -277,7 +282,7 @@ namespace
 	// mundane ranged offensive combat
 	Monster generateAssassin(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr = generateOutlawBase(generate);
 		mr.name = "Assassin";
 		mr.icon = "assassin";
 		mr.faction = "outlaw";
@@ -287,7 +292,7 @@ namespace
 	// mundane --- defensive combat
 	Monster generateBandit(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr = generateOutlawBase(generate);
 		mr.name = "Bandit";
 		mr.icon = "bandit";
 		mr.faction = "outlaw";
@@ -297,7 +302,7 @@ namespace
 	// mundane melee --- support
 	Monster generateRogue(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr = generateOutlawBase(generate);
 		mr.name = "Rogue";
 		mr.icon = "rogue";
 		mr.faction = "outlaw";
@@ -307,7 +312,7 @@ namespace
 	// mundane ranged --- support
 	Monster generateSaboteur(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr = generateOutlawBase(generate);
 		mr.name = "Saboteur";
 		mr.icon = "saboteur";
 		mr.faction = "outlaw";
@@ -317,7 +322,7 @@ namespace
 	// magic melee --- combat
 	Monster generateDruid(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr = generateOutlawBase(generate);
 		mr.name = "Druid";
 		mr.icon = "druid";
 		mr.faction = "outlaw";
@@ -327,7 +332,7 @@ namespace
 	// magic ranged offensive combat
 	Monster generateWarlock(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr = generateOutlawBase(generate);
 		mr.name = "Warlock";
 		mr.icon = "warlock";
 		mr.faction = "outlaw";
@@ -337,7 +342,7 @@ namespace
 	// magic ranged offensive support
 	Monster generateOccultist(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr = generateOutlawBase(generate);
 		mr.name = "Occultist";
 		mr.icon = "occultist";
 		mr.faction = "outlaw";
@@ -347,7 +352,7 @@ namespace
 	// magic ranged defensive support
 	Monster generateShaman(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr = generateOutlawBase(generate);
 		mr.name = "Shaman";
 		mr.icon = "shaman";
 		mr.faction = "outlaw";
@@ -357,7 +362,7 @@ namespace
 	// magic --- --- support
 	Monster generateNecromancer(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr = generateOutlawBase(generate);
 		mr.name = "Necromancer";
 		mr.icon = "necromancer";
 		mr.faction = "outlaw";
@@ -424,42 +429,45 @@ namespace
 			}
 		}
 	}
+
+	Monster generateMonsterImpl(const Generate &generate_, Monster (*generator)(const Generate &))
+	{
+		CAGE_ASSERT(generate_.valid());
+		CAGE_ASSERT(generate_.slot == SlotEnum::None);
+
+		// additional empower
+		// https://www.wolframalpha.com/input?i=plot+exp%28%28x+-+100%29+%2F+200%29%3B+x+%3D+100+..+1000
+		const Real empower = max(pow((Real(generate_.power) - 100) / 200), 1);
+		Generate generate = generate_;
+		generate.power = numeric_cast<uint32>(generate_.power * empower);
+
+		// generate several monsters and pick the strongest
+		// 0 .. 39 -> 1 attempt
+		// 40 .. 59 -> 2 attempts
+		// 60 .. 79 -> 3 attempts
+		// 80 .. 99 -> 4 attempts
+		// 100 and more -> 5 attempts
+		Monster mr = generator(generate);
+		const uint32 attempts = min(generate_.power / 20, 5u); // use the original power
+		for (uint32 i = 1; i < attempts; i++) // starting from one -> one attempt has already been generated above
+		{
+			Monster mr2 = generator(generate);
+			if (mr2.goldCost > mr.goldCost)
+				std::swap(mr, mr2);
+		}
+
+		// loot
+		if (randomChance() < 0.4)
+			mr.onDeath.push_back(generateItem(Generate(generate_.level, generate_.powerOffset()))); // use the original power
+		mr.score = numeric_cast<uint32>(mr.goldCost / empower);
+
+		return mr;
+	}
 }
 
-Monster generateMonster(const Generate &generate_)
+Monster generateMonster(const Generate &generate)
 {
-	CAGE_ASSERT(generate_.valid());
-	CAGE_ASSERT(generate_.slot == SlotEnum::None);
-
-	const auto generator = isHellFloor(generate_.level) > 0.5 ? &generateHell : &generateOutlaw;
-
-	// additional empower
-	// https://www.wolframalpha.com/input?i=plot+exp%28%28x+-+100%29+%2F+200%29%3B+x+%3D+100+..+1000
-	const Real empower = max(pow((Real(generate_.power) - 100) / 200), 1);
-	Generate generate = generate_;
-	generate.power = numeric_cast<uint32>(generate_.power * empower);
-
-	// generate several monsters and pick the strongest
-	// 0 .. 39 -> 1 attempt
-	// 40 .. 59 -> 2 attempts
-	// 60 .. 79 -> 3 attempts
-	// 80 .. 99 -> 4 attempts
-	// 100 and more -> 5 attempts
-	Monster mr = generator(generate);
-	const uint32 attempts = min(generate_.power / 20, 5u); // use the original power
-	for (uint32 i = 1; i < attempts; i++) // starting from one -> one attempt has already been generated above
-	{
-		Monster mr2 = generator(generate);
-		if (mr2.goldCost > mr.goldCost)
-			std::swap(mr, mr2);
-	}
-
-	// loot
-	if (randomChance() < 0.4)
-		mr.onDeath.push_back(generateItem(Generate(generate.level, generate_.powerOffset()))); // use the original power
-	mr.score = numeric_cast<uint32>(mr.goldCost / empower);
-
-	return mr;
+	return generateMonsterImpl(generate, isHellFloor(generate.level) > 0.5 ? &generateHell : &generateOutlaw);
 }
 
 Monster generateMinion(const Generate &generate)
@@ -496,5 +504,54 @@ Monster generateChest(const Generate &generate)
 	if (randomChance() < 0.05)
 		mr.onDeath.push_back(generateMonster(Generate(generate.level, generate.powerOffset()))); // empowered monster
 
+	return mr;
+}
+
+Monster generateButcher(uint32 level)
+{
+	Generate g = Generate(level, level / 3);
+	g.magic = 0;
+	g.ranged = 0;
+	g.defensive = 0;
+	g.support = 0;
+
+	Monster mr = generateMonsterImpl(g, &generateBarbarian);
+	mr.name = "Butcher";
+	mr.icon = "butcher";
+	mr.algorithm = "boss";
+	mr.faction = "butcher";
+	return mr;
+}
+
+Monster generateWitch(uint32 level)
+{
+	Generate g = Generate(level, level / 10);
+	g.magic = 1;
+	g.ranged = 1;
+	g.defensive = 0;
+	g.support = randomChance();
+
+	Monster mr = generateMonsterImpl(g, g.support < 0.5 ? &generateWarlock : &generateOccultist);
+	mr.name = "Witch";
+	mr.icon = "witch";
+	mr.algorithm = "boss";
+	mr.faction = "witch";
+	return mr;
+}
+
+Monster generateTemplar(uint32 level)
+{
+	Generate g = Generate(level, level / 10);
+	g.magic = 0;
+	g.ranged = 0;
+	g.defensive = 1;
+	g.support = randomChance();
+
+	Monster mr = generateMonsterImpl(g, &generateOutlawBase);
+	mr.name = "Templar";
+	mr.icon = "templar";
+	mr.algorithm = "boss";
+	mr.faction = "templar";
+	mr.score = 0;
 	return mr;
 }
