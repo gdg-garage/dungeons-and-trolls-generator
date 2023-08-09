@@ -353,9 +353,9 @@ namespace
 				f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"lava\"}");
 				Skill sk;
 				sk.name = "Lava";
-				sk.damageType = DamageTypeEnum::Fire;
-				sk.damageAmount[AttributeEnum::Scalar] = randomRange(5u, 20u);
 				sk.duration[AttributeEnum::Scalar] = 1000000;
+				sk.damageAmount[AttributeEnum::Scalar] = randomRange(5.0, 20.0);
+				sk.damageType = DamageTypeEnum::Fire;
 				sk.casterFlags.push_back(GroundEffect);
 				f.extra(x, y).push_back(std::move(sk));
 			}
@@ -624,10 +624,7 @@ namespace
 				return item;
 			};
 
-			Monster mr = generateMonster(Generate(f.level, f.level / 5));
-			mr.name = Stringizer() + "Guardian of " + f.level + "th floor";
-			mr.icon = "guardian";
-			mr.algorithm = "boss";
+			Monster mr = generateFloorBoss(f.level);
 			mr.onDeath.push_back(generateKeyToAllDoors());
 			return mr;
 		};
@@ -661,7 +658,7 @@ namespace
 		}
 
 		// witches
-		if (f.level > 60 && randomChance() < 0.07)
+		if (f.level > 50 && randomChance() < 0.07)
 			placeWitchCoven(f);
 
 		// corridors
@@ -711,7 +708,7 @@ namespace
 			}
 		}
 
-		if (f.level > 50)
+		if (f.level > 60)
 			placeLavaRiver(f);
 	}
 
@@ -766,7 +763,7 @@ namespace
 
 	void generateStripesLayout(Floor &f)
 	{
-		if (f.level <= 10)
+		if (f.level <= 50)
 			return generateDungeonLayout(f);
 
 		uint32 x = 1;
@@ -804,7 +801,7 @@ namespace
 		}
 
 		// witches
-		if (f.level > 60 && randomChance() < 0.07)
+		if (f.level > 50 && randomChance() < 0.07)
 			placeWitchCoven(f);
 
 		// corridors
@@ -849,7 +846,7 @@ namespace
 		placeSpawnAndStairs(f);
 
 		// lava river
-		if (f.level > 50 && randomChance() < 0.05)
+		if (f.level > 60 && randomChance() < 0.05)
 			placeLavaRiver(f);
 
 		// highlight path
@@ -981,7 +978,49 @@ namespace
 			}
 		}
 
+		// monsters
 		placeMonsters(f, 0);
+
+		// spikes traps
+		if (f.level > 60 && randomChance() < 0.05)
+		{
+			for (uint32 i = 0; i < f.tiles.size(); i++)
+			{
+				if (f.tiles[i] == TileEnum::Empty && randomChance() < 0.2)
+				{
+					f.tiles[i] = TileEnum::Decoration;
+					f.extras[i].push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"spikesTrap\"}");
+					Skill sk;
+					sk.name = "Spikes";
+					sk.duration[AttributeEnum::Scalar] = 1000000;
+					sk.damageAmount[AttributeEnum::Scalar] = randomRange(10.0, 30.0);
+					sk.damageType = DamageTypeEnum::Piercing;
+					sk.casterFlags.push_back(GroundEffect);
+					f.extras[i].push_back(std::move(sk));
+				}
+			}
+		}
+
+		// poison rot
+		if (f.level > 60 && randomChance() < 0.05)
+		{
+			for (uint32 i = 0; i < f.tiles.size(); i++)
+			{
+				if (f.tiles[i] == TileEnum::Empty && randomChance() < 0.05)
+				{
+					f.tiles[i] = TileEnum::Decoration;
+					f.extras[i].push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"rottenPile\"}");
+					Skill sk;
+					sk.name = "Rot";
+					sk.radius[AttributeEnum::Scalar] = randomRange(1.0, 4.0);
+					sk.duration[AttributeEnum::Scalar] = 1000000;
+					sk.damageAmount[AttributeEnum::Scalar] = randomRange(3.0, 15.0);
+					sk.damageType = DamageTypeEnum::Poison;
+					sk.casterFlags.push_back(GroundEffect);
+					f.extras[i].push_back(std::move(sk));
+				}
+			}
+		}
 	}
 }
 

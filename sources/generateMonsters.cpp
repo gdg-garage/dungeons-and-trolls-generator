@@ -507,6 +507,25 @@ Monster generateChest(const Generate &generate)
 	return mr;
 }
 
+namespace
+{
+	void addDeadBody(Monster &mr)
+	{
+		mr.onDeath.push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"deadBody\",\"name\":\"" + mr.name.c_str() + "\"}");
+	}
+}
+
+Monster generateFloorBoss(uint32 level)
+{
+	Monster mr = generateMonster(Generate(level, level / 5));
+	mr.name = Stringizer() + "Guardian of " + level + "th floor";
+	mr.icon = "guardian";
+	mr.algorithm = "boss";
+
+	addDeadBody(mr);
+	return mr;
+}
+
 Monster generateButcher(uint32 level)
 {
 	Generate g = Generate(level, level / 3);
@@ -520,6 +539,8 @@ Monster generateButcher(uint32 level)
 	mr.icon = "butcher";
 	mr.algorithm = "boss";
 	mr.faction = "butcher";
+
+	addDeadBody(mr);
 	return mr;
 }
 
@@ -536,6 +557,8 @@ Monster generateWitch(uint32 level)
 	mr.icon = "witch";
 	mr.algorithm = "boss";
 	mr.faction = "witch";
+
+	addDeadBody(mr);
 	return mr;
 }
 
@@ -553,5 +576,7 @@ Monster generateTemplar(uint32 level)
 	mr.algorithm = "boss";
 	mr.faction = "templar";
 	mr.score = 0;
+
+	addDeadBody(mr);
 	return mr;
 }

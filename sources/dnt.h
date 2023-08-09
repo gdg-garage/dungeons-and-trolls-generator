@@ -250,6 +250,7 @@ Item generateItem(const Generate &generate);
 Monster generateMonster(const Generate &generate);
 Monster generateMinion(const Generate &generate);
 Monster generateChest(const Generate &generate);
+Monster generateFloorBoss(uint32 level);
 Monster generateButcher(uint32 level);
 Monster generateWitch(uint32 level);
 Monster generateTemplar(uint32 level);
