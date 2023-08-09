@@ -1,4 +1,5 @@
 #include "dnt.h"
+#include <cage-core/noiseFunction.h>
 
 #include <unordered_map>
 
@@ -380,6 +381,74 @@ namespace
 		}
 	}
 
+	void placeWitchCoven(Floor &f)
+	{
+		const uint32 w = f.width;
+		const uint32 h = f.height;
+		const uint32 r = randomRange(6u, 10u);
+		CAGE_ASSERT(r * 2 + 6 < w && r * 2 + 6 < h);
+		const Vec2i c = Vec2i(randomRange(r + 3, w - r - 4), randomRange(r + 3, h - r - 4));
+		const Vec2i a = Vec2i(c - r - 3);
+		const Vec2i b = Vec2i(c + r + 3);
+
+		// generate circular room
+		const auto &dist = [=](Vec2i p) -> Real { return distance(Vec2(p), Vec2(c)); };
+		for (uint32 y = a[1]; y < b[1]; y++)
+		{
+			for (uint32 x = a[0]; x < b[0]; x++)
+			{
+				const Vec2i p = Vec2i(x, y);
+				const Real d = dist(p);
+				if (d > r)
+					f.tile(x, y) = TileEnum::Outside;
+				else if (d > r - 1)
+				{
+					f.tile(x, y) = TileEnum::Decoration;
+					f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"rune\"}");
+				}
+				else
+					f.tile(x, y) = TileEnum::Empty;
+			}
+		}
+
+		// cauldron
+		f.tile(c) = TileEnum::Decoration;
+		f.extra(c).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"cauldron\"}");
+
+		// witches
+		for (uint32 i = 0; i < 4; i++)
+		{
+			const Vec2i ps[4] = {
+				c + Vec2i(0, -1),
+				c + Vec2i(0, +1),
+				c + Vec2i(-1, 0),
+				c + Vec2i(+1, 0),
+			};
+			Vec2i p = ps[i];
+			f.tile(p) = TileEnum::Monster;
+			f.extra(p).push_back(generateWitch(f.level));
+		}
+	}
+
+	void placeCorridors(Floor &f)
+	{
+		static constexpr TileEnum tmp = TileEnum::Placeholder;
+		CAGE_ASSERT(countCells(f, tmp) == 0);
+		seedReplace(f, findAny(f, TileEnum::Empty), TileEnum::Empty, tmp);
+		while (true)
+		{
+			const Vec2i a = findAny(f, TileEnum::Empty);
+			if (a == Vec2i(-1))
+				break;
+			const Vec2i b = findNearest(f, a, tmp);
+			const Vec2i c = findNearest(f, b, TileEnum::Empty);
+			directPathReplace(f, b, c, TileEnum::Outside, tmp);
+			f.tile(c) = TileEnum::Empty;
+			seedReplace(f, c, TileEnum::Empty, tmp);
+		}
+		rectReplace(f, Vec2i(), Vec2i(f.width, f.height), tmp, TileEnum::Empty); // restore back
+	}
+
 	void generateShopFloor(Floor &f, uint32 maxLevel)
 	{
 		const uint32 portals = levelToBossIndex(maxLevel - 1);
@@ -592,68 +661,11 @@ namespace
 		}
 
 		// witches
-		if (f.level > 60 && randomChance() < 0.10)
-		{
-			const uint32 r = randomRange(6u, 10u);
-			CAGE_ASSERT(r * 2 + 6 < w && r * 2 + 6 < h);
-			const Vec2i c = Vec2i(randomRange(r + 3, w - r - 4), randomRange(r + 3, h - r - 4));
-			const Vec2i a = Vec2i(c - r - 3);
-			const Vec2i b = Vec2i(c + r + 3);
+		if (f.level > 60 && randomChance() < 0.07)
+			placeWitchCoven(f);
 
-			// generate circular room
-			const auto &dist = [=](Vec2i p) -> Real { return distance(Vec2(p), Vec2(c)); };
-			for (uint32 y = a[1]; y < b[1]; y++)
-			{
-				for (uint32 x = a[0]; x < b[0]; x++)
-				{
-					const Vec2i p = Vec2i(x, y);
-					const Real d = dist(p);
-					if (d > r)
-						f.tile(x, y) = TileEnum::Outside;
-					else if (d > r - 1)
-					{
-						f.tile(x, y) = TileEnum::Decoration;
-						f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"rune\"}");
-					}
-					else
-						f.tile(x, y) = TileEnum::Empty;
-				}
-			}
-
-			// cauldron
-			f.tile(c) = TileEnum::Decoration;
-			f.extra(c).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"cauldron\"}");
-
-			// witches
-			for (uint32 i = 0; i < 4; i++)
-			{
-				const Vec2i ps[4] = {
-					c + Vec2i(0, -1),
-					c + Vec2i(0, +1),
-					c + Vec2i(-1, 0),
-					c + Vec2i(+1, 0),
-				};
-				Vec2i p = ps[i];
-				f.tile(p) = TileEnum::Monster;
-				f.extra(p).push_back(generateWitch(f.level));
-			}
-		}
-
-		{ // corridors
-			static constexpr TileEnum tmp = TileEnum::Placeholder;
-			CAGE_ASSERT(countCells(f, tmp) == 0);
-			seedReplace(f, findAny(f, TileEnum::Empty), TileEnum::Empty, tmp);
-			while (countCells(f, TileEnum::Empty) > 0)
-			{
-				const Vec2i a = findAny(f, TileEnum::Empty);
-				const Vec2i b = findNearest(f, a, tmp);
-				const Vec2i c = findNearest(f, b, TileEnum::Empty);
-				directPathReplace(f, b, c, TileEnum::Outside, tmp);
-				f.tile(c) = TileEnum::Empty;
-				seedReplace(f, c, TileEnum::Empty, tmp);
-			}
-			rectReplace(f, Vec2i(), Vec2i(f.width, f.height), tmp, TileEnum::Empty); // restore back
-		}
+		// corridors
+		placeCorridors(f);
 	}
 
 	void generateSingleRoomLayout(Floor &f)
@@ -771,6 +783,34 @@ namespace
 		}
 	}
 
+	void generateNaturalCavesLayout(Floor &f)
+	{
+		if (f.level <= 10)
+			return generateDungeonLayout(f);
+
+		NoiseFunctionCreateConfig cfg;
+		cfg.seed = randomRange((uint32)0, (uint32)m);
+		cfg.fractalType = NoiseFractalTypeEnum::Fbm;
+		cfg.frequency = randomRange(0.02, 0.07);
+		Holder<NoiseFunction> noise = newNoiseFunction(cfg);
+
+		for (uint32 y = 1; y < f.height - 1; y++)
+		{
+			for (uint32 x = 1; x < f.width - 1; x++)
+			{
+				if (noise->evaluate(Vec2(x, y)) > 0)
+					f.tile(x, y) = TileEnum::Empty;
+			}
+		}
+
+		// witches
+		if (f.level > 60 && randomChance() < 0.07)
+			placeWitchCoven(f);
+
+		// corridors
+		placeCorridors(f);
+	}
+
 	void generateGenericFloor(Floor &f)
 	{
 		{
@@ -792,6 +832,11 @@ namespace
 					break;
 				case 2:
 					generateStripesLayout(f);
+					break;
+				case 3:
+				case 4:
+				case 5:
+					generateNaturalCavesLayout(f);
 					break;
 				default:
 					generateDungeonLayout(f);
