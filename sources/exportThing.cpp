@@ -6,12 +6,15 @@ namespace
 	{
 		std::string r;
 
-		r += (Stringizer() + "\"level\":" + thing.generate.level + ",").value.c_str();
 		r += (Stringizer() + "\"power\":" + thing.generate.power + ",").value.c_str();
-		r += (Stringizer() + "\"magic\":" + thing.generate.magic + ",").value.c_str();
-		r += (Stringizer() + "\"ranged\":" + thing.generate.ranged + ",").value.c_str();
-		r += (Stringizer() + "\"defensive\":" + thing.generate.defensive + ",").value.c_str();
-		r += (Stringizer() + "\"support\":" + thing.generate.support + ",").value.c_str();
+		if (thing.generate.power > 0)
+		{
+			r += (Stringizer() + "\"level\":" + thing.generate.level + ",").value.c_str();
+			r += (Stringizer() + "\"magic\":" + thing.generate.magic + ",").value.c_str();
+			r += (Stringizer() + "\"ranged\":" + thing.generate.ranged + ",").value.c_str();
+			r += (Stringizer() + "\"defensive\":" + thing.generate.defensive + ",").value.c_str();
+			r += (Stringizer() + "\"support\":" + thing.generate.support + ",").value.c_str();
+		}
 
 		r += (Stringizer() + "\"powersCount\":" + thing.powersCount + ",").value.c_str();
 		r += (Stringizer() + "\"powerWeight\":" + thing.powerWeight + ",").value.c_str();
