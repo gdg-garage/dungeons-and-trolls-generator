@@ -6,11 +6,12 @@ namespace
 	{
 		std::string r;
 
-		r += "\"affixRelevances\":[\n";
-		for (const Affix &affix : thing.affixes)
-			r += (Stringizer() + affix.relevance + ",").value.c_str();
-		removeLastComma(r);
-		r += "],\n"; // /affixRelevances
+		r += (Stringizer() + "\"level\":" + thing.generate.level + ",").value.c_str();
+		r += (Stringizer() + "\"power\":" + thing.generate.power + ",").value.c_str();
+		r += (Stringizer() + "\"magic\":" + thing.generate.magic + ",").value.c_str();
+		r += (Stringizer() + "\"ranged\":" + thing.generate.ranged + ",").value.c_str();
+		r += (Stringizer() + "\"defensive\":" + thing.generate.defensive + ",").value.c_str();
+		r += (Stringizer() + "\"support\":" + thing.generate.support + ",").value.c_str();
 
 		r += (Stringizer() + "\"powersCount\":" + thing.powersCount + ",").value.c_str();
 		r += (Stringizer() + "\"powerWeight\":" + thing.powerWeight + ",").value.c_str();
@@ -173,7 +174,7 @@ std::string exportSkill(const Skill &skill)
 	std::string json;
 	json += "{\n";
 	json += "\"class\":\"skill\",\n";
-	json += std::string() + "\"name\":\"" + skill.name.c_str() + "\",\n";
+	json += std::string() + "\"name\":\"" + skill.name + "\",\n";
 	json += std::string() + "\"target\":\"" + skillTargetName(skill.target) + "\",\n";
 	json += std::string() + "\"cost\":" + attributesValueMappingJson(skill.cost) + ",\n";
 	json += std::string() + "\"range\":" + attributesValueMappingJson(skill.range) + ",\n";
@@ -210,7 +211,7 @@ std::string exportItem(const Item &item)
 	std::string json;
 	json += "{\n";
 	json += "\"class\":\"item\",\n";
-	json += std::string() + "\"name\":\"" + item.name.c_str() + "\",\n";
+	json += std::string() + "\"name\":\"" + item.name + "\",\n";
 	json += std::string() + "\"slot\":\"" + slotName(item.slot) + "\",\n";
 	json += "\"requirements\":" + attributesValueMappingJson(item.requirements) + ",\n";
 	json += "\"attributes\":" + attributesValueMappingJson(item.attributes) + ",\n";
@@ -243,7 +244,7 @@ std::string exportMonster(const Monster &monster)
 	std::string json;
 	json += "{\n";
 	json += "\"class\":\"monster\",\n";
-	json += std::string() + "\"name\":\"" + monster.name.c_str() + "\",\n";
+	json += std::string() + "\"name\":\"" + monster.name + "\",\n";
 	json += std::string() + "\"icon\":\"" + monster.icon.c_str() + "\",\n";
 	json += std::string() + "\"algorithm\":\"" + monster.algorithm.c_str() + "\",\n";
 	json += std::string() + "\"faction\":\"" + monster.faction.c_str() + "\",\n";

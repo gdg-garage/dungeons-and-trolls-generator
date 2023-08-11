@@ -1,7 +1,8 @@
-#include "dnt.h"
-#include <cage-core/noiseFunction.h>
-
 #include <unordered_map>
+
+#include "dnt.h"
+
+#include <cage-core/noiseFunction.h>
 
 namespace std
 {
@@ -351,12 +352,12 @@ namespace
 					continue;
 				f.tile(x, y) = TileEnum::Decoration;
 				f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"lava\"}");
-				Skill sk;
+				Skill sk({});
 				sk.name = "Lava";
 				sk.duration[AttributeEnum::Scalar] = 1000000;
 				sk.damageAmount[AttributeEnum::Scalar] = randomRange(5.0, 20.0);
 				sk.damageType = DamageTypeEnum::Fire;
-				sk.casterFlags.push_back(GroundEffect);
+				sk.casterFlags.push_back(SkillGroundEffect);
 				f.extra(x, y).push_back(std::move(sk));
 			}
 			switch (randomRange(0u, 5u))
@@ -597,7 +598,7 @@ namespace
 		{
 			const auto &generateKeyToAllDoors = [&]()
 			{
-				Item item;
+				Item item({});
 				item.name = "Key";
 
 				std::vector<Vec2i> doors;
@@ -990,12 +991,12 @@ namespace
 				{
 					f.tiles[i] = TileEnum::Decoration;
 					f.extras[i].push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"spikesTrap\"}");
-					Skill sk;
+					Skill sk({});
 					sk.name = "Spikes";
 					sk.duration[AttributeEnum::Scalar] = 1000000;
 					sk.damageAmount[AttributeEnum::Scalar] = randomRange(10.0, 30.0);
 					sk.damageType = DamageTypeEnum::Piercing;
-					sk.casterFlags.push_back(GroundEffect);
+					sk.casterFlags.push_back(SkillGroundEffect);
 					f.extras[i].push_back(std::move(sk));
 				}
 			}
@@ -1010,13 +1011,13 @@ namespace
 				{
 					f.tiles[i] = TileEnum::Decoration;
 					f.extras[i].push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"rottenPile\"}");
-					Skill sk;
+					Skill sk({});
 					sk.name = "Rot";
 					sk.radius[AttributeEnum::Scalar] = randomRange(1.0, 4.0);
 					sk.duration[AttributeEnum::Scalar] = 1000000;
 					sk.damageAmount[AttributeEnum::Scalar] = randomRange(3.0, 15.0);
 					sk.damageType = DamageTypeEnum::Poison;
-					sk.casterFlags.push_back(GroundEffect);
+					sk.casterFlags.push_back(SkillGroundEffect);
 					f.extras[i].push_back(std::move(sk));
 				}
 			}

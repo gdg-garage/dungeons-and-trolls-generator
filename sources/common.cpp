@@ -8,6 +8,11 @@ namespace
 	}
 }
 
+Thing::Thing(const Generate &generate) : generate(generate)
+{
+	goldCost = 10 + generate.power / 2 + randomRange(0u, generate.power);
+}
+
 Real Thing::addPower(Real weight)
 {
 	return addPower(skewedChance(), weight);
@@ -15,6 +20,7 @@ Real Thing::addPower(Real weight)
 
 Real Thing::addPower(Real roll, Real weight)
 {
+	CAGE_ASSERT(generate.level > 0); // generate was not initialized
 	CAGE_ASSERT(roll >= 0 && roll <= 1);
 	CAGE_ASSERT(weight >= 0);
 	powersCount++;
@@ -24,12 +30,12 @@ Real Thing::addPower(Real roll, Real weight)
 	return roll;
 }
 
-Real Thing::addPower(Real weight, AffixEnum affix, const String &name)
+Real Thing::addPower(Real weight, AffixEnum affix, const std::string &name)
 {
 	return addPower(skewedChance(), weight, affix, name);
 }
 
-Real Thing::addPower(Real roll, Real weight, AffixEnum affix, const String &name)
+Real Thing::addPower(Real roll, Real weight, AffixEnum affix, const std::string &name)
 {
 	addAffix(roll * weight, affix, name);
 	return addPower(roll, weight);
@@ -38,15 +44,19 @@ Real Thing::addPower(Real roll, Real weight, AffixEnum affix, const String &name
 void Thing::addPower(const Thing &other, Real weight)
 {
 	if (other.powerWeight > 1e-3)
+	{
 		addPower(other.powerTotal / other.powerWeight, weight);
+		addAffix(other.powerTotal / other.powerWeight * weight, AffixEnum::Suffix, std::string() + "With " + other.name);
+	}
 	else
 		powersCount++;
 	goldCost += other.goldCost;
 }
 
-void Thing::addAffix(Real relevance, AffixEnum affix, const String &name)
+void Thing::addAffix(Real relevance, AffixEnum affix, const std::string &name)
 {
 	CAGE_ASSERT(affix < AffixEnum::_Total);
+	CAGE_ASSERT(!name.empty());
 	Affix &a = affixes[(uint32)affix];
 	if (relevance > a.relevance)
 	{
@@ -55,17 +65,17 @@ void Thing::addAffix(Real relevance, AffixEnum affix, const String &name)
 	}
 }
 
-String Thing::makeName(const String &basicName, Real relevance) const
+void Thing::updateName(const std::string &basicName, Real relevance)
 {
-	Thing t;
+	Thing t({});
 	t.affixes = affixes;
 	t.addAffix(relevance, AffixEnum::Infix, basicName);
-	String r;
+	std::string r;
 	for (const Affix &a : t.affixes)
 	{
 		if (a.name.empty())
 			continue;
-		if (a.relevance < 0.4)
+		if (a.relevance < 0.3)
 			continue;
 		if (!r.empty())
 			r += " ";
@@ -73,7 +83,7 @@ String Thing::makeName(const String &basicName, Real relevance) const
 	}
 	if (r.empty())
 		r = t.affixes[(uint32)AffixEnum::Infix].name;
-	return r;
+	this->name = r;
 }
 
 Generate::Generate(uint32 level, sint32 powerOffset, SlotEnum slot) : level(level), power(level + powerOffset), slot(slot)
@@ -162,6 +172,28 @@ Real isHellFloor(uint32 level)
 	// https://www.wolframalpha.com/input?i=plot+sin%28floor%28x%2B89%29+*+2+*+pi+*+0.029%29+-+sin%28floor%28x%2B69%29+*+2+*+pi+*+0.017%29+%3B+x+%3D+0+..+20
 	const Real hellish = cage::sin((level + 89) * Rads::Full() * 0.029) - cage::sin((level + 69) * Rads::Full() * 0.017) + (randomChance() - 0.5) * 0.2;
 	return hellish * 0.5 + 0.5;
+}
+
+Real makeAttrFactor(uint32 power, Real roll)
+{
+	return interpolate(0.1, 1.0, roll) + power * 0.05;
+}
+
+Real makeAttrFactor(Thing &sk, const Generate &generate, Real weight)
+{
+	return makeAttrFactor(generate.power, sk.addPower(weight));
+}
+
+Real makeAttrFactor(Thing &sk, const Generate &generate, Real weight, const std::string &affixName, AffixEnum affixPos)
+{
+	return makeAttrFactor(generate.power, sk.addPower(weight, affixPos, affixName));
+}
+
+uint32 makeCost(Thing &sk, const Generate &generate, Real default_)
+{
+	const Real roll = sk.addPower(0.6, AffixEnum::Prefix, "Thrifty");
+	const Real p = interpolate(default_ * 1.10, default_ * 0.95 * 100 / (100 + generate.power), roll);
+	return numeric_cast<uint32>(max(p, 1));
 }
 
 namespace

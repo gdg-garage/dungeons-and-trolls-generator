@@ -2,9 +2,10 @@
 
 namespace
 {
+	// todo remove
 	Monster generateRandomMonster(const Generate &generate)
 	{
-		Monster mr;
+		Monster mr(generate);
 
 		const uint32 level = generate.power;
 
@@ -60,7 +61,7 @@ namespace
 	Monster generateZombie(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Zombie";
+		mr.updateName("Zombie");
 		mr.icon = "zombie";
 		mr.faction = "hell";
 		return mr;
@@ -72,7 +73,7 @@ namespace
 	Monster generateSkeleton(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Skeleton";
+		mr.updateName("Skeleton");
 		mr.icon = "skeleton";
 		mr.faction = "hell";
 		return mr;
@@ -84,7 +85,7 @@ namespace
 	Monster generateOgre(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Ogre";
+		mr.updateName("Ogre");
 		mr.icon = "ogre";
 		mr.faction = "hell";
 		return mr;
@@ -96,7 +97,7 @@ namespace
 	Monster generateTroll(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Troll";
+		mr.updateName("Troll");
 		mr.icon = "troll";
 		mr.faction = "hell";
 		return mr;
@@ -108,7 +109,7 @@ namespace
 	Monster generateVampire(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Vampire";
+		mr.updateName("Vampire");
 		mr.icon = "vampire";
 		mr.faction = "hell";
 		return mr;
@@ -120,7 +121,7 @@ namespace
 	Monster generateMedusa(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Medusa";
+		mr.updateName("Medusa");
 		mr.icon = "medusa";
 		mr.faction = "hell";
 		return mr;
@@ -132,7 +133,7 @@ namespace
 	Monster generateSuccubus(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Succubus";
+		mr.updateName("Succubus");
 		mr.icon = "succubus";
 		mr.faction = "hell";
 		return mr;
@@ -144,7 +145,7 @@ namespace
 	Monster generateImp(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Imp";
+		mr.updateName("Imp");
 		mr.icon = "imp";
 		mr.faction = "hell";
 		return mr;
@@ -156,7 +157,7 @@ namespace
 	Monster generateGhost(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Ghost";
+		mr.updateName("Ghost");
 		mr.icon = "ghost";
 		mr.faction = "hell";
 		return mr;
@@ -168,7 +169,7 @@ namespace
 	Monster generateBanshee(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Banshee";
+		mr.updateName("Banshee");
 		mr.icon = "banshee";
 		mr.faction = "hell";
 		return mr;
@@ -180,7 +181,7 @@ namespace
 	Monster generateLich(const Generate &generate)
 	{
 		Monster mr = generateRandomMonster(generate);
-		mr.name = "Lich";
+		mr.updateName("Lich");
 		mr.icon = "lich";
 		mr.faction = "hell";
 		return mr;
@@ -266,6 +267,7 @@ namespace
 {
 	Monster generateOutlawBase(const Generate &generate)
 	{
+		// todo rewrite
 		return generateRandomMonster(generate);
 	}
 
@@ -273,7 +275,7 @@ namespace
 	Monster generateBarbarian(const Generate &generate)
 	{
 		Monster mr = generateOutlawBase(generate);
-		mr.name = "Barbarian";
+		mr.updateName("Barbarian");
 		mr.icon = "barbarian";
 		mr.faction = "outlaw";
 		return mr;
@@ -283,7 +285,7 @@ namespace
 	Monster generateAssassin(const Generate &generate)
 	{
 		Monster mr = generateOutlawBase(generate);
-		mr.name = "Assassin";
+		mr.updateName("Assassin");
 		mr.icon = "assassin";
 		mr.faction = "outlaw";
 		return mr;
@@ -293,7 +295,7 @@ namespace
 	Monster generateBandit(const Generate &generate)
 	{
 		Monster mr = generateOutlawBase(generate);
-		mr.name = "Bandit";
+		mr.updateName("Bandit");
 		mr.icon = "bandit";
 		mr.faction = "outlaw";
 		return mr;
@@ -303,7 +305,7 @@ namespace
 	Monster generateRogue(const Generate &generate)
 	{
 		Monster mr = generateOutlawBase(generate);
-		mr.name = "Rogue";
+		mr.updateName("Rogue");
 		mr.icon = "rogue";
 		mr.faction = "outlaw";
 		return mr;
@@ -313,7 +315,7 @@ namespace
 	Monster generateSaboteur(const Generate &generate)
 	{
 		Monster mr = generateOutlawBase(generate);
-		mr.name = "Saboteur";
+		mr.updateName("Saboteur");
 		mr.icon = "saboteur";
 		mr.faction = "outlaw";
 		return mr;
@@ -323,7 +325,7 @@ namespace
 	Monster generateDruid(const Generate &generate)
 	{
 		Monster mr = generateOutlawBase(generate);
-		mr.name = "Druid";
+		mr.updateName("Druid");
 		mr.icon = "druid";
 		mr.faction = "outlaw";
 		return mr;
@@ -333,7 +335,7 @@ namespace
 	Monster generateWarlock(const Generate &generate)
 	{
 		Monster mr = generateOutlawBase(generate);
-		mr.name = "Warlock";
+		mr.updateName("Warlock");
 		mr.icon = "warlock";
 		mr.faction = "outlaw";
 		return mr;
@@ -343,7 +345,7 @@ namespace
 	Monster generateOccultist(const Generate &generate)
 	{
 		Monster mr = generateOutlawBase(generate);
-		mr.name = "Occultist";
+		mr.updateName("Occultist");
 		mr.icon = "occultist";
 		mr.faction = "outlaw";
 		return mr;
@@ -353,7 +355,7 @@ namespace
 	Monster generateShaman(const Generate &generate)
 	{
 		Monster mr = generateOutlawBase(generate);
-		mr.name = "Shaman";
+		mr.updateName("Shaman");
 		mr.icon = "shaman";
 		mr.faction = "outlaw";
 		return mr;
@@ -363,7 +365,7 @@ namespace
 	Monster generateNecromancer(const Generate &generate)
 	{
 		Monster mr = generateOutlawBase(generate);
-		mr.name = "Necromancer";
+		mr.updateName("Necromancer");
 		mr.icon = "necromancer";
 		mr.faction = "outlaw";
 		return mr;
@@ -488,7 +490,7 @@ Monster generateChest(const Generate &generate)
 	CAGE_ASSERT(generate.valid());
 	CAGE_ASSERT(generate.slot == SlotEnum::None);
 
-	Monster mr;
+	Monster mr(generate);
 	mr.name = "Chest";
 	mr.icon = "chest";
 	mr.algorithm = "none";
@@ -517,10 +519,28 @@ namespace
 
 Monster generateFloorBoss(uint32 level)
 {
-	Monster mr = generateMonster(Generate(level, level / 5));
-	mr.name = Stringizer() + "Guardian of " + level + "th floor";
+	const auto &levelSwitch = [level](uint32 floor) -> Real
+	{
+		floor = bossIndexToLevel(levelToBossIndex(floor) + 1); // round up to actual boss
+		CAGE_ASSERT(isLevelBoss(floor));
+		if (level < floor)
+			return 0;
+		if (level == floor)
+			return 1;
+		return randomChance();
+	};
+
+	Generate g = Generate(level, level / 5);
+	g.magic = levelSwitch(LevelMagic);
+	g.ranged = levelSwitch(LevelRanged);
+	g.defensive = randomChance();
+	g.support = levelSwitch(LevelSupport);
+
+	Monster mr = generateMonsterImpl(g, &generateOutlaw);
+	mr.updateName((Stringizer() + "Guardian of " + level + "th floor").value.c_str());
 	mr.icon = "guardian";
-	mr.algorithm = "boss";
+	mr.algorithm = "guardian";
+	mr.faction = "monster";
 
 	addDeadBody(mr);
 	return mr;
@@ -535,10 +555,10 @@ Monster generateButcher(uint32 level)
 	g.support = 0;
 
 	Monster mr = generateMonsterImpl(g, &generateBarbarian);
-	mr.name = "Butcher";
+	mr.updateName("Butcher");
 	mr.icon = "butcher";
-	mr.algorithm = "boss";
-	mr.faction = "butcher";
+	mr.algorithm = "butcher";
+	mr.faction = "monster";
 
 	addDeadBody(mr);
 	return mr;
@@ -553,10 +573,10 @@ Monster generateWitch(uint32 level)
 	g.support = randomChance();
 
 	Monster mr = generateMonsterImpl(g, g.support < 0.5 ? &generateWarlock : &generateOccultist);
-	mr.name = "Witch";
+	mr.updateName("Witch");
 	mr.icon = "witch";
-	mr.algorithm = "boss";
-	mr.faction = "witch";
+	mr.algorithm = "witch";
+	mr.faction = "monster";
 
 	addDeadBody(mr);
 	return mr;
@@ -570,10 +590,10 @@ Monster generateTemplar(uint32 level)
 	g.defensive = 1;
 	g.support = randomChance();
 
-	Monster mr = generateMonsterImpl(g, &generateOutlawBase);
-	mr.name = "Templar";
+	Monster mr = generateMonsterImpl(g, &generateOutlaw);
+	mr.updateName("Templar Knight");
 	mr.icon = "templar";
-	mr.algorithm = "boss";
+	mr.algorithm = "templar";
 	mr.faction = "templar";
 	mr.score = 0;
 

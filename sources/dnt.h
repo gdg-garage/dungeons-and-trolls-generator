@@ -1,10 +1,11 @@
-#include <cage-core/math.h>
-
+#include <algorithm>
 #include <array>
 #include <map>
 #include <string>
 #include <variant>
 #include <vector>
+
+#include <cage-core/math.h>
 
 using namespace cage;
 
@@ -13,6 +14,35 @@ struct Item;
 struct Monster;
 
 using Variant = std::variant<std::string, Skill, Item, Monster>;
+
+enum class SlotEnum : uint8
+{
+	None,
+	MainHand,
+	OffHand,
+	Head,
+	Body,
+	Legs,
+	Neck,
+};
+
+struct Generate
+{
+	uint32 level = 0;
+	uint32 power = 0;
+	SlotEnum slot = SlotEnum::None;
+
+	Real magic = Real::Nan(); // 0 = warrior, 1 = sorcerer
+	Real ranged = Real::Nan(); // 0 = melee, 1 = ranged
+	Real defensive = Real::Nan(); // 0 = offensive, 1 = defensive
+	Real support = Real::Nan(); // 0 = combat, 1 = support
+
+	Generate() = default;
+	explicit Generate(uint32 level, sint32 powerOffset, SlotEnum slot = SlotEnum::None);
+	void randomize();
+	bool valid() const;
+	sint32 powerOffset() const;
+};
 
 enum class AffixEnum : uint8
 {
@@ -24,26 +54,30 @@ enum class AffixEnum : uint8
 
 struct Affix
 {
-	detail::StringBase<120> name;
+	std::string name;
 	Real relevance;
 };
 
 struct Thing : private Noncopyable
 {
+	Thing(const Generate &generate);
+
+	std::string name = "unnamed";
 	std::array<Affix, (uint32)AffixEnum::_Total> affixes;
 
+	Generate generate;
 	uint32 powersCount = 0;
 	Real powerWeight; // sum of weights
 	Real powerTotal; // sum of weighted rolls
-	Real goldCost = 1;
+	Real goldCost = 0;
 
 	Real addPower(Real weight);
 	Real addPower(Real roll, Real weight);
-	Real addPower(Real weight, AffixEnum affix, const String &name);
-	Real addPower(Real roll, Real weight, AffixEnum affix, const String &name);
+	Real addPower(Real weight, AffixEnum affix, const std::string &name);
+	Real addPower(Real roll, Real weight, AffixEnum affix, const std::string &name);
 	void addPower(const Thing &other, Real weight);
-	void addAffix(Real relevance, AffixEnum affix, const String &name);
-	String makeName(const String &basicName, Real relevance = 0.5) const;
+	void addAffix(Real relevance, AffixEnum affix, const std::string &name);
+	void updateName(const std::string &basicName, Real relevance = 0.5);
 };
 
 enum class AttributeEnum : uint8
@@ -90,18 +124,10 @@ using AttributesValuesList = std::map<AttributeEnum, sint32>;
 using AttributesEquationFactors = std::map<AttributeEnum, Real>;
 using SkillAttributes = std::map<AttributeEnum, AttributesEquationFactors>;
 
-constexpr const char *Alone = "\"alone\""; // requires that the caster is alone (no other creature (player or monster) are visible in 15 range)
-constexpr const char *NoLineOfSight = "\"noLineOfSight\""; // does not require the target position be visible from the caster position
-constexpr const char *AllowSelf = "\"allowSelf\""; // allows skills that target a character to target oneself
-constexpr const char *Moves = "\"moves\""; // moves the caster to the target position, or the target to the caster position
-constexpr const char *Knockback = "\"knockback\""; // moves the caster/target one tile away from the other
-constexpr const char *Stun = "\"stun\""; // prevents the caster/target from performing any actions for one tick, and grants immunity to stun for the following tick
-constexpr const char *GroundEffect = "\"groundEffect\""; // creates ground effect at caster/target position, which applies the effects of the skill
-constexpr const char *Passive = "\"passive\""; // the effects of the skill are automatically applied every tick, assuming the cost can be paid; multiple passive skills are allowed
-
 struct Skill : public Thing
 {
-	String name = "unnamed skill";
+	Skill(const Generate &generate) : Thing(generate){};
+
 	SkillTargetEnum target = SkillTargetEnum::None;
 	AttributesValuesList cost;
 	AttributesEquationFactors range, radius, duration, damageAmount;
@@ -110,20 +136,10 @@ struct Skill : public Thing
 	std::vector<std::string> casterFlags, targetFlags;
 };
 
-enum class SlotEnum : uint8
-{
-	None,
-	MainHand,
-	OffHand,
-	Head,
-	Body,
-	Legs,
-	Neck,
-};
-
 struct Item : public Thing
 {
-	String name = "unnamed item";
+	Item(const Generate &generate) : Thing(generate){};
+
 	SlotEnum slot = SlotEnum::None;
 	AttributesValuesList requirements;
 	AttributesValuesList attributes;
@@ -134,7 +150,8 @@ struct Item : public Thing
 
 struct Monster : public Thing
 {
-	String name = "unnamed monster";
+	Monster(const Generate &generate) : Thing(generate){};
+
 	detail::StringBase<30> icon = "monster";
 	detail::StringBase<30> algorithm = "default";
 	detail::StringBase<30> faction = "monster";
@@ -220,30 +237,16 @@ struct FloorExport
 	std::string json;
 };
 
-struct Generate
-{
-	uint32 level = 0;
-	uint32 power = 0;
-	SlotEnum slot = SlotEnum::None;
-
-	Real magic = Real::Nan(); // 0 = warrior, 1 = sorcerer
-	Real ranged = Real::Nan(); // 0 = melee, 1 = ranged
-	Real defensive = Real::Nan(); // 0 = offensive, 1 = defensive
-	Real support = Real::Nan(); // 0 = combat, 1 = support
-
-	Generate() = default;
-	explicit Generate(uint32 level, sint32 powerOffset, SlotEnum slot = SlotEnum::None);
-	void randomize();
-	bool valid() const;
-	sint32 powerOffset() const;
-};
-
 void removeLastComma(std::string &json);
 OccupancyEnum occupancy(TileEnum tile);
 bool isLevelBoss(uint32 level);
 uint32 levelToBossIndex(uint32 level);
 uint32 bossIndexToLevel(uint32 index);
 Real isHellFloor(uint32 level);
+Real makeAttrFactor(uint32 power, Real roll);
+Real makeAttrFactor(Thing &sk, const Generate &generate, Real weight);
+Real makeAttrFactor(Thing &sk, const Generate &generate, Real weight, const std::string &affixName, AffixEnum affixPos = AffixEnum::Prefix);
+uint32 makeCost(Thing &sk, const Generate &generate, Real default_);
 
 Skill generateSkill(const Generate &generate);
 Item generateItem(const Generate &generate);
@@ -265,3 +268,69 @@ void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, con
 
 template<class... T>
 constexpr bool always_false = false;
+
+constexpr const char *SkillAlone = "\"alone\""; // requires that the caster is alone (no other creature (player or monster) are visible in 10 range)
+constexpr const char *SkillNoLineOfSight = "\"noLineOfSight\""; // does not require the target position be visible from the caster position
+constexpr const char *SkillAllowSelf = "\"allowSelf\""; // allows skills that target a character to target oneself
+constexpr const char *SkillMoves = "\"moves\""; // moves the caster to the target position, or the target to the caster position
+constexpr const char *SkillKnockback = "\"knockback\""; // moves the caster/target one tile away from the other
+constexpr const char *SkillStun = "\"stun\""; // prevents the caster/target from performing any actions for one tick, and grants immunity to stun for the following tick
+constexpr const char *SkillGroundEffect = "\"groundEffect\""; // creates ground effect at caster/target position, which applies the effects of the skill
+constexpr const char *SkillPassive = "\"passive\""; // the effects of the skill are automatically applied every tick, assuming the cost can be paid; multiple passive skills are allowed
+
+constexpr uint32 LevelSlash = 0;
+constexpr uint32 LevelPierce = 7;
+constexpr uint32 LevelRanged = 7;
+constexpr uint32 LevelAoe = 11;
+constexpr uint32 LevelKnockback = 11;
+constexpr uint32 LevelFire = 16;
+constexpr uint32 LevelMagic = 16;
+constexpr uint32 LevelDuration = 22;
+constexpr uint32 LevelSupport = 29;
+constexpr uint32 LevelPoison = 37;
+constexpr uint32 LevelGroundEffect = 46;
+constexpr uint32 LevelStun = 56;
+constexpr uint32 LevelSummoning = 67;
+constexpr uint32 LevelElectric = 79;
+
+template<class T>
+struct Candidates : private Immovable
+{
+	struct Candidate
+	{
+		Real penalty;
+		T (*generator)(const Generate &generate);
+	};
+
+	Candidates(const Generate &generate) : generate(generate) { data.reserve(100); }
+
+	const Generate &generate;
+	std::vector<Candidate> data;
+	Real slotMismatchPenalty = 1;
+
+	void add(Real magic, Real ranged, Real defensive, Real support, SlotEnum preferredSlot, const std::initializer_list<uint32> &requiredLevels, T (*generator)(const Generate &generate))
+	{
+		uint32 minLevel = std::max(requiredLevels);
+		if (generate.ranged > 0.5 || ranged > 0.5)
+			minLevel = max(minLevel, LevelRanged);
+		if (generate.magic > 0.5 || magic > 0.5)
+			minLevel = max(minLevel, LevelMagic);
+		if (generate.support > 0.5 || support > 0.5)
+			minLevel = max(minLevel, LevelSupport);
+		const Real a = abs(generate.magic - magic) + abs(generate.ranged - ranged) + abs(generate.defensive - defensive) + abs(generate.support - support);
+		const Real s = generate.slot != preferredSlot ? slotMismatchPenalty : 0;
+		const Real l = generate.level > minLevel ? 0 : 10;
+		const Real p = a + s + l + randomChance() * 0.2;
+		data.push_back({ p, generator });
+	}
+
+	void fallback(T (*generator)(const Generate &generate)) { data.push_back({ 10.0, generator }); }
+
+	T call()
+	{
+		CAGE_ASSERT(!data.empty());
+		std::sort(data.begin(), data.end(), [](const Candidate &a, const Candidate &b) { return a.penalty < b.penalty; });
+		CAGE_ASSERT(data[0].penalty <= 10);
+		return data[0].generator(generate);
+	}
+};

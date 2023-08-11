@@ -2,244 +2,203 @@
 
 namespace
 {
+	Item generateBasicItem(const Generate &generate)
+	{
+		CAGE_ASSERT(generate.slot != SlotEnum::None);
+		Item item(generate);
+		item.slot = generate.slot;
+
+		if (item.addPower(0.5, AffixEnum::Prefix, "Skilled") > 0.7)
+		{
+			Skill sk = generateSkill(generate);
+			item.addPower(sk, 0.8);
+			item.skills.push_back(std::move(sk));
+		}
+
+		return item;
+	}
+}
+
+namespace
+{
 	Item generateSword(const Generate &generate)
 	{
 		CAGE_ASSERT(generate.slot == SlotEnum::MainHand);
-
-		Item item;
-		item.slot = SlotEnum::MainHand;
-		item.goldCost = randomRange(20, 30);
+		Item item = generateBasicItem(generate);
 
 		{
-			Skill sk;
-			sk.goldCost = randomRange(3, 5);
-			sk.cost[AttributeEnum::Stamina] = randomRange(5, 10);
-			sk.damageAmount[AttributeEnum::Strength] = sk.addPower(2, AffixEnum::Prefix, "Strong") + 0.5;
-			sk.damageAmount[AttributeEnum::Scalar] = interpolate(1u, generate.power, sk.addPower(1, AffixEnum::Prefix, "Powerful"));
-			sk.damageType = DamageTypeEnum::Slash;
-			sk.range[AttributeEnum::Scalar] = 1;
+			Skill sk(generate);
 			sk.target = SkillTargetEnum::Character;
-			sk.name = "Attack";
+			sk.range[AttributeEnum::Scalar] = 1;
+			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Strong");
+			sk.damageType = DamageTypeEnum::Slash;
+			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 10);
+			sk.updateName("Attack");
 			item.addPower(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
-		item.name = item.makeName("Sword");
+		item.updateName("Sword");
+		return item;
+	}
+
+	Item generateScythe(const Generate &generate)
+	{
+		CAGE_ASSERT(generate.slot == SlotEnum::MainHand);
+		Item item = generateBasicItem(generate);
+
+		{
+			Skill sk(generate);
+			sk.radius[AttributeEnum::Scalar] = interpolate(1.0, 3.0, sk.addPower(1, AffixEnum::Prefix, "Wide"));
+			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Strong") * 0.3;
+			sk.damageType = DamageTypeEnum::Slash;
+			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 10);
+			sk.updateName("Attack");
+			item.addPower(sk, 1);
+			item.skills.push_back(std::move(sk));
+		}
+
+		item.updateName("Scythe");
 		return item;
 	}
 
 	Item generateBow(const Generate &generate)
 	{
 		CAGE_ASSERT(generate.slot == SlotEnum::MainHand);
-
-		Item item;
-		item.slot = SlotEnum::MainHand;
-		item.goldCost = randomRange(25, 35);
+		Item item = generateBasicItem(generate);
 
 		{
-			Skill sk;
-			sk.goldCost = randomRange(3, 5);
-			sk.cost[AttributeEnum::Stamina] = randomRange(8, 13);
-			sk.damageAmount[AttributeEnum::Dexterity] = sk.addPower(2, AffixEnum::Prefix, "Swift") + 0.5;
-			sk.damageAmount[AttributeEnum::Scalar] = interpolate(1u, generate.power, sk.addPower(1, AffixEnum::Prefix, "Powerful"));
-			sk.damageType = DamageTypeEnum::Piercing;
-			sk.range[AttributeEnum::Strength] = sk.addPower(1, AffixEnum::Prefix, "Long") * 0.2;
-			sk.range[AttributeEnum::Scalar] = 3;
+			Skill sk(generate);
 			sk.target = SkillTargetEnum::Character;
-			sk.name = "Attack";
+			sk.range[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Far") * 0.1;
+			sk.range[AttributeEnum::Scalar] = 4;
+			sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(sk, generate, 1, "Accurate") * 0.5;
+			sk.damageType = DamageTypeEnum::Piercing;
+			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 10);
+			sk.updateName("Attack");
 			item.addPower(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
-		item.name = item.makeName("Bow");
+		item.updateName("Bow");
 		return item;
 	}
 
 	Item generateShield(const Generate &generate)
 	{
 		CAGE_ASSERT(generate.slot == SlotEnum::OffHand);
+		Item item = generateBasicItem(generate);
 
-		Item item;
-		item.slot = SlotEnum::OffHand;
-		item.goldCost = randomRange(10, 15);
-
-		if (randomChance() < 0.8)
-			item.attributes[AttributeEnum::SlashArmor] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Prefix, "Plated"));
-		if (randomChance() < 0.8)
-			item.attributes[AttributeEnum::PiercingArmor] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Prefix, "Impenetrable"));
-
-		{
-			Skill sk;
-			sk.goldCost = randomRange(3, 5);
-			sk.cost[AttributeEnum::Stamina] = randomRange(1, 6);
-			sk.range[AttributeEnum::Scalar] = 1;
-			sk.target = SkillTargetEnum::Character;
-			sk.targetFlags.push_back(Knockback);
-			sk.name = "Push";
-			item.addPower(sk, 1);
-			item.skills.push_back(std::move(sk));
-		}
-
-		item.name = item.makeName("Shield");
-		return item;
-	}
-
-	Item generateWand(const Generate &generate)
-	{
-		CAGE_ASSERT(generate.slot == SlotEnum::MainHand || generate.slot == SlotEnum::OffHand);
-
-		Item item;
-		item.slot = generate.slot;
-		item.goldCost = randomRange(30, 60);
-
-		{
-			Skill sk = generateSkill(generate);
-			item.addPower(sk, 1);
-			item.skills.push_back(std::move(sk));
-		}
-
-		item.name = item.makeName("Wand");
+		item.updateName("Shield");
 		return item;
 	}
 
 	Item generateHelmet(const Generate &generate)
 	{
 		CAGE_ASSERT(generate.slot == SlotEnum::Head);
+		Item item = generateBasicItem(generate);
 
-		Item item;
-		item.slot = SlotEnum::Head;
-		item.goldCost = randomRange(15, 25);
-
-		if (randomChance() < 0.7)
-			item.attributes[AttributeEnum::FireResist] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Prefix, "Watering"));
-		if (randomChance() < 0.7)
-			item.attributes[AttributeEnum::PoisonResist] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Suffix, "of Antidote"));
-		if (randomChance() < 0.7)
-			item.attributes[AttributeEnum::ElectricResist] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Suffix, "of Lightning rod"));
-
-		item.name = item.makeName("Helmet");
+		item.updateName("Helmet");
 		return item;
 	}
 
 	Item generateBodyArmor(const Generate &generate)
 	{
 		CAGE_ASSERT(generate.slot == SlotEnum::Body);
-
-		Item item;
-		item.slot = SlotEnum::Body;
-		item.goldCost = randomRange(30, 50);
-
-		if (randomChance() < 0.8)
-			item.attributes[AttributeEnum::SlashArmor] = interpolate(1u, generate.power * 2, item.addPower(2, AffixEnum::Prefix, "Plated"));
-		if (randomChance() < 0.8)
-			item.attributes[AttributeEnum::PiercingArmor] = interpolate(1u, generate.power * 2, item.addPower(2, AffixEnum::Prefix, "Impenetrable"));
-		if (randomChance() < 0.3)
-			item.attributes[AttributeEnum::FireResist] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Prefix, "Watering"));
-		if (randomChance() < 0.3)
-			item.attributes[AttributeEnum::PoisonResist] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Suffix, "of Antidote"));
-		if (randomChance() < 0.3)
-			item.attributes[AttributeEnum::ElectricResist] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Suffix, "of Lightning rod"));
+		Item item = generateBasicItem(generate);
 
 		{
-			Skill sk;
-			sk.goldCost = randomRange(3, 5);
-			sk.target = SkillTargetEnum::None;
-			sk.casterFlags.push_back(Alone);
-			sk.casterAttributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = interpolate(0.5, 1.0, sk.addPower(1));
-			sk.casterAttributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = interpolate(1, 10, sk.addPower(0.5));
-			sk.name = "Rest";
-			item.addPower(sk, 0.5);
+			Skill sk(generate);
+			sk.casterAttributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 1, "Refreshing");
+			sk.casterFlags.push_back(SkillAlone);
+			sk.updateName("Rest");
+			item.addPower(sk, 0.7);
 			item.skills.push_back(std::move(sk));
 		}
 
-		item.name = item.makeName("Body Armor");
-		return item;
-	}
-
-	Item generateCape(const Generate &generate)
-	{
-		CAGE_ASSERT(generate.slot == SlotEnum::Body);
-
-		Item item;
-		item.slot = SlotEnum::Body;
-		item.goldCost = randomRange(25, 55);
-
-		if (randomChance() < 0.4)
-			item.attributes[AttributeEnum::SlashArmor] = interpolate(1u, generate.power * 2, item.addPower(2, AffixEnum::Prefix, "Plated"));
-		if (randomChance() < 0.4)
-			item.attributes[AttributeEnum::PiercingArmor] = interpolate(1u, generate.power * 2, item.addPower(2, AffixEnum::Prefix, "Impenetrable"));
-		if (randomChance() < 0.6)
-			item.attributes[AttributeEnum::FireResist] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Prefix, "Watering"));
-		if (randomChance() < 0.6)
-			item.attributes[AttributeEnum::PoisonResist] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Suffix, "of Antidote"));
-		if (randomChance() < 0.6)
-			item.attributes[AttributeEnum::ElectricResist] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Suffix, "of Lightning rod"));
-
-		{
-			Skill sk;
-			sk.goldCost = randomRange(3, 5);
-			sk.target = SkillTargetEnum::None;
-			sk.casterFlags.push_back(Alone);
-			sk.casterAttributes[AttributeEnum::Mana][AttributeEnum::Willpower] = interpolate(0.5, 1.0, sk.addPower(1));
-			sk.casterAttributes[AttributeEnum::Mana][AttributeEnum::Scalar] = interpolate(1, 10, sk.addPower(0.5));
-			sk.name = "Meditate";
-			item.addPower(sk, 0.5);
-			item.skills.push_back(std::move(sk));
-		}
-
-		item.name = item.makeName("Cape");
+		item.updateName(generate.defensive < 0.5 ? "Leather Armor" : "Plated Armor");
 		return item;
 	}
 
 	Item generateBoots(const Generate &generate)
 	{
 		CAGE_ASSERT(generate.slot == SlotEnum::Legs);
-
-		Item item;
-		item.slot = SlotEnum::Legs;
-		item.goldCost = randomRange(20, 30);
-
-		if (randomChance() < 0.5)
-			item.attributes[AttributeEnum::SlashArmor] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Prefix, "Plated"));
-		if (randomChance() < 0.5)
-			item.attributes[AttributeEnum::PiercingArmor] = interpolate(1u, generate.power, item.addPower(1, AffixEnum::Prefix, "Impenetrable"));
+		Item item = generateBasicItem(generate);
 
 		if (randomChance() < 0.7)
 		{
-			Skill sk;
-			sk.goldCost = randomRange(3, 5);
-			sk.cost[AttributeEnum::Stamina] = randomRange(2, 4);
-			sk.range[AttributeEnum::Strength] = sk.addPower(0.5) * 0.1;
-			sk.range[AttributeEnum::Scalar] = 2;
+			Skill sk(generate);
 			sk.target = SkillTargetEnum::Position;
-			sk.name = "Walk";
-			item.addPower(sk, 0.5);
+			sk.range[AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 1, "Enduring") * 0.1;
+			sk.range[AttributeEnum::Scalar] = 1;
+			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 5);
+			sk.updateName("Walk");
+			item.addPower(sk, 0.6);
 			item.skills.push_back(std::move(sk));
 		}
 		else
 		{
-			Skill sk;
-			sk.goldCost = randomRange(3, 5);
-			sk.cost[AttributeEnum::Stamina] = randomRange(3, 6);
-			sk.range[AttributeEnum::Constitution] = sk.addPower(0.5) * 0.1;
-			sk.range[AttributeEnum::Scalar] = 3;
+			Skill sk(generate);
 			sk.target = SkillTargetEnum::Position;
-			sk.name = "Run";
-			item.addPower(sk, 0.5);
+			sk.range[AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 1, "Enduring") * 0.075;
+			sk.range[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Fast") * 0.075;
+			sk.range[AttributeEnum::Scalar] = 2;
+			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 10);
+			sk.updateName("Run");
+			item.addPower(sk, 0.8);
 			item.skills.push_back(std::move(sk));
 		}
 
-		item.name = item.makeName("Boots");
+		item.updateName("Boots");
+		return item;
+	}
+}
+
+namespace
+{
+	Item generateRestoringTattoos(const Generate &generate)
+	{
+		CAGE_ASSERT(generate.slot == SlotEnum::Head || generate.slot == SlotEnum::Body);
+		Item item(generate); // no generateBasicItem -> no stats
+		item.slot = generate.slot;
+
+		{
+			Skill sk(generate);
+			if (randomChance() < 0.5)
+				sk.casterAttributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = interpolate(1.0, 6.0, sk.addPower(1, AffixEnum::Prefix, "Refreshing"));
+			else
+				sk.casterAttributes[AttributeEnum::Mana][AttributeEnum::Scalar] = interpolate(1.0, 6.0, sk.addPower(1, AffixEnum::Prefix, "Energizing"));
+			sk.casterFlags.push_back(SkillPassive);
+			sk.updateName("Glow");
+			item.addPower(sk, 1);
+			item.skills.push_back(std::move(sk));
+		}
+
+		item.updateName("Tattoos");
 		return item;
 	}
 
-	Item generateAmulet(const Generate &generate)
+	Item generateProtectiveTattoos(const Generate &generate)
 	{
-		CAGE_ASSERT(generate.slot == SlotEnum::Neck);
+		CAGE_ASSERT(generate.slot == SlotEnum::Head || generate.slot == SlotEnum::Body);
+		Item item(generate); // no generateBasicItem -> no stats
+		item.slot = generate.slot;
 
-		Item item;
-		item.slot = SlotEnum::Neck;
-		item.goldCost = randomRange(40, 60);
+		if (generate.level > 16)
+			item.attributes[AttributeEnum::FireResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Watering"));
+		if (generate.level > 37)
+			item.attributes[AttributeEnum::PoisonResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Antidote"));
+		if (generate.level > 79)
+			item.attributes[AttributeEnum::ElectricResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Isolating"));
+
+		item.updateName("Tattoos");
+		return item;
+	}
+
+	Item generateStaff(const Generate &generate)
+	{
+		CAGE_ASSERT(generate.slot == SlotEnum::MainHand);
+		Item item = generateBasicItem(generate);
 
 		{
 			Skill sk = generateSkill(generate);
@@ -247,77 +206,140 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
-		item.name = item.makeName("Amulet");
+		item.updateName("Staff");
+		return item;
+	}
+
+	Item generateWand(const Generate &generate)
+	{
+		CAGE_ASSERT(generate.slot == SlotEnum::MainHand || generate.slot == SlotEnum::OffHand);
+		Item item = generateBasicItem(generate);
+
+		{
+			Skill sk = generateSkill(generate);
+			item.addPower(sk, 1);
+			item.skills.push_back(std::move(sk));
+		}
+
+		item.updateName(
+			[]()
+			{
+				switch (randomRange(0, 3))
+				{
+					case 0:
+						return "Wand";
+					case 1:
+						return "Book";
+					case 2:
+						return "Scroll";
+				}
+			}());
+		return item;
+	}
+
+	Item generateCape(const Generate &generate)
+	{
+		CAGE_ASSERT(generate.slot == SlotEnum::Body);
+		Item item = generateBasicItem(generate);
+
+		{
+			Skill sk(generate);
+			sk.casterAttributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(sk, generate, 1, "Energizing") * 0.8;
+			sk.casterAttributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 0.7, "Refreshing") * 0.2;
+			sk.casterFlags.push_back(SkillAlone);
+			sk.updateName("Meditation");
+			item.addPower(sk, 0.7);
+			item.skills.push_back(std::move(sk));
+		}
+
+		item.updateName("Cape");
+		return item;
+	}
+
+	Item generateAmulet(const Generate &generate)
+	{
+		CAGE_ASSERT(generate.slot == SlotEnum::Neck);
+		Item item = generateBasicItem(generate);
+
+		{
+			Skill sk = generateSkill(generate);
+			item.addPower(sk, 1);
+			item.skills.push_back(std::move(sk));
+		}
+
+		item.updateName("Amulet");
+		return item;
+	}
+}
+
+namespace
+{
+	Item generateTrinket(const Generate &generate)
+	{
+		Item item = generateBasicItem(generate);
+		item.updateName("Trinket");
 		return item;
 	}
 }
 
 Item generateItem(const Generate &generate)
 {
-	CAGE_ASSERT(generate.valid());
-	// may or may not have slot
-
-	switch (generate.slot)
+	if (generate.slot == SlotEnum::None)
 	{
-		case SlotEnum::None:
+		Generate g = generate;
+		g.slot = []()
 		{
-			Generate g = generate;
-			g.slot = []()
+			switch (randomRange(0, 13))
 			{
-				const uint32 v = randomRange(0, 100);
-				if (v < 5)
+				case 0:
 					return SlotEnum::Neck;
-				if (v < 20)
-					return SlotEnum::Legs;
-				if (v < 35)
-					return SlotEnum::Head;
-				if (v < 50)
+				case 1:
+				case 2:
 					return SlotEnum::OffHand;
-				if (v < 70)
+				case 3:
+				case 4:
+					return SlotEnum::Head;
+				case 5:
+				case 6:
+					return SlotEnum::Legs;
+				case 7:
+				case 8:
+				case 9:
 					return SlotEnum::Body;
-				return SlotEnum::MainHand;
-			}();
-			return generateItem(g);
-		}
-		case SlotEnum::MainHand:
-		{
-			if (generate.magic > 0.5)
-				return generateWand(generate);
-			else
-			{
-				if (generate.ranged > 0.5)
-					return generateBow(generate);
-				else
-					return generateSword(generate);
+				default:
+					return SlotEnum::MainHand;
 			}
-		}
-		case SlotEnum::OffHand:
-		{
-			if (generate.magic > 0.5)
-				return generateWand(generate);
-			else
-				return generateShield(generate);
-		}
-		case SlotEnum::Head:
-		{
-			return generateHelmet(generate);
-		}
-		case SlotEnum::Body:
-		{
-			if (generate.magic > 0.5)
-				return generateCape(generate);
-			else
-				return generateBodyArmor(generate);
-		}
-		case SlotEnum::Legs:
-		{
-			return generateBoots(generate);
-		}
-		case SlotEnum::Neck:
-		{
-			return generateAmulet(generate);
-		}
-		default:
-			CAGE_THROW_CRITICAL(Exception, "invalid slot enum for generating item");
+		}();
+		return generateItem(g);
 	}
+
+	CAGE_ASSERT(generate.valid());
+	CAGE_ASSERT(generate.slot != SlotEnum::None);
+
+	Candidates<Item> candidates(generate);
+	candidates.slotMismatchPenalty = 10;
+
+	static constexpr float H = 0.5;
+	static constexpr uint32 Nothing = 0;
+
+	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelSlash }, generateSword);
+	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelSlash, LevelAoe }, generateScythe);
+	candidates.add(0, 1, 0, 0, SlotEnum::MainHand, { LevelPierce }, generateBow);
+	candidates.add(0, 0, 1, 0, SlotEnum::OffHand, { Nothing }, generateShield);
+	candidates.add(0, H, H, 0, SlotEnum::Head, { Nothing }, generateHelmet);
+	candidates.add(0, H, H, 0, SlotEnum::Body, { Nothing }, generateBodyArmor);
+	candidates.add(0, H, H, 0, SlotEnum::Legs, { Nothing }, generateBoots);
+
+	candidates.add(1, H, 0, 1, SlotEnum::Head, { Nothing }, generateRestoringTattoos);
+	candidates.add(1, H, 0, 1, SlotEnum::Body, { Nothing }, generateRestoringTattoos);
+	candidates.add(1, H, 1, 1, SlotEnum::Head, { Nothing }, generateProtectiveTattoos);
+	candidates.add(1, H, 1, 1, SlotEnum::Body, { Nothing }, generateProtectiveTattoos);
+	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { Nothing }, generateStaff);
+	candidates.add(1, 1, H, H, SlotEnum::MainHand, { Nothing }, generateWand);
+	candidates.add(1, H, H, H, SlotEnum::OffHand, { Nothing }, generateWand);
+	candidates.add(1, H, 1, 0, SlotEnum::Body, { Nothing }, generateCape);
+	candidates.add(1, H, H, 1, SlotEnum::Neck, { Nothing }, generateAmulet);
+
+	candidates.fallback(generateTrinket);
+	return candidates.call();
 }
