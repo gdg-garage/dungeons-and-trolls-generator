@@ -388,10 +388,7 @@ Skill generateSkill(const Generate &generate)
 	CAGE_ASSERT(generate.valid());
 	// may or may not have a slot
 
-	Candidates<Skill> candidates(generate);
-
-	static constexpr float H = 0.5;
-	static constexpr uint32 Nothing = 0;
+	Candidates<Skill (*)(const Generate &generate)> candidates(generate);
 
 	candidates.add(0, 1, 0, 0, SlotEnum::MainHand, { LevelPierce, LevelStun }, generateChainHook);
 	candidates.add(0, 0, 1, 0, SlotEnum::Legs, { LevelSlash, LevelAoe, LevelKnockback }, generateStomp);
@@ -421,5 +418,5 @@ Skill generateSkill(const Generate &generate)
 	candidates.add(1, 1, 1, 1, SlotEnum::OffHand, { LevelElectric, LevelDuration }, generateFaradayCage);
 
 	candidates.fallback(generateLaugh);
-	return candidates.call();
+	return candidates.pick()(generate);
 }

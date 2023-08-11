@@ -10,7 +10,7 @@ namespace
 
 Thing::Thing(const Generate &generate) : generate(generate)
 {
-	goldCost = 10 + generate.power / 2 + randomRange(0u, generate.power);
+	goldCost = 15 + generate.power * 3 + randomRange(0u, generate.power);
 }
 
 Real Thing::addPower(Real weight)
@@ -167,11 +167,11 @@ uint32 bossIndexToLevel(uint32 index)
 	return index * (index + 1) / 2;
 }
 
-Real isHellFloor(uint32 level)
+Real isHorrorFloor(uint32 level)
 {
 	// https://www.wolframalpha.com/input?i=plot+sin%28floor%28x%2B89%29+*+2+*+pi+*+0.029%29+-+sin%28floor%28x%2B69%29+*+2+*+pi+*+0.017%29+%3B+x+%3D+0+..+20
-	const Real hellish = cage::sin((level + 89) * Rads::Full() * 0.029) - cage::sin((level + 69) * Rads::Full() * 0.017) + (randomChance() - 0.5) * 0.2;
-	return hellish * 0.5 + 0.5;
+	const Real horrorish = cage::sin((level + 89) * Rads::Full() * 0.029) - cage::sin((level + 69) * Rads::Full() * 0.017) + (randomChance() - 0.5) * 0.2;
+	return horrorish * 0.5 + 0.5;
 }
 
 Real makeAttrFactor(uint32 power, Real roll)

@@ -63,7 +63,7 @@ namespace
 		Monster mr = generateRandomMonster(generate);
 		mr.updateName("Zombie");
 		mr.icon = "zombie";
-		mr.faction = "hell";
+		mr.faction = "horror";
 		return mr;
 	}
 
@@ -75,7 +75,7 @@ namespace
 		Monster mr = generateRandomMonster(generate);
 		mr.updateName("Skeleton");
 		mr.icon = "skeleton";
-		mr.faction = "hell";
+		mr.faction = "horror";
 		return mr;
 	}
 
@@ -87,7 +87,7 @@ namespace
 		Monster mr = generateRandomMonster(generate);
 		mr.updateName("Ogre");
 		mr.icon = "ogre";
-		mr.faction = "hell";
+		mr.faction = "horror";
 		return mr;
 	}
 
@@ -99,7 +99,7 @@ namespace
 		Monster mr = generateRandomMonster(generate);
 		mr.updateName("Troll");
 		mr.icon = "troll";
-		mr.faction = "hell";
+		mr.faction = "horror";
 		return mr;
 	}
 
@@ -111,7 +111,7 @@ namespace
 		Monster mr = generateRandomMonster(generate);
 		mr.updateName("Vampire");
 		mr.icon = "vampire";
-		mr.faction = "hell";
+		mr.faction = "horror";
 		return mr;
 	}
 
@@ -123,7 +123,7 @@ namespace
 		Monster mr = generateRandomMonster(generate);
 		mr.updateName("Medusa");
 		mr.icon = "medusa";
-		mr.faction = "hell";
+		mr.faction = "horror";
 		return mr;
 	}
 
@@ -135,7 +135,7 @@ namespace
 		Monster mr = generateRandomMonster(generate);
 		mr.updateName("Succubus");
 		mr.icon = "succubus";
-		mr.faction = "hell";
+		mr.faction = "horror";
 		return mr;
 	}
 
@@ -147,7 +147,7 @@ namespace
 		Monster mr = generateRandomMonster(generate);
 		mr.updateName("Imp");
 		mr.icon = "imp";
-		mr.faction = "hell";
+		mr.faction = "horror";
 		return mr;
 	}
 
@@ -159,7 +159,7 @@ namespace
 		Monster mr = generateRandomMonster(generate);
 		mr.updateName("Ghost");
 		mr.icon = "ghost";
-		mr.faction = "hell";
+		mr.faction = "horror";
 		return mr;
 	}
 
@@ -171,7 +171,7 @@ namespace
 		Monster mr = generateRandomMonster(generate);
 		mr.updateName("Banshee");
 		mr.icon = "banshee";
-		mr.faction = "hell";
+		mr.faction = "horror";
 		return mr;
 	}
 
@@ -183,11 +183,11 @@ namespace
 		Monster mr = generateRandomMonster(generate);
 		mr.updateName("Lich");
 		mr.icon = "lich";
-		mr.faction = "hell";
+		mr.faction = "horror";
 		return mr;
 	}
 
-	Monster generateHell(const Generate &generate)
+	Monster generateHorror(const Generate &generate)
 	{
 		if (generate.magic < 0.5)
 		{ // mundane
@@ -469,7 +469,7 @@ namespace
 
 Monster generateMonster(const Generate &generate)
 {
-	return generateMonsterImpl(generate, isHellFloor(generate.level) > 0.5 ? &generateHell : &generateOutlaw);
+	return generateMonsterImpl(generate, isHorrorFloor(generate.level) > 0.5 ? &generateHorror : &generateOutlaw);
 }
 
 Monster generateMinion(const Generate &generate)
@@ -480,7 +480,7 @@ Monster generateMinion(const Generate &generate)
 	// no rerolls
 	// no loot
 	// no score
-	Monster mr = isHellFloor(generate.level) > 0.5 ? generateHell(generate) : generateOutlaw(generate);
+	Monster mr = isHorrorFloor(generate.level) > 0.5 ? generateHorror(generate) : generateOutlaw(generate);
 	mr.faction = "inherited";
 	return mr;
 }
@@ -560,6 +560,8 @@ Monster generateButcher(uint32 level)
 	mr.algorithm = "butcher";
 	mr.faction = "monster";
 
+	// todo add some skills
+
 	addDeadBody(mr);
 	return mr;
 }
@@ -577,6 +579,8 @@ Monster generateWitch(uint32 level)
 	mr.icon = "witch";
 	mr.algorithm = "witch";
 	mr.faction = "monster";
+
+	// todo add broomstick skill
 
 	addDeadBody(mr);
 	return mr;

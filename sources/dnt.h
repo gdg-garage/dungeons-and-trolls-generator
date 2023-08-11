@@ -242,7 +242,7 @@ OccupancyEnum occupancy(TileEnum tile);
 bool isLevelBoss(uint32 level);
 uint32 levelToBossIndex(uint32 level);
 uint32 bossIndexToLevel(uint32 index);
-Real isHellFloor(uint32 level);
+Real isHorrorFloor(uint32 level);
 Real makeAttrFactor(uint32 power, Real roll);
 Real makeAttrFactor(Thing &sk, const Generate &generate, Real weight);
 Real makeAttrFactor(Thing &sk, const Generate &generate, Real weight, const std::string &affixName, AffixEnum affixPos = AffixEnum::Prefix);
@@ -278,6 +278,8 @@ constexpr const char *SkillStun = "\"stun\""; // prevents the caster/target from
 constexpr const char *SkillGroundEffect = "\"groundEffect\""; // creates ground effect at caster/target position, which applies the effects of the skill
 constexpr const char *SkillPassive = "\"passive\""; // the effects of the skill are automatically applied every tick, assuming the cost can be paid; multiple passive skills are allowed
 
+constexpr float H = 0.5;
+constexpr uint32 Nothing = 0;
 constexpr uint32 LevelSlash = 0;
 constexpr uint32 LevelPierce = 7;
 constexpr uint32 LevelRanged = 7;
@@ -299,7 +301,7 @@ struct Candidates : private Immovable
 	struct Candidate
 	{
 		Real penalty;
-		T (*generator)(const Generate &generate);
+		T value = {};
 	};
 
 	Candidates(const Generate &generate) : generate(generate) { data.reserve(100); }
@@ -308,7 +310,7 @@ struct Candidates : private Immovable
 	std::vector<Candidate> data;
 	Real slotMismatchPenalty = 1;
 
-	void add(Real magic, Real ranged, Real defensive, Real support, SlotEnum preferredSlot, const std::initializer_list<uint32> &requiredLevels, T (*generator)(const Generate &generate))
+	void add(Real magic, Real ranged, Real defensive, Real support, SlotEnum preferredSlot, const std::initializer_list<uint32> &requiredLevels, T value)
 	{
 		uint32 minLevel = std::max(requiredLevels);
 		if (generate.ranged > 0.5 || ranged > 0.5)
@@ -321,16 +323,16 @@ struct Candidates : private Immovable
 		const Real s = generate.slot != preferredSlot ? slotMismatchPenalty : 0;
 		const Real l = generate.level > minLevel ? 0 : 10;
 		const Real p = a + s + l + randomChance() * 0.2;
-		data.push_back({ p, generator });
+		data.push_back({ p, value });
 	}
 
-	void fallback(T (*generator)(const Generate &generate)) { data.push_back({ 10.0, generator }); }
+	void fallback(T value) { data.push_back({ 10.0, value }); }
 
-	T call()
+	T pick()
 	{
 		CAGE_ASSERT(!data.empty());
 		std::sort(data.begin(), data.end(), [](const Candidate &a, const Candidate &b) { return a.penalty < b.penalty; });
 		CAGE_ASSERT(data[0].penalty <= 10);
-		return data[0].generator(generate);
+		return data[0].value;
 	}
 };
