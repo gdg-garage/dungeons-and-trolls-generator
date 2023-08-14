@@ -301,6 +301,28 @@ namespace
 		}
 	}
 
+	void surroundWithDecorations(Floor &f, Vec2i center, const char *decor)
+	{
+		const Vec2i ps[] = {
+			center + Vec2i(-1, -1),
+			center + Vec2i(-1, +0),
+			center + Vec2i(-1, +1),
+			center + Vec2i(+0, -1),
+			center + Vec2i(+0, +1),
+			center + Vec2i(+1, -1),
+			center + Vec2i(+1, +0),
+			center + Vec2i(+1, +1),
+		};
+		for (Vec2i i : ps)
+		{
+			if (f.tile(i) == TileEnum::Empty)
+			{
+				f.tile(i) = TileEnum::Decoration;
+				f.extra(i).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"" + decor + "\"}");
+			}
+		}
+	}
+
 	void placeMonsters(Floor &f, sint32 powerOffset)
 	{
 		const uint32 a = f.level / 2 + 1;
@@ -598,9 +620,6 @@ namespace
 		{
 			const auto &generateKeyToAllDoors = [&]()
 			{
-				Item item({});
-				item.name = "Key";
-
 				std::vector<Vec2i> doors;
 				const uint32 cnt = f.width * f.height;
 				for (uint32 i = 0; i < cnt; i++)
@@ -620,9 +639,7 @@ namespace
 				removeLastComma(json);
 				json += "]\n"; // /doors
 				json += "}"; // /root
-				item.flags.push_back(std::move(json));
-
-				return item;
+				return json;
 			};
 
 			Monster mr = generateFloorBoss(f.level);
@@ -873,25 +890,16 @@ namespace
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
 			f.extra(p).push_back(generateButcher(f.level));
+			surroundWithDecorations(f, p, "bones");
+		}
 
-			const Vec2i ps[] = {
-				p + Vec2i(-1, -1),
-				p + Vec2i(-1, +0),
-				p + Vec2i(-1, +1),
-				p + Vec2i(+0, -1),
-				p + Vec2i(+0, +1),
-				p + Vec2i(+1, -1),
-				p + Vec2i(+1, +0),
-				p + Vec2i(+1, +1),
-			};
-			for (Vec2i i : ps)
-			{
-				if (f.tile(i) == TileEnum::Empty)
-				{
-					f.tile(i) = TileEnum::Decoration;
-					f.extra(i).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"blood\"}");
-				}
-			}
+		// the hydra
+		if (f.level > 70 && randomChance() < 0.05)
+		{
+			const Vec2i p = findAny(f, TileEnum::Empty);
+			f.tile(p) = TileEnum::Monster;
+			f.extra(p).push_back(generateHydra(f.level));
+			surroundWithDecorations(f, p, "bones");
 		}
 
 		// templars
@@ -980,7 +988,20 @@ namespace
 		}
 
 		// monsters
-		placeMonsters(f, 0);
+		if (f.level > 70 && randomChance() < 0.05)
+		{
+			// zerg infestation
+			for (uint32 i = 0; i < f.tiles.size(); i++)
+			{
+				if (f.tiles[i] == TileEnum::Empty && randomChance() < 0.2)
+				{
+					f.tiles[i] = TileEnum::Monster;
+					f.extras[i].push_back(generateZergling(f.level));
+				}
+			}
+		}
+		else
+			placeMonsters(f, 0);
 
 		// spikes traps
 		if (f.level > 60 && randomChance() < 0.05)

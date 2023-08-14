@@ -144,7 +144,6 @@ struct Item : public Thing
 	AttributesValuesList requirements;
 	AttributesValuesList attributes;
 	std::vector<Skill> skills;
-	std::vector<std::string> flags;
 	uint32 buyPrice = 0;
 };
 
@@ -257,6 +256,8 @@ Monster generateFloorBoss(uint32 level);
 Monster generateButcher(uint32 level);
 Monster generateWitch(uint32 level);
 Monster generateTemplar(uint32 level);
+Monster generateZergling(uint32 level);
+Monster generateHydra(uint32 level);
 Floor generateFloor(uint32 level, uint32 maxLevel);
 
 std::string exportVariant(const Variant &variant);

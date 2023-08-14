@@ -225,12 +225,6 @@ std::string exportItem(const Item &item)
 	removeLastComma(json);
 	json += "],\n"; // /skills
 
-	json += "\"flags\":[\n";
-	for (const std::string &flag : item.flags)
-		json += flag + ",\n";
-	removeLastComma(json);
-	json += "],\n"; // /casterFlags
-
 	json += (Stringizer() + "\"buyPrice\":" + item.buyPrice + ",").value.c_str();
 
 #ifdef CAGE_DEBUG

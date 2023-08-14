@@ -1,13 +1,5 @@
 #include "dnt.h"
 
-namespace
-{
-	Real skewedChance()
-	{
-		return randomChance() * randomChance();
-	}
-}
-
 Thing::Thing(const Generate &generate) : generate(generate)
 {
 	goldCost = 15 + generate.power * 3 + randomRange(0u, generate.power);
@@ -15,7 +7,7 @@ Thing::Thing(const Generate &generate) : generate(generate)
 
 Real Thing::addPower(Real weight)
 {
-	return addPower(skewedChance(), weight);
+	return addPower(randomChance(), weight);
 }
 
 Real Thing::addPower(Real roll, Real weight)
@@ -32,7 +24,7 @@ Real Thing::addPower(Real roll, Real weight)
 
 Real Thing::addPower(Real weight, AffixEnum affix, const std::string &name)
 {
-	return addPower(skewedChance(), weight, affix, name);
+	return addPower(randomChance(), weight, affix, name);
 }
 
 Real Thing::addPower(Real roll, Real weight, AffixEnum affix, const std::string &name)
@@ -46,7 +38,13 @@ void Thing::addPower(const Thing &other, Real weight)
 	if (other.powerWeight > 1e-3)
 	{
 		addPower(other.powerTotal / other.powerWeight, weight);
-		addAffix(other.powerTotal / other.powerWeight * weight, AffixEnum::Suffix, std::string() + "With " + other.name);
+		std::string s = other.name;
+		{
+			auto it = s.find(" With");
+			if (it != s.npos)
+				s.erase(it);
+		}
+		addAffix(other.powerTotal / other.powerWeight * weight, AffixEnum::Suffix, "With " + s);
 	}
 	else
 		powersCount++;
