@@ -140,6 +140,7 @@ namespace
 		sk.range[AttributeEnum::Scalar] = 2;
 		sk.targetAttributes[AttributeEnum::Life][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Doctorly") * 0.2;
 		sk.targetAttributes[AttributeEnum::Life][AttributeEnum::Dexterity] = makeAttrFactor(sk, generate, 1, "Carefully") * 0.2;
+		sk.casterFlags.push_back(SkillAllowSelf);
 		sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 10);
 		sk.updateName("Patch Wounds");
 		return sk;
@@ -277,6 +278,7 @@ namespace
 		sk.range[AttributeEnum::Willpower] = makeAttrFactor(sk, generate, 1, "Distant") * 0.1;
 		sk.range[AttributeEnum::Scalar] = 4;
 		sk.targetAttributes[AttributeEnum::Life][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Concentrated") * 0.5;
+		sk.casterFlags.push_back(SkillAllowSelf);
 		sk.cost[AttributeEnum::Mana] = makeCost(sk, generate, 20);
 		sk.updateName("Heal");
 		return sk;
@@ -325,6 +327,7 @@ namespace
 		sk.duration[AttributeEnum::Scalar] = interpolate(3.0, 6.0, sk.addPower(0.8, AffixEnum::Prefix, "Constricting"));
 		sk.targetAttributes[AttributeEnum::Strength][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Choking") * -0.2;
 		sk.targetAttributes[AttributeEnum::ElectricResist][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Conductive") * -0.15;
+		sk.casterFlags.push_back(SkillAllowSelf);
 		sk.cost[AttributeEnum::Mana] = makeCost(sk, generate, 20);
 		sk.updateName("Electrocute");
 		return sk;
@@ -339,6 +342,7 @@ namespace
 		sk.duration[AttributeEnum::Scalar] = interpolate(2.0, 5.0, sk.addPower(0.9, AffixEnum::Prefix, "Durable"));
 		sk.targetAttributes[AttributeEnum::PiercingArmor][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Impenetrable") * 0.2;
 		sk.targetAttributes[AttributeEnum::FireResist][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Fireproof") * 0.2;
+		sk.casterFlags.push_back(SkillAllowSelf);
 		sk.cost[AttributeEnum::Mana] = makeCost(sk, generate, 20);
 		sk.updateName("Ice Shield");
 		return sk;
@@ -353,6 +357,7 @@ namespace
 		sk.duration[AttributeEnum::Scalar] = interpolate(2.0, 5.0, sk.addPower(0.9, AffixEnum::Prefix, "Durable"));
 		sk.targetAttributes[AttributeEnum::SlashArmor][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Slipping") * 0.2;
 		sk.targetAttributes[AttributeEnum::PoisonResist][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Resilient") * 0.2;
+		sk.casterFlags.push_back(SkillAllowSelf);
 		sk.cost[AttributeEnum::Mana] = makeCost(sk, generate, 20);
 		sk.updateName("Flesh Of Steel");
 		return sk;
@@ -366,6 +371,7 @@ namespace
 		sk.range[AttributeEnum::Scalar] = 3;
 		sk.duration[AttributeEnum::Scalar] = interpolate(2.0, 5.0, sk.addPower(0.9, AffixEnum::Prefix, "Durable"));
 		sk.targetAttributes[AttributeEnum::ElectricResist][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Grounded") * 0.2;
+		sk.casterFlags.push_back(SkillAllowSelf);
 		sk.cost[AttributeEnum::Mana] = makeCost(sk, generate, 15);
 		sk.updateName("Faraday Cage");
 		return sk;
@@ -397,10 +403,10 @@ Skill generateSkill(const Generate &generate)
 	candidates.add(0, 1, 0, 0, SlotEnum::Body, { LevelPoison, LevelAoe, LevelDuration, LevelGroundEffect }, generatePoisonVial);
 	candidates.add(0, 1, 0, 1, SlotEnum::Body, { LevelDuration, LevelSummoning }, generateConstructBallista);
 	candidates.add(0, 0, 0, 1, SlotEnum::Head, { LevelAoe, LevelDuration, LevelStun }, generateWarcry);
-	candidates.add(0, H, 0, 1, SlotEnum::Head, { LevelDuration }, generateFocus);
-	candidates.add(0, H, 1, 1, SlotEnum::OffHand, { Nothing }, generatePatchWounds);
-	candidates.add(0, H, 0, 1, SlotEnum::Head, { Nothing }, generateBerserk);
-	candidates.add(0, 0, H, 1, SlotEnum::Head, { LevelDuration }, generateIntimidate);
+	candidates.add(0, 0, 0, 1, SlotEnum::Head, { LevelDuration }, generateFocus);
+	candidates.add(0, 0, 1, 1, SlotEnum::OffHand, { Nothing }, generatePatchWounds);
+	candidates.add(0, 0, 0, 1, SlotEnum::Head, { Nothing }, generateBerserk);
+	candidates.add(0, 0, 0, 1, SlotEnum::Head, { LevelDuration }, generateIntimidate);
 
 	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { LevelElectric, LevelAoe }, generateShockNova);
 	candidates.add(1, 1, 0, 0, SlotEnum::MainHand, { LevelFire }, generateFireball);

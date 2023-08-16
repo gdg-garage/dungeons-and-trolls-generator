@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <map>
+#include <optional>
 #include <string>
 #include <variant>
 #include <vector>
@@ -66,14 +67,15 @@ struct Thing : private Noncopyable
 	std::array<Affix, (uint32)AffixEnum::_Total> affixes;
 
 	Generate generate;
-	uint32 powersCount = 0;
-	Real powerWeight; // sum of weights
-	Real powerTotal; // sum of weighted rolls
+	Real totalRolls; // sum of weighted rolls
+	Real totalWeight; // sum of weights
+	Real weightedRoll() const;
 	Real goldCost = 0;
 
 	Real addPower(Real weight);
 	Real addPower(Real roll, Real weight);
 	Real addPower(Real weight, AffixEnum affix, const std::string &name);
+	Real subtractPower(Real weight, AffixEnum affix, const std::string &name);
 	Real addPower(Real roll, Real weight, AffixEnum affix, const std::string &name);
 	void addPower(const Thing &other, Real weight);
 	void addAffix(Real relevance, AffixEnum affix, const std::string &name);
@@ -299,17 +301,15 @@ constexpr uint32 LevelElectric = 79;
 template<class T>
 struct Candidates : private Immovable
 {
-	struct Candidate
-	{
-		Real penalty;
-		T value = {};
-	};
-
-	Candidates(const Generate &generate) : generate(generate) { data.reserve(100); }
+	Candidates(const Generate &generate) : generate(generate) {}
 
 	const Generate &generate;
-	std::vector<Candidate> data;
+	std::optional<T> data;
+	Real bestPenalty = Real::Infinity();
 	Real slotMismatchPenalty = 1;
+#ifdef CAGE_DEBUG
+	std::vector<std::pair<Real, T>> vec;
+#endif // CAGE_DEBUG
 
 	void add(Real magic, Real ranged, Real defensive, Real support, SlotEnum preferredSlot, const std::initializer_list<uint32> &requiredLevels, T value)
 	{
@@ -321,19 +321,32 @@ struct Candidates : private Immovable
 		if (generate.support > 0.5 || support > 0.5)
 			minLevel = max(minLevel, LevelSupport);
 		const Real a = abs(generate.magic - magic) + abs(generate.ranged - ranged) + abs(generate.defensive - defensive) + abs(generate.support - support);
-		const Real s = generate.slot != preferredSlot ? slotMismatchPenalty : 0;
+		const Real s = generate.slot == preferredSlot ? 0 : slotMismatchPenalty;
 		const Real l = generate.level > minLevel ? 0 : 10;
-		const Real p = a + s + l + randomChance() * 0.2;
-		data.push_back({ p, value });
+		const Real p = a + s + l + randomChance() * 0.3;
+		if (p < bestPenalty)
+		{
+			bestPenalty = p;
+			data = value;
+		}
+#ifdef CAGE_DEBUG
+		vec.push_back({ p, value });
+#endif // CAGE_DEBUG
 	}
 
-	void fallback(T value) { data.push_back({ 10.0, value }); }
+	void fallback(T value)
+	{
+		if (!data.has_value())
+		{
+			data = value;
+			bestPenalty = 10;
+		}
+	}
 
 	T pick()
 	{
-		CAGE_ASSERT(!data.empty());
-		std::sort(data.begin(), data.end(), [](const Candidate &a, const Candidate &b) { return a.penalty < b.penalty; });
-		CAGE_ASSERT(data[0].penalty <= 10);
-		return data[0].value;
+		CAGE_ASSERT(data.has_value());
+		CAGE_ASSERT(bestPenalty <= 10);
+		return *data;
 	}
 };

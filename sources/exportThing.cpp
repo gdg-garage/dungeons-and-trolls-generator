@@ -2,23 +2,25 @@
 
 namespace
 {
+	template<bool Properties>
 	std::string thingJson(const Thing &thing)
 	{
 		std::string r;
 
 		r += (Stringizer() + "\"power\":" + thing.generate.power + ",").value.c_str();
-		if (thing.generate.power > 0)
+		if constexpr (Properties)
 		{
-			r += (Stringizer() + "\"level\":" + thing.generate.level + ",").value.c_str();
-			r += (Stringizer() + "\"magic\":" + thing.generate.magic + ",").value.c_str();
-			r += (Stringizer() + "\"ranged\":" + thing.generate.ranged + ",").value.c_str();
-			r += (Stringizer() + "\"defensive\":" + thing.generate.defensive + ",").value.c_str();
-			r += (Stringizer() + "\"support\":" + thing.generate.support + ",").value.c_str();
+			if (thing.generate.power > 0)
+			{
+				r += (Stringizer() + "\"level\":" + thing.generate.level + ",").value.c_str();
+				r += (Stringizer() + "\"magic\":" + thing.generate.magic + ",").value.c_str();
+				r += (Stringizer() + "\"ranged\":" + thing.generate.ranged + ",").value.c_str();
+				r += (Stringizer() + "\"defensive\":" + thing.generate.defensive + ",").value.c_str();
+				r += (Stringizer() + "\"support\":" + thing.generate.support + ",").value.c_str();
+			}
 		}
 
-		r += (Stringizer() + "\"powersCount\":" + thing.powersCount + ",").value.c_str();
-		r += (Stringizer() + "\"powerWeight\":" + thing.powerWeight + ",").value.c_str();
-		r += (Stringizer() + "\"powerTotal\":" + thing.powerTotal + ",").value.c_str();
+		r += (Stringizer() + "\"weightedRoll\":" + thing.weightedRoll() + ",").value.c_str();
 		r += (Stringizer() + "\"goldCost\":" + thing.goldCost + ",").value.c_str();
 
 		removeLastComma(r);
@@ -178,30 +180,45 @@ std::string exportSkill(const Skill &skill)
 	json += "{\n";
 	json += "\"class\":\"skill\",\n";
 	json += std::string() + "\"name\":\"" + skill.name + "\",\n";
-	json += std::string() + "\"target\":\"" + skillTargetName(skill.target) + "\",\n";
-	json += std::string() + "\"cost\":" + attributesValueMappingJson(skill.cost) + ",\n";
-	json += std::string() + "\"range\":" + attributesValueMappingJson(skill.range) + ",\n";
-	json += std::string() + "\"radius\":" + attributesValueMappingJson(skill.radius) + ",\n";
-	json += std::string() + "\"duration\":" + attributesValueMappingJson(skill.duration) + ",\n";
-	json += std::string() + "\"damageAmount\":" + attributesValueMappingJson(skill.damageAmount) + ",\n";
-	json += std::string() + "\"damageType\":\"" + damageTypeName(skill.damageType) + "\",\n";
-	json += std::string() + "\"casterAttributes\":" + skillAttributesJson(skill.casterAttributes) + ",\n";
-	json += std::string() + "\"targetAttributes\":" + skillAttributesJson(skill.targetAttributes) + ",\n";
+	if (skill.target != SkillTargetEnum::None)
+		json += std::string() + "\"target\":\"" + skillTargetName(skill.target) + "\",\n";
+	if (!skill.cost.empty())
+		json += std::string() + "\"cost\":" + attributesValueMappingJson(skill.cost) + ",\n";
+	if (!skill.range.empty())
+		json += std::string() + "\"range\":" + attributesValueMappingJson(skill.range) + ",\n";
+	if (!skill.radius.empty())
+		json += std::string() + "\"radius\":" + attributesValueMappingJson(skill.radius) + ",\n";
+	if (!skill.duration.empty())
+		json += std::string() + "\"duration\":" + attributesValueMappingJson(skill.duration) + ",\n";
+	if (!skill.damageAmount.empty())
+		json += std::string() + "\"damageAmount\":" + attributesValueMappingJson(skill.damageAmount) + ",\n";
+	if (skill.damageType != DamageTypeEnum::None)
+		json += std::string() + "\"damageType\":\"" + damageTypeName(skill.damageType) + "\",\n";
+	if (!skill.casterAttributes.empty())
+		json += std::string() + "\"casterAttributes\":" + skillAttributesJson(skill.casterAttributes) + ",\n";
+	if (!skill.targetAttributes.empty())
+		json += std::string() + "\"targetAttributes\":" + skillAttributesJson(skill.targetAttributes) + ",\n";
 
-	json += "\"casterFlags\":[\n";
-	for (const std::string &flag : skill.casterFlags)
-		json += flag + ",\n";
-	removeLastComma(json);
-	json += "],\n"; // /casterFlags
+	if (!skill.casterFlags.empty())
+	{
+		json += "\"casterFlags\":[\n";
+		for (const std::string &flag : skill.casterFlags)
+			json += flag + ",\n";
+		removeLastComma(json);
+		json += "],\n";
+	}
 
-	json += "\"targetFlags\":[\n";
-	for (const std::string &flag : skill.targetFlags)
-		json += flag + ",\n";
-	removeLastComma(json);
-	json += "],\n"; // /targetFlags
+	if (!skill.targetFlags.empty())
+	{
+		json += "\"targetFlags\":[\n";
+		for (const std::string &flag : skill.targetFlags)
+			json += flag + ",\n";
+		removeLastComma(json);
+		json += "],\n";
+	}
 
 #ifdef CAGE_DEBUG
-	json += "\"_debug\":" + thingJson(skill) + ",\n";
+	json += "\"_debug\":" + thingJson<false>(skill) + ",\n";
 #endif // CAGE_DEBUG
 
 	removeLastComma(json);
@@ -216,19 +233,24 @@ std::string exportItem(const Item &item)
 	json += "\"class\":\"item\",\n";
 	json += std::string() + "\"name\":\"" + item.name + "\",\n";
 	json += std::string() + "\"slot\":\"" + slotName(item.slot) + "\",\n";
-	json += "\"requirements\":" + attributesValueMappingJson(item.requirements) + ",\n";
-	json += "\"attributes\":" + attributesValueMappingJson(item.attributes) + ",\n";
+	if (!item.requirements.empty())
+		json += "\"requirements\":" + attributesValueMappingJson(item.requirements) + ",\n";
+	if (!item.attributes.empty())
+		json += "\"attributes\":" + attributesValueMappingJson(item.attributes) + ",\n";
 
-	json += "\"skills\":[\n";
-	for (const Skill &skill : item.skills)
-		json += exportSkill(skill) + ",\n";
-	removeLastComma(json);
-	json += "],\n"; // /skills
+	if (!item.skills.empty())
+	{
+		json += "\"skills\":[\n";
+		for (const Skill &skill : item.skills)
+			json += exportSkill(skill) + ",\n";
+		removeLastComma(json);
+		json += "],\n";
+	}
 
 	json += (Stringizer() + "\"buyPrice\":" + item.buyPrice + ",").value.c_str();
 
 #ifdef CAGE_DEBUG
-	json += "\"_debug\":" + thingJson(item) + ",\n";
+	json += "\"_debug\":" + thingJson<false>(item) + ",\n";
 #endif // CAGE_DEBUG
 
 	removeLastComma(json);
@@ -245,24 +267,31 @@ std::string exportMonster(const Monster &monster)
 	json += std::string() + "\"icon\":\"" + monster.icon.c_str() + "\",\n";
 	json += std::string() + "\"algorithm\":\"" + monster.algorithm.c_str() + "\",\n";
 	json += std::string() + "\"faction\":\"" + monster.faction.c_str() + "\",\n";
-	json += "\"attributes\":" + attributesValueMappingJson(monster.attributes) + ",\n";
+	if (!monster.attributes.empty())
+		json += "\"attributes\":" + attributesValueMappingJson(monster.attributes) + ",\n";
 
-	json += "\"equippedItems\":[\n";
-	for (const Item &item : monster.equippedItems)
-		json += exportItem(item) + ",\n";
-	removeLastComma(json);
-	json += "],\n"; // /equippedItems
+	if (!monster.equippedItems.empty())
+	{
+		json += "\"equippedItems\":[\n";
+		for (const Item &item : monster.equippedItems)
+			json += exportItem(item) + ",\n";
+		removeLastComma(json);
+		json += "],\n";
+	}
 
-	json += "\"onDeath\":[\n";
-	for (const auto &it : monster.onDeath)
-		json += exportVariant(it) + ",\n";
-	removeLastComma(json);
-	json += "],\n"; // onDeath
+	if (!monster.onDeath.empty())
+	{
+		json += "\"onDeath\":[\n";
+		for (const auto &it : monster.onDeath)
+			json += exportVariant(it) + ",\n";
+		removeLastComma(json);
+		json += "],\n";
+	}
 
 	json += (Stringizer() + "\"score\":" + monster.score + ",").value.c_str();
 
 #ifdef CAGE_DEBUG
-	json += "\"_debug\":" + thingJson(monster) + ",\n";
+	json += "\"_debug\":" + thingJson<true>(monster) + ",\n";
 #endif // CAGE_DEBUG
 
 	removeLastComma(json);

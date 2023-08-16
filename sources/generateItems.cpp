@@ -2,11 +2,13 @@
 
 namespace
 {
+	void addNothing(Item &item) {}
+
 	template<AttributeEnum Attr>
 	void addBoost(Item &item)
 	{
-		const Real a = item.generate.power / 10 + 1;
-		const Real b = item.generate.power / 5 + 3;
+		const Real a = item.generate.power / 20 + 1;
+		const Real b = item.generate.power / 10 + 3;
 		static constexpr const char *names[] = {
 			"Strengthening",
 			"Dexterous",
@@ -23,11 +25,11 @@ namespace
 			"Vigorous",
 		};
 		static_assert(sizeof(names) / sizeof(names[0]) == (uint32)AttributeEnum::Scalar);
-		const sint32 r = numeric_cast<sint32>(interpolate(a, b, item.addPower(0.8, AffixEnum::Prefix, names[(uint32)Attr])));
-		item.attributes[Attr] = max(item.attributes[Attr], r);
+		Real r = interpolate(a, b, item.addPower(0.8, AffixEnum::Prefix, names[(uint32)Attr]));
+		if constexpr (Attr >= AttributeEnum::SlashArmor)
+			r *= 1.5;
+		item.attributes[Attr] += numeric_cast<sint32>(r + 0.5);
 	}
-
-	void addNothing(Item &item) {}
 
 	void makeBoost(Item &item)
 	{
@@ -70,6 +72,46 @@ namespace
 		candidates.pick()(item);
 	}
 
+	template<AttributeEnum Attr>
+	void addRequirement(Item &item)
+	{
+		const Real a = item.generate.power / 6 + 1;
+		const Real b = item.generate.power / 3 + 3;
+		const Real r = interpolate(a, b, item.subtractPower(0.6, AffixEnum::Suffix, "Of Need"));
+		item.requirements[Attr] += numeric_cast<sint32>(r + 0.5);
+	}
+
+	void makeRequirement(Item &item)
+	{
+		Candidates<void (*)(Item &)> candidates(item.generate);
+
+		candidates.add(0, 0, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Strength>);
+		candidates.add(0, 1, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Dexterity>);
+		candidates.add(1, H, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Intelligence>);
+
+		candidates.add(0, 0, H, H, SlotEnum::OffHand, { Nothing }, addRequirement<AttributeEnum::Strength>);
+		candidates.add(0, 1, H, H, SlotEnum::OffHand, { Nothing }, addRequirement<AttributeEnum::Dexterity>);
+		candidates.add(1, H, H, H, SlotEnum::OffHand, { Nothing }, addRequirement<AttributeEnum::Intelligence>);
+
+		candidates.add(0, H, H, H, SlotEnum::Body, { Nothing }, addRequirement<AttributeEnum::Strength>);
+		candidates.add(0, 1, H, H, SlotEnum::Body, { Nothing }, addRequirement<AttributeEnum::Dexterity>);
+		candidates.add(0, 0, H, H, SlotEnum::Body, { Nothing }, addRequirement<AttributeEnum::Constitution>);
+		candidates.add(1, H, H, H, SlotEnum::Body, { Nothing }, addRequirement<AttributeEnum::Willpower>);
+
+		candidates.add(0, H, H, H, SlotEnum::Head, { Nothing }, addRequirement<AttributeEnum::Dexterity>);
+		candidates.add(1, H, H, H, SlotEnum::Head, { Nothing }, addRequirement<AttributeEnum::Willpower>);
+
+		candidates.add(0, H, H, H, SlotEnum::Legs, { Nothing }, addRequirement<AttributeEnum::Strength>);
+		candidates.add(1, H, H, H, SlotEnum::Legs, { Nothing }, addRequirement<AttributeEnum::Willpower>);
+		candidates.add(0, H, H, H, SlotEnum::Legs, { Nothing }, addRequirement<AttributeEnum::Constitution>);
+
+		candidates.add(1, H, H, H, SlotEnum::Neck, { Nothing }, addRequirement<AttributeEnum::Intelligence>);
+		candidates.add(0, H, H, H, SlotEnum::Neck, { Nothing }, addRequirement<AttributeEnum::Constitution>);
+
+		candidates.fallback(addNothing);
+		candidates.pick()(item);
+	}
+
 	Item generateBasicItem(const Generate &generate)
 	{
 		CAGE_ASSERT(generate.slot != SlotEnum::None);
@@ -79,6 +121,13 @@ namespace
 		makeBoost(item);
 		if (item.addPower(0.5, AffixEnum::Prefix, "Rare") > 0.7)
 			makeBoost(item);
+
+		if (generate.level > 22)
+		{
+			makeRequirement(item);
+			if ((randomChance() < 0.3))
+				makeRequirement(item);
+		}
 
 		if (item.addPower(0.5, AffixEnum::Prefix, "Skilled") > 0.7)
 		{
@@ -342,9 +391,26 @@ namespace
 		return item;
 	}
 
+	Item generateProtectiveTattoos(const Generate &generate)
+	{
+		CAGE_ASSERT(generate.slot == SlotEnum::Body);
+		Item item(generate); // no generateBasicItem -> no stats
+		item.slot = generate.slot;
+
+		if (generate.level > 16)
+			item.attributes[AttributeEnum::FireResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Watering"));
+		if (generate.level > 37)
+			item.attributes[AttributeEnum::PoisonResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Antidote"));
+		if (generate.level > 79)
+			item.attributes[AttributeEnum::ElectricResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Isolating"));
+
+		item.updateName("Tattoos");
+		return item;
+	}
+
 	Item generateRestoringTattoos(const Generate &generate)
 	{
-		CAGE_ASSERT(generate.slot == SlotEnum::Head || generate.slot == SlotEnum::Body);
+		CAGE_ASSERT(generate.slot == SlotEnum::Head);
 		Item item(generate); // no generateBasicItem -> no stats
 		item.slot = generate.slot;
 
@@ -359,23 +425,6 @@ namespace
 			item.addPower(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
-
-		item.updateName("Tattoos");
-		return item;
-	}
-
-	Item generateProtectiveTattoos(const Generate &generate)
-	{
-		CAGE_ASSERT(generate.slot == SlotEnum::Head || generate.slot == SlotEnum::Body);
-		Item item(generate); // no generateBasicItem -> no stats
-		item.slot = generate.slot;
-
-		if (generate.level > 16)
-			item.attributes[AttributeEnum::FireResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Watering"));
-		if (generate.level > 37)
-			item.attributes[AttributeEnum::PoisonResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Antidote"));
-		if (generate.level > 79)
-			item.attributes[AttributeEnum::ElectricResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Isolating"));
 
 		item.updateName("Tattoos");
 		return item;
@@ -514,12 +563,10 @@ Item generateItem(const Generate &generate)
 	candidates.add(1, H, 1, 1, SlotEnum::OffHand, { Nothing }, generateTalisman);
 	candidates.add(0, H, 1, 0, SlotEnum::Body, { Nothing }, generateBodyArmor);
 	candidates.add(1, H, 1, 0, SlotEnum::Body, { Nothing }, generateCape);
-	candidates.add(1, H, 0, 1, SlotEnum::Body, { Nothing }, generateRestoringTattoos);
-	candidates.add(1, H, 1, 1, SlotEnum::Body, { Nothing }, generateProtectiveTattoos);
+	candidates.add(1, H, 1, 0, SlotEnum::Body, { Nothing }, generateProtectiveTattoos);
 	candidates.add(0, H, 1, 0, SlotEnum::Head, { Nothing }, generateHelmet);
 	candidates.add(1, H, 0, H, SlotEnum::Head, { Nothing }, generateCirclet);
 	candidates.add(1, H, 0, 1, SlotEnum::Head, { Nothing }, generateRestoringTattoos);
-	candidates.add(1, H, 1, 1, SlotEnum::Head, { Nothing }, generateProtectiveTattoos);
 	candidates.add(H, H, 1, 0, SlotEnum::Legs, { Nothing }, generateBoots);
 	candidates.add(1, H, 1, H, SlotEnum::Neck, { Nothing }, generateAmulet);
 

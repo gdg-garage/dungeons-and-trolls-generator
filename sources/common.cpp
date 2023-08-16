@@ -5,6 +5,13 @@ Thing::Thing(const Generate &generate) : generate(generate)
 	goldCost = 15 + generate.power * 3 + randomRange(0u, generate.power);
 }
 
+Real Thing::weightedRoll() const
+{
+	if (totalWeight > 1e-3)
+		return totalRolls / totalWeight;
+	return 0;
+}
+
 Real Thing::addPower(Real weight)
 {
 	return addPower(randomChance(), weight);
@@ -15,10 +22,21 @@ Real Thing::addPower(Real roll, Real weight)
 	CAGE_ASSERT(generate.level > 0); // generate was not initialized
 	CAGE_ASSERT(roll >= 0 && roll <= 1);
 	CAGE_ASSERT(weight >= 0);
-	powersCount++;
-	powerWeight += weight;
-	powerTotal += roll * weight;
-	goldCost *= 1 + interpolate(0.01, 4.0, sqr(roll)) * weight;
+	totalRolls += roll * weight;
+	totalWeight += weight;
+	goldCost *= 1 + interpolate(0.1, 4.0, sqr(roll)) * weight;
+	return roll;
+}
+
+Real Thing::subtractPower(Real weight, AffixEnum affix, const std::string &name)
+{
+	CAGE_ASSERT(generate.level > 0); // generate was not initialized
+	CAGE_ASSERT(weight >= 0);
+	const Real roll = randomChance();
+	totalRolls += roll * weight;
+	totalWeight += weight;
+	goldCost /= 1 + interpolate(0.2, 2.0, sqr(roll)) * weight;
+	addAffix(roll * weight, affix, name);
 	return roll;
 }
 
@@ -35,19 +53,18 @@ Real Thing::addPower(Real roll, Real weight, AffixEnum affix, const std::string 
 
 void Thing::addPower(const Thing &other, Real weight)
 {
-	if (other.powerWeight > 1e-3)
+	if (other.totalWeight > 1e-3)
 	{
-		addPower(other.powerTotal / other.powerWeight, weight);
+		const Real r = other.weightedRoll();
+		addPower(r, weight);
 		std::string s = other.name;
 		{
 			auto it = s.find(" With");
 			if (it != s.npos)
 				s.erase(it);
 		}
-		addAffix(other.powerTotal / other.powerWeight * weight, AffixEnum::Suffix, "With " + s);
+		addAffix(r * weight, AffixEnum::Suffix, "With " + s);
 	}
-	else
-		powersCount++;
 	goldCost += other.goldCost;
 }
 

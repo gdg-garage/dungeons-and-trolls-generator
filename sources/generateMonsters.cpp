@@ -4,9 +4,15 @@ namespace
 {
 	void matchAttributesRequirements(Monster &mr)
 	{
+		// maximum of all requirements
 		for (const Item &it : mr.equippedItems)
 			for (const auto &rq : it.requirements)
 				mr.attributes[rq.first] = max(mr.attributes[rq.first], rq.second);
+		// subtract what is already satisfied by attributes provided by items
+		for (const Item &it : mr.equippedItems)
+			for (const auto &at : it.attributes)
+				mr.attributes[at.first] -= at.second;
+		std::erase_if(mr.attributes, [](const auto &it) { return it.second <= 0; });
 	}
 
 	void spendAttributesPoints(Monster &mr)
