@@ -336,10 +336,10 @@ struct Candidates : private Immovable
 
 	void fallback(T value)
 	{
-		if (!data.has_value())
+		if (bestPenalty > 10)
 		{
-			data = value;
 			bestPenalty = 10;
+			data = value;
 		}
 	}
 
