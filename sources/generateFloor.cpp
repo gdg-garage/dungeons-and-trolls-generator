@@ -893,6 +893,24 @@ namespace
 			surroundWithDecorations(f, p, "bones");
 		}
 
+		// the satyr
+		if (f.level > 50 && randomChance() < 0.05)
+		{
+			const Vec2i p = findAny(f, TileEnum::Empty);
+			f.tile(p) = TileEnum::Monster;
+			f.extra(p).push_back(generateSatyr(f.level));
+			surroundWithDecorations(f, p, "garland");
+		}
+
+		// the elemental
+		if (f.level > 50 && randomChance() < 0.05)
+		{
+			const Vec2i p = findAny(f, TileEnum::Empty);
+			f.tile(p) = TileEnum::Monster;
+			f.extra(p).push_back(generateElemental(f.level));
+			surroundWithDecorations(f, p, "rune");
+		}
+
 		// the hydra
 		if (f.level > 70 && randomChance() < 0.05)
 		{

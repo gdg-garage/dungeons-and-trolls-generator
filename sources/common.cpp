@@ -2,7 +2,7 @@
 
 Thing::Thing(const Generate &generate) : generate(generate)
 {
-	goldCost = 15 + generate.power * 3 + randomRange(0u, generate.power);
+	goldCost = 15 + generate.power * 3 + randomRange(0, generate.power);
 }
 
 Real Thing::weightedRoll() const
@@ -101,9 +101,9 @@ void Thing::updateName(const std::string &basicName, Real relevance)
 	this->name = r;
 }
 
-Generate::Generate(uint32 level, sint32 powerOffset, SlotEnum slot) : level(level), power(level + powerOffset), slot(slot)
+Generate::Generate(sint32 level, sint32 powerOffset, SlotEnum slot) : level(level), power(level + powerOffset), slot(slot)
 {
-	CAGE_ASSERT((sint32)level + powerOffset > 0);
+	CAGE_ASSERT(level + powerOffset > 0);
 	randomize();
 }
 
@@ -129,7 +129,7 @@ bool Generate::valid() const
 
 sint32 Generate::powerOffset() const
 {
-	return (sint32)power - (sint32)level;
+	return power - level;
 }
 
 void removeLastComma(std::string &json)

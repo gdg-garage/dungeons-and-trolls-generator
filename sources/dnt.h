@@ -29,8 +29,8 @@ enum class SlotEnum : uint8
 
 struct Generate
 {
-	uint32 level = 0;
-	uint32 power = 0;
+	sint32 level = 0;
+	sint32 power = 0;
 	SlotEnum slot = SlotEnum::None;
 
 	Real magic = Real::Nan(); // 0 = warrior, 1 = sorcerer
@@ -39,7 +39,7 @@ struct Generate
 	Real support = Real::Nan(); // 0 = combat, 1 = support
 
 	Generate() = default;
-	explicit Generate(uint32 level, sint32 powerOffset, SlotEnum slot = SlotEnum::None);
+	explicit Generate(sint32 level, sint32 powerOffset, SlotEnum slot = SlotEnum::None);
 	void randomize();
 	bool valid() const;
 	sint32 powerOffset() const;
@@ -260,6 +260,8 @@ Monster generateWitch(uint32 level);
 Monster generateTemplar(uint32 level);
 Monster generateZergling(uint32 level);
 Monster generateHydra(uint32 level);
+Monster generateSatyr(uint32 level);
+Monster generateElemental(uint32 level);
 Floor generateFloor(uint32 level, uint32 maxLevel);
 
 std::string exportVariant(const Variant &variant);

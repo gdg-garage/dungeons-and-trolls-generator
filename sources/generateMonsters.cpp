@@ -1,5 +1,7 @@
 #include "dnt.h"
 
+#include <cage-core/string.h>
+
 namespace
 {
 	void matchAttributesRequirements(Monster &mr)
@@ -64,181 +66,455 @@ namespace
 		for (const auto &w : weights)
 			mr.attributes[w.first] += numeric_cast<uint32>(available * w.second / sum);
 	}
-
-	// todo remove
-	Monster generateRandomMonster(const Generate &generate)
-	{
-		Monster mr(generate);
-
-		const uint32 level = generate.power;
-
-		mr.attributes[AttributeEnum::Life] = randomRange(10u, level * 2 + 10);
-		mr.attributes[AttributeEnum::Mana] = randomRange(10u, level * 2 + 10);
-		mr.attributes[AttributeEnum::Stamina] = randomRange(10u, level * 2 + 10);
-
-		const auto &equip = [&](SlotEnum slot)
-		{
-			Generate g = generate;
-			g.slot = slot;
-			Item item = generateItem(g);
-			mr.addPower(item, 1);
-			mr.equippedItems.push_back(std::move(item));
-		};
-		equip(SlotEnum::MainHand);
-		if (randomChance() < 0.3)
-			equip(SlotEnum::OffHand);
-		if (randomChance() < 0.3)
-			equip(SlotEnum::Head);
-		if (randomChance() < 0.6)
-			equip(SlotEnum::Body);
-		if (randomChance() < 0.3)
-			equip(SlotEnum::Legs);
-		if (randomChance() < 0.1)
-			equip(SlotEnum::Neck);
-
-		//if (randomChance() < 0.1)
-		//	mr.onDeath.push_back(generateMinion(generate));
-		//if (randomChance() < 0.1)
-		//	mr.onDeath.push_back(generateSkill(Generate(generate.level, generate.powerOffset(), SlotEnum::MainHand)));
-
-		matchAttributesRequirements(mr);
-		spendAttributesPoints(mr);
-
-		return mr;
-	}
 }
 
 namespace
 {
-	// mundane melee offensive combat
-	// teeth, poison
-	// slashing armor, poison resist
 	Monster generateZombie(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr(generate);
 		mr.updateName("Zombie");
 		mr.icon = "zombie";
+		mr.algorithm = "zombie";
 		mr.faction = "horror";
+
+		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+		mr.attributes[AttributeEnum::SlashArmor] = generate.power * 0.1 + 1;
+		mr.attributes[AttributeEnum::PoisonResist] = generate.power * 0.1 + 1;
+
+		Item it(generate);
+		Skill sk(generate);
+		sk.target = SkillTargetEnum::Character;
+		sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+		if (generate.level > LevelPoison && randomChance() < 0.5)
+		{
+			it.slot = SlotEnum::Head;
+			it.name = "Teeth";
+			sk.name = "Bite";
+			sk.damageType = DamageTypeEnum::Poison;
+		}
+		else
+		{
+			it.slot = SlotEnum::MainHand;
+			it.name = "Claws";
+			sk.name = "Scratch";
+			sk.range[AttributeEnum::Scalar] = 1;
+			sk.damageType = DamageTypeEnum::Slash;
+		}
+		it.addPower(sk, 1);
+		it.skills.push_back(std::move(sk));
+
+		mr.addPower(it, 1);
+		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
 
-	// mundane ranged offensive combat
-	// bow, fire arrows
-	// piercing armor, poison resist
 	Monster generateSkeleton(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr(generate);
 		mr.updateName("Skeleton");
 		mr.icon = "skeleton";
+		mr.algorithm = "skeleton";
 		mr.faction = "horror";
+
+		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+		mr.attributes[AttributeEnum::PiercingArmor] = generate.power * 0.1 + 1;
+		mr.attributes[AttributeEnum::PoisonResist] = generate.power * 0.1 + 1;
+
+		Item it(generate);
+		it.slot = SlotEnum::MainHand;
+		it.name = "Bow";
+
+		{
+			Skill sk(generate);
+			sk.name = "Attack";
+			sk.target = SkillTargetEnum::Character;
+			sk.range[AttributeEnum::Scalar] = randomRange(4, 8);
+			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+			sk.damageType = generate.level > LevelFire && randomChance() < 0.5 ? DamageTypeEnum ::Fire : DamageTypeEnum::Piercing;
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		mr.addPower(it, 1);
+		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
 
-	// mundane melee defensive combat
-	// mace + shield
-	// knockback stomp
 	Monster generateOgre(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr(generate);
 		mr.updateName("Ogre");
 		mr.icon = "ogre";
+		mr.algorithm = "ogre";
 		mr.faction = "horror";
+
+		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+		mr.attributes[AttributeEnum::Stamina] = generate.power + randomRange(30, 50);
+
+		Item it(generate);
+		it.slot = SlotEnum::MainHand;
+		it.name = "Mace";
+
+		{
+			Skill sk(generate);
+			sk.name = "Attack";
+			sk.target = SkillTargetEnum::Character;
+			sk.range[AttributeEnum::Scalar] = 1;
+			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+			sk.damageType = DamageTypeEnum::Slash;
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		if (generate.level > LevelKnockback && generate.level > LevelAoe)
+		{
+			Skill sk(generate);
+			sk.name = "Stomp";
+			sk.radius[AttributeEnum::Scalar] = 2;
+			sk.cost[AttributeEnum::Stamina] = 20;
+			sk.targetFlags.push_back(SkillKnockback);
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		mr.addPower(it, 1);
+		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
 
-	// mundane ranged defensive combat
-	// speer
-	// regeneration
 	Monster generateTroll(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr(generate);
 		mr.updateName("Troll");
 		mr.icon = "troll";
+		mr.algorithm = "troll";
 		mr.faction = "horror";
+
+		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+
+		Item it(generate);
+		it.slot = SlotEnum::MainHand;
+		it.name = "Spear";
+
+		{
+			Skill sk(generate);
+			sk.name = "Attack";
+			sk.radius[AttributeEnum::Scalar] = 3;
+			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+			sk.damageType = DamageTypeEnum::Piercing;
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		{
+			Skill sk(generate);
+			sk.name = "Regenerate";
+			sk.casterAttributes[AttributeEnum::Life][AttributeEnum::Scalar] = generate.power * 0.1 + 1;
+			sk.casterFlags.push_back(SkillPassive);
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		mr.addPower(it, 1);
+		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
 
-	// mundane melee --- support
-	// teeth, lifeleech
-	// healing
 	Monster generateVampire(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr(generate);
 		mr.updateName("Vampire");
 		mr.icon = "vampire";
+		mr.algorithm = "vampire";
 		mr.faction = "horror";
+
+		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+
+		Item it(generate);
+		it.slot = SlotEnum::Head;
+		it.name = "Teeth";
+
+		{
+			Skill sk(generate);
+			sk.name = "Bite";
+			sk.target = SkillTargetEnum::Character;
+			sk.range[AttributeEnum::Scalar] = 1;
+			sk.casterAttributes[AttributeEnum::Life][AttributeEnum::Scalar] = generate.power * 0.1 + 1;
+			sk.targetAttributes[AttributeEnum::Life][AttributeEnum::Scalar] = generate.power * -0.05 - 5; // bypasses resistances
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		{
+			Skill sk(generate);
+			sk.name = "Jump";
+			sk.target = SkillTargetEnum::Position;
+			sk.range[AttributeEnum::Scalar] = 4;
+			sk.casterFlags.push_back(SkillMoves);
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		if (generate.level > LevelMagic)
+		{
+			Skill sk(generate);
+			sk.name = "Heal";
+			sk.target = SkillTargetEnum::Character;
+			sk.targetAttributes[AttributeEnum::Life][AttributeEnum::Scalar] = generate.power * 0.2 + 1;
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		mr.addPower(it, 1);
+		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
 
-	// mundane ranged --- support
-	// bow
-	// aoe stun stare
 	Monster generateMedusa(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr(generate);
 		mr.updateName("Medusa");
 		mr.icon = "medusa";
+		mr.algorithm = "medusa";
 		mr.faction = "horror";
+
+		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+		mr.attributes[AttributeEnum::Stamina] = generate.power + randomRange(30, 50);
+
+		Item it(generate);
+		it.slot = SlotEnum::MainHand;
+		it.name = "Bow";
+
+		{
+			Skill sk(generate);
+			sk.name = "Attack";
+			sk.target = SkillTargetEnum::Character;
+			sk.range[AttributeEnum::Scalar] = randomRange(5, 10);
+			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+			sk.damageType = DamageTypeEnum::Piercing;
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		if (generate.level > LevelStun && generate.level > LevelAoe)
+		{
+			Skill sk(generate);
+			sk.name = "Petrify";
+			sk.target = SkillTargetEnum::Position;
+			sk.range[AttributeEnum::Scalar] = 3;
+			sk.radius[AttributeEnum::Scalar] = 2;
+			sk.cost[AttributeEnum::Stamina] = 40;
+			sk.targetFlags.push_back(SkillStun);
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		mr.addPower(it, 1);
+		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
 
-	// magic melee offensive combat
-	// claws, poison, pull enemy
-	//
 	Monster generateSuccubus(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr(generate);
 		mr.updateName("Succubus");
 		mr.icon = "succubus";
+		mr.algorithm = "succubus";
 		mr.faction = "horror";
+
+		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+
+		Item it(generate);
+		it.slot = SlotEnum::Body;
+		it.name = "Lingerie";
+
+		if (generate.level > LevelPoison)
+		{
+			Skill sk(generate);
+			sk.name = "Kiss";
+			sk.target = SkillTargetEnum::Character;
+			sk.range[AttributeEnum::Scalar] = 1;
+			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+			sk.damageType = DamageTypeEnum::Poison;
+			if (generate.level > LevelDuration)
+				sk.duration[AttributeEnum::Scalar] = 3;
+			sk.casterFlags.push_back(SkillMoves);
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		{
+			Skill sk(generate);
+			sk.name = "Seduce";
+			sk.target = SkillTargetEnum::Character;
+			sk.range[AttributeEnum::Scalar] = 7;
+			sk.targetFlags.push_back(SkillMoves);
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		mr.addPower(it, 1);
+		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
 
-	// magic ranged offensive combat
-	// fireballs
-	// fire resist
 	Monster generateImp(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr(generate);
 		mr.updateName("Imp");
 		mr.icon = "imp";
+		mr.algorithm = "imp";
 		mr.faction = "horror";
+
+		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+		mr.attributes[AttributeEnum::Mana] = generate.power + randomRange(30, 50);
+		mr.attributes[AttributeEnum::FireResist] = generate.power * 0.1 + 1;
+
+		Item it(generate);
+		it.slot = SlotEnum::MainHand;
+		it.name = "Claws";
+
+		{
+			Skill sk(generate);
+			sk.name = "Scratch";
+			sk.target = SkillTargetEnum::Character;
+			sk.range[AttributeEnum::Scalar] = 1;
+			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+			sk.damageType = DamageTypeEnum::Slash;
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		if (generate.level > LevelFire && generate.level > LevelAoe)
+		{
+			Skill sk(generate);
+			sk.name = "Fireball";
+			sk.target = SkillTargetEnum::Position;
+			sk.range[AttributeEnum::Scalar] = 12;
+			sk.radius[AttributeEnum::Scalar] = 1;
+			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+			sk.damageType = DamageTypeEnum::Fire;
+			sk.cost[AttributeEnum::Mana] = 10;
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		{
+			Skill sk(generate);
+			sk.name = "Regenerate";
+			sk.casterAttributes[AttributeEnum::Mana][AttributeEnum::Scalar] = 5;
+			sk.casterFlags.push_back(SkillPassive);
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		mr.addPower(it, 1);
+		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
 
-	// magic --- defensive combat
-	// electric shock
-	// slashing and piercing armor
 	Monster generateGhost(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr(generate);
 		mr.updateName("Ghost");
 		mr.icon = "ghost";
+		mr.algorithm = "ghost";
 		mr.faction = "horror";
+
+		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+		mr.attributes[AttributeEnum::SlashArmor] = generate.power * 0.4 + 10;
+		mr.attributes[AttributeEnum::PiercingArmor] = generate.power * 0.4 + 10;
+
+		Item it(generate);
+		it.slot = SlotEnum::Body;
+		it.name = "Cloth";
+
+		{
+			Skill sk(generate);
+			sk.name = "Terror";
+			sk.target = SkillTargetEnum::Character;
+			sk.radius[AttributeEnum::Scalar] = 1;
+			if (generate.level > LevelElectric)
+			{
+				sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+				sk.damageType = DamageTypeEnum::Electric;
+			}
+			if (generate.level > LevelStun)
+				sk.targetFlags.push_back(SkillStun);
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		mr.addPower(it, 1);
+		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
 
-	// magic --- offensive support
-	// curses
-	// electric resist
 	Monster generateBanshee(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr(generate);
 		mr.updateName("Banshee");
 		mr.icon = "banshee";
+		mr.algorithm = "banshee";
 		mr.faction = "horror";
+
+		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+		mr.attributes[AttributeEnum::ElectricResist] = generate.power * 0.1 + 1;
+
+		Item it(generate);
+		it.slot = SlotEnum::Head;
+		it.name = "Mouth";
+
+		for (AttributeEnum attr : { AttributeEnum::Strength, AttributeEnum::Dexterity, AttributeEnum::Intelligence, AttributeEnum::SlashArmor, AttributeEnum::PiercingArmor })
+		{
+			Skill sk(generate);
+			sk.name = "Scream";
+			sk.target = SkillTargetEnum::Character;
+			sk.range[AttributeEnum::Scalar] = 5;
+			if (generate.level > LevelDuration)
+				sk.duration[AttributeEnum::Scalar] = 6;
+			sk.targetAttributes[attr][AttributeEnum::Scalar] = generate.power * -0.1 - 5;
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		mr.addPower(it, 1);
+		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
 
-	// magic --- defensive support
-	// buffs
-	// fire resist
 	Monster generateLich(const Generate &generate)
 	{
-		Monster mr = generateRandomMonster(generate);
+		Monster mr(generate);
 		mr.updateName("Lich");
 		mr.icon = "lich";
+		mr.algorithm = "lich";
 		mr.faction = "horror";
+
+		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+		mr.attributes[AttributeEnum::FireResist] = generate.power * 0.1 + 1;
+
+		Item it(generate);
+		it.slot = SlotEnum::MainHand;
+		it.name = "Staff";
+
+		for (AttributeEnum attr : { AttributeEnum::SlashArmor, AttributeEnum::PiercingArmor, AttributeEnum::FireResist, AttributeEnum::PoisonResist, AttributeEnum::ElectricResist })
+		{
+			Skill sk(generate);
+			sk.name = "Harden";
+			sk.target = SkillTargetEnum::Character;
+			sk.range[AttributeEnum::Scalar] = 13;
+			if (generate.level > LevelDuration)
+				sk.duration[AttributeEnum::Scalar] = 5;
+			sk.targetAttributes[attr][AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+			sk.casterFlags.push_back(SkillAllowSelf);
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		mr.addPower(it, 1);
+		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
 
@@ -320,9 +596,13 @@ namespace
 
 namespace
 {
-	Monster generateOutlawBase(const Generate &generate)
+	Monster generateOutlawBase(const Generate &generate, const char *name)
 	{
 		Monster mr(generate);
+		mr.updateName(name);
+		mr.icon = toLower(String(name));
+		mr.algorithm = toLower(String(name));
+		mr.faction = "outlaw";
 
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
 		mr.attributes[AttributeEnum::Mana] = numeric_cast<uint32>((generate.power + randomRange(30, 50)) * generate.magic);
@@ -351,104 +631,49 @@ namespace
 		return mr;
 	}
 
-	// mundane melee offensive combat
 	Monster generateBarbarian(const Generate &generate)
 	{
-		Monster mr = generateOutlawBase(generate);
-		mr.updateName("Barbarian");
-		mr.icon = "barbarian";
-		mr.faction = "outlaw";
-		return mr;
+		return generateOutlawBase(generate, "Barbarian");
 	}
 
-	// mundane ranged offensive combat
 	Monster generateAssassin(const Generate &generate)
 	{
-		Monster mr = generateOutlawBase(generate);
-		mr.updateName("Assassin");
-		mr.icon = "assassin";
-		mr.faction = "outlaw";
-		return mr;
+		return generateOutlawBase(generate, "Assassin");
 	}
 
-	// mundane --- defensive combat
 	Monster generateBandit(const Generate &generate)
 	{
-		Monster mr = generateOutlawBase(generate);
-		mr.updateName("Bandit");
-		mr.icon = "bandit";
-		mr.faction = "outlaw";
-		return mr;
+		return generateOutlawBase(generate, "Bandit");
 	}
 
-	// mundane melee --- support
 	Monster generateRogue(const Generate &generate)
 	{
-		Monster mr = generateOutlawBase(generate);
-		mr.updateName("Rogue");
-		mr.icon = "rogue";
-		mr.faction = "outlaw";
-		return mr;
+		return generateOutlawBase(generate, "Rogue");
 	}
 
-	// mundane ranged --- support
 	Monster generateSaboteur(const Generate &generate)
 	{
-		Monster mr = generateOutlawBase(generate);
-		mr.updateName("Saboteur");
-		mr.icon = "saboteur";
-		mr.faction = "outlaw";
-		return mr;
+		return generateOutlawBase(generate, "Saboteur");
 	}
 
-	// magic melee --- combat
 	Monster generateDruid(const Generate &generate)
 	{
-		Monster mr = generateOutlawBase(generate);
-		mr.updateName("Druid");
-		mr.icon = "druid";
-		mr.faction = "outlaw";
-		return mr;
+		return generateOutlawBase(generate, "Druid");
 	}
 
-	// magic ranged offensive combat
 	Monster generateWarlock(const Generate &generate)
 	{
-		Monster mr = generateOutlawBase(generate);
-		mr.updateName("Warlock");
-		mr.icon = "warlock";
-		mr.faction = "outlaw";
-		return mr;
+		return generateOutlawBase(generate, "Warlock");
 	}
 
-	// magic ranged offensive support
 	Monster generateOccultist(const Generate &generate)
 	{
-		Monster mr = generateOutlawBase(generate);
-		mr.updateName("Occultist");
-		mr.icon = "occultist";
-		mr.faction = "outlaw";
-		return mr;
+		return generateOutlawBase(generate, "Occultist");
 	}
 
-	// magic ranged defensive support
 	Monster generateShaman(const Generate &generate)
 	{
-		Monster mr = generateOutlawBase(generate);
-		mr.updateName("Shaman");
-		mr.icon = "shaman";
-		mr.faction = "outlaw";
-		return mr;
-	}
-
-	// magic --- --- support
-	Monster generateNecromancer(const Generate &generate)
-	{
-		Monster mr = generateOutlawBase(generate);
-		mr.updateName("Necromancer");
-		mr.icon = "necromancer";
-		mr.faction = "outlaw";
-		return mr;
+		return generateOutlawBase(generate, "Shaman");
 	}
 
 	Monster generateOutlaw(const Generate &generate)
@@ -493,25 +718,21 @@ namespace
 			}
 			else
 			{ // support
-				if (randomChance() > 0.2)
-				{ // likely
-					if (generate.defensive < 0.5)
-					{ // offensive
-						return generateOccultist(generate);
-					}
-					else
-					{ // defensive
-						return generateShaman(generate);
-					}
+				if (generate.defensive < 0.5)
+				{ // offensive
+					return generateOccultist(generate);
 				}
 				else
-				{ // unlikely
-					return generateNecromancer(generate);
+				{ // defensive
+					return generateShaman(generate);
 				}
 			}
 		}
 	}
+}
 
+namespace
+{
 	Monster generateMonsterImpl(const Generate &generate_, Monster (*generator)(const Generate &))
 	{
 		CAGE_ASSERT(generate_.valid());
@@ -530,7 +751,7 @@ namespace
 		// 80 .. 99 -> 4 attempts
 		// 100 and more -> 5 attempts
 		Monster mr = generator(generate);
-		const uint32 attempts = min(generate_.power / 20, 5u); // use the original power
+		const uint32 attempts = min(generate_.power / 20, 5); // use the original power
 		for (uint32 i = 1; i < attempts; i++) // starting from one -> one attempt has already been generated above
 		{
 			Monster mr2 = generator(generate);
@@ -724,7 +945,6 @@ namespace
 		mr.faction = "monster";
 
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
-		mr.attributes[AttributeEnum::Stamina] = generate.power + randomRange(30, 50);
 
 		Item it(generate);
 		it.slot = SlotEnum::MainHand;
@@ -733,19 +953,10 @@ namespace
 		{
 			Skill sk(generate);
 			sk.name = "Scratch";
-			sk.radius[AttributeEnum::Scalar] = 1;
+			sk.target = SkillTargetEnum::Character;
+			sk.range[AttributeEnum::Scalar] = 1;
 			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
 			sk.damageType = DamageTypeEnum::Slash;
-			sk.cost[AttributeEnum::Stamina] = 10;
-			it.addPower(sk, 1);
-			it.skills.push_back(std::move(sk));
-		}
-
-		{
-			Skill sk(generate);
-			sk.name = "Jump";
-			sk.radius[AttributeEnum::Scalar] = 2;
-			sk.cost[AttributeEnum::Stamina] = 5;
 			sk.casterFlags.push_back(SkillMoves);
 			it.addPower(sk, 1);
 			it.skills.push_back(std::move(sk));
@@ -753,10 +964,10 @@ namespace
 
 		{
 			Skill sk(generate);
-			sk.name = "Regenerate";
-			sk.casterAttributes[AttributeEnum::Life][AttributeEnum::Scalar] = generate.power * 0.02 + 1;
-			sk.casterAttributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = generate.power * 0.02 + 1;
-			sk.casterFlags.push_back(SkillPassive);
+			sk.name = "Jump";
+			sk.target = SkillTargetEnum::Position;
+			sk.range[AttributeEnum::Scalar] = 2;
+			sk.casterFlags.push_back(SkillMoves);
 			it.addPower(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -788,7 +999,6 @@ namespace
 		mr.faction = "monster";
 
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
-		mr.attributes[AttributeEnum::Stamina] = generate.power + randomRange(30, 50);
 
 		Item it(generate);
 		it.slot = SlotEnum::Head;
@@ -796,21 +1006,21 @@ namespace
 
 		{
 			Skill sk(generate);
+			sk.target = SkillTargetEnum::Character;
 			if (generate.ranged > 0.5)
 			{
 				sk.name = "Smash";
+				sk.range[AttributeEnum::Scalar] = 3;
 				sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.10 + 5;
-				sk.radius[AttributeEnum::Scalar] = 3;
 				sk.damageType = DamageTypeEnum::Slash;
 			}
 			else
 			{
 				sk.name = "Bite";
-				sk.radius[AttributeEnum::Scalar] = 1;
+				sk.range[AttributeEnum::Scalar] = 1;
 				sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.15 + 5;
 				sk.damageType = DamageTypeEnum::Piercing;
 			}
-			sk.cost[AttributeEnum::Stamina] = 10;
 			it.addPower(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -818,18 +1028,9 @@ namespace
 		{
 			Skill sk(generate);
 			sk.name = "Jump";
-			sk.radius[AttributeEnum::Scalar] = 2;
-			sk.cost[AttributeEnum::Stamina] = 5;
+			sk.target = SkillTargetEnum::Position;
+			sk.range[AttributeEnum::Scalar] = 3;
 			sk.casterFlags.push_back(SkillMoves);
-			it.addPower(sk, 1);
-			it.skills.push_back(std::move(sk));
-		}
-
-		{
-			Skill sk(generate);
-			sk.name = "Regenerate";
-			sk.casterAttributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = generate.power * 0.02 + 1;
-			sk.casterFlags.push_back(SkillPassive);
 			it.addPower(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -863,4 +1064,112 @@ Monster generateHydra(uint32 level)
 	g.defensive = 0;
 	g.support = 0;
 	return generateMonsterImpl(g, &generateHydraImplEntry);
+}
+
+Monster generateSatyr(uint32 level)
+{
+	Generate generate = Generate(level, 0);
+	generate.magic = 1;
+	generate.ranged = 0;
+	generate.defensive = 0;
+	generate.support = 1;
+
+	Monster mr(generate);
+	mr.updateName("Satyr");
+	mr.icon = "satyr";
+	mr.algorithm = "random";
+	mr.faction = "neutral";
+
+	mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+
+	Item it(generate);
+	it.slot = SlotEnum::Head;
+	it.name = "Horns";
+
+	{
+		Skill sk(generate);
+		sk.name = "Abduct";
+		sk.target = SkillTargetEnum::Character;
+		sk.range[AttributeEnum::Scalar] = 30;
+		sk.casterFlags.push_back(SkillMoves);
+		sk.targetFlags.push_back(SkillMoves);
+		it.addPower(sk, 1);
+		it.skills.push_back(std::move(sk));
+	}
+
+	mr.addPower(it, 1);
+	mr.equippedItems.push_back(std::move(it));
+	return mr;
+}
+
+namespace
+{
+	Monster generateElementalImpl(const Generate &generate)
+	{
+		Monster mr(generate);
+		mr.updateName("Elemental");
+		mr.icon = "elemental";
+		mr.algorithm = "elemental";
+		mr.faction = "monster";
+
+		const auto type = [&]()
+		{
+			std::vector<std::pair<DamageTypeEnum, AttributeEnum>> cns;
+			if (generate.level > LevelFire)
+				cns.push_back({ DamageTypeEnum::Fire, AttributeEnum::FireResist });
+			if (generate.level > LevelPoison)
+				cns.push_back({ DamageTypeEnum::Poison, AttributeEnum::PoisonResist });
+			if (generate.level > LevelElectric)
+				cns.push_back({ DamageTypeEnum::Electric, AttributeEnum::ElectricResist });
+			CAGE_ASSERT(!cns.empty());
+			return cns[randomRange(std::size_t(), cns.size())];
+		}();
+
+		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+		mr.attributes[type.second] = 1000000;
+
+		Item it(generate);
+		it.slot = SlotEnum::Body;
+		it.name = "Element";
+
+		{
+			Skill sk(generate);
+			sk.name = "Jump";
+			sk.target = SkillTargetEnum::Position;
+			sk.range[AttributeEnum::Scalar] = 3;
+			sk.casterFlags.push_back(SkillMoves);
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		{
+			Skill sk(generate);
+			sk.name = "Shedding";
+			sk.radius[AttributeEnum::Scalar] = 2;
+			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+			sk.damageType = type.first;
+			if (generate.level > LevelDuration)
+				sk.duration[AttributeEnum::Scalar] = generate.power * 0.1 + 1;
+			if (generate.level > LevelGroundEffect)
+				sk.casterFlags.push_back(SkillGroundEffect);
+			sk.casterFlags.push_back(SkillPassive);
+			sk.casterAttributes[AttributeEnum::Life][AttributeEnum::Scalar] = 10;
+			it.addPower(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		mr.addPower(it, 1);
+		mr.equippedItems.push_back(std::move(it));
+		return mr;
+	}
+}
+
+Monster generateElemental(uint32 level)
+{
+	Generate g = Generate(level, 0);
+	g.magic = 1;
+	g.ranged = 0.5;
+	g.defensive = 0;
+	g.support = 0;
+	return generateMonsterImpl(g, &generateElementalImpl);
 }
