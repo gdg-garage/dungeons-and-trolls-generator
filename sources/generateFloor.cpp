@@ -455,6 +455,7 @@ namespace
 
 	void placeCorridors(Floor &f)
 	{
+		CAGE_ASSERT(countCells(f, TileEnum::Empty) > 0);
 		static constexpr TileEnum tmp = TileEnum::Placeholder;
 		CAGE_ASSERT(countCells(f, tmp) == 0);
 		seedReplace(f, findAny(f, TileEnum::Empty), TileEnum::Empty, tmp);
@@ -730,9 +731,89 @@ namespace
 			placeLavaRiver(f);
 	}
 
-	void generateMazeLayout(Floor &f)
+	void generateShiftedGridLayout(Floor &f)
 	{
 		if (f.level <= 20)
+			return generateDungeonLayout(f);
+
+		std::vector<Vec2i> open;
+		open.reserve(f.tiles.size());
+		{
+			const Vec2i p = Vec2i(f.width, f.height) / 2;
+			open.push_back(p);
+			f.tile(p) = TileEnum::Empty;
+		}
+
+		/*
+		*  N
+		* W E
+		*  S
+		*/
+		const auto &walk = [&](Vec2i p, const char *path)
+		{
+			CAGE_ASSERT(f.tile(p) == TileEnum::Empty);
+			CAGE_ASSERT(path && *path);
+			while (true)
+			{
+				switch (*path++)
+				{
+					case 0:
+						return;
+					case 'N':
+						p += Vec2i(0, 1);
+						break;
+					case 'S':
+						p += Vec2i(0, -1);
+						break;
+					case 'W':
+						p += Vec2i(-1, 0);
+						break;
+					case 'E':
+						p += Vec2i(1, 0);
+						break;
+				}
+				if (p[0] <= 1 || p[0] >= f.width - 1 || p[1] <= 1 || p[1] >= f.height - 1)
+					return;
+				if (*path == 0 && f.tile(p) == TileEnum::Outside)
+					open.push_back(p);
+				f.tile(p) = TileEnum::Empty;
+			}
+		};
+
+		while (!open.empty())
+		{
+			const Vec2i p = open[0];
+			open.erase(open.begin());
+			walk(p, "ESWN");
+			walk(p, "WWNNNWWWN");
+			walk(p, "ENNEEENNN");
+			walk(p, "SSSWWWSSW");
+			walk(p, "SEEESSSEE");
+		}
+	}
+
+	void generateStripesLayout(Floor &f)
+	{
+		if (f.level <= 50)
+			return generateDungeonLayout(f);
+
+		uint32 x = 1;
+		while (x + 5 < f.width)
+		{
+			const uint32 s = randomRange(1, 5);
+			rectReplace(f, Vec2i(x, 1), Vec2i(x + s, f.height - 1), TileEnum::Outside, TileEnum::Empty);
+			if (x > 1)
+			{
+				const uint32 y = randomRange(3u, f.height - 5);
+				f.tile(x - 1, y) = TileEnum::Empty;
+			}
+			x += s + 1;
+		}
+	}
+
+	void generateMazeLayout(Floor &f)
+	{
+		if (f.level <= 40)
 			return generateDungeonLayout(f);
 
 		const uint32 w = f.width;
@@ -776,25 +857,6 @@ namespace
 					continue;
 				open.push_back(c);
 			}
-		}
-	}
-
-	void generateStripesLayout(Floor &f)
-	{
-		if (f.level <= 50)
-			return generateDungeonLayout(f);
-
-		uint32 x = 1;
-		while (x + 5 < f.width)
-		{
-			const uint32 s = randomRange(1, 5);
-			rectReplace(f, Vec2i(x, 1), Vec2i(x + s, f.height - 1), TileEnum::Outside, TileEnum::Empty);
-			if (x > 1)
-			{
-				const uint32 y = randomRange(3u, f.height - 5);
-				f.tile(x - 1, y) = TileEnum::Empty;
-			}
-			x += s + 1;
 		}
 	}
 
@@ -843,14 +905,17 @@ namespace
 					generateSingleRoomLayout(f);
 					break;
 				case 1:
-					generateMazeLayout(f);
+					generateShiftedGridLayout(f);
 					break;
 				case 2:
 					generateStripesLayout(f);
 					break;
 				case 3:
+					generateMazeLayout(f);
+					break;
 				case 4:
 				case 5:
+				case 6:
 					generateNaturalCavesLayout(f);
 					break;
 				default:

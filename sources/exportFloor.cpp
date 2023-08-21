@@ -85,9 +85,11 @@ namespace
 			case TileEnum::Monster:
 				return "@";
 			case TileEnum::Wall:
+				return uni(u8"\u2592");
 				return connectedWall(f, x, y);
 			case TileEnum::Outside:
 				return "~";
+				return uni(u8"\u2593");
 			default:
 				return "?";
 		}
