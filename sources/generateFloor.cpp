@@ -318,7 +318,7 @@ namespace
 			if (f.tile(i) == TileEnum::Empty)
 			{
 				f.tile(i) = TileEnum::Decoration;
-				f.extra(i).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"" + decor + "\"}");
+				f.extra(i).push_back(Decoration{ decor });
 			}
 		}
 	}
@@ -373,7 +373,7 @@ namespace
 				if (f.tile(x, y) != TileEnum::Empty)
 					continue;
 				f.tile(x, y) = TileEnum::Decoration;
-				f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"lava\"}");
+				f.extra(x, y).push_back(Decoration{ "lava" });
 				Skill sk({});
 				sk.name = "Lava";
 				sk.duration[AttributeEnum::Scalar] = 1000000;
@@ -427,7 +427,7 @@ namespace
 				else if (d > r - 1)
 				{
 					f.tile(x, y) = TileEnum::Decoration;
-					f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"rune\"}");
+					f.extra(x, y).push_back(Decoration{ "rune" });
 				}
 				else
 					f.tile(x, y) = TileEnum::Empty;
@@ -436,7 +436,7 @@ namespace
 
 		// cauldron
 		f.tile(c) = TileEnum::Decoration;
-		f.extra(c).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"cauldron\"}");
+		f.extra(c).push_back(Decoration{ "cauldron" });
 
 		// witches
 		for (uint32 i = 0; i < 4; i++)
@@ -519,6 +519,12 @@ namespace
 				item.buyPrice = numeric_cast<uint32>(item.goldCost * costMult);
 				extra.push_back(std::move(item));
 			}
+			if (maxLevel > LevelSummoning && maxLevel > LevelDuration && randomChance() < 0.02)
+			{
+				Item item = generateSprayCan();
+				item.buyPrice = randomRange(100, 1000);
+				extra.push_back(std::move(item));
+			}
 		};
 
 		for (uint32 y = 0; y < h; y++)
@@ -530,7 +536,7 @@ namespace
 				else if (isDecoration(x, y))
 				{
 					f.tile(x, y) = TileEnum::Decoration;
-					f.extra(x, y).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"pedestal\"}");
+					f.extra(x, y).push_back(Decoration{ "pedestal" });
 					makeShopItems(f.extra(x, y));
 				}
 				else
@@ -543,7 +549,7 @@ namespace
 		for (uint32 i = 0; i < portals; i++)
 		{
 			f.tile(8 + i * 2, h / 2) = TileEnum::Waypoint;
-			f.extra(8 + i * 2, h / 2).push_back(std::string() + (Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + (bossIndexToLevel(i + 1) + 1) + "}").value.c_str());
+			f.extra(8 + i * 2, h / 2).push_back(Waypoint{ bossIndexToLevel(i + 1) + 1 });
 		}
 	}
 
@@ -634,28 +640,14 @@ namespace
 
 		const auto &generateBossMonster = [&]()
 		{
-			const auto &generateKeyToAllDoors = [&]()
+			const auto &generateKeyToAllDoors = [&]() -> Key
 			{
-				std::vector<Vec2i> doors;
+				Key k;
 				const uint32 cnt = f.width * f.height;
 				for (uint32 i = 0; i < cnt; i++)
 					if (f.tiles[i] == TileEnum::Door)
-						doors.push_back(Vec2i(i % f.width, i / f.width));
-				std::string json;
-				json += "{\n";
-				json += "\"class\":\"key\",\n";
-				json += "\"doors\":[\n";
-				for (const Vec2i &door : doors)
-				{
-					json += "{\n";
-					json += (Stringizer() + "\"x\":" + door[0] + ",\n").value.c_str();
-					json += (Stringizer() + "\"y\":" + door[1] + "\n").value.c_str();
-					json += "},"; // /door
-				}
-				removeLastComma(json);
-				json += "]\n"; // /doors
-				json += "}"; // /root
-				return json;
+						k.doors.push_back(Vec2i(i % f.width, i / f.width));
+				return k;
 			};
 
 			Monster mr = generateFloorBoss(f.level);
@@ -959,9 +951,17 @@ namespace
 				if (f.tiles[i] == TileEnum::Placeholder)
 				{
 					f.tiles[i] = TileEnum::Decoration;
-					f.extras[i].push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"rope\"}");
+					f.extras[i].push_back(Decoration{ "rope" });
 				}
 			}
+		}
+
+		// the vandal
+		if (f.level > 10 && randomChance() < 0.05)
+		{
+			const Vec2i p = findAny(f, TileEnum::Empty);
+			f.tile(p) = TileEnum::Monster;
+			f.extra(p).push_back(generateVandal());
 		}
 
 		// the butcher
@@ -1031,7 +1031,7 @@ namespace
 					if (f.tile(n) == TileEnum::Empty)
 					{
 						f.tile(n) = TileEnum::Decoration;
-						f.extra(n).push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"cross\"}");
+						f.extra(n).push_back(Decoration{ "cross" });
 						break;
 					}
 				}
@@ -1081,7 +1081,7 @@ namespace
 							CAGE_THROW_CRITICAL(Exception, "invalid value");
 					}
 				};
-				f.extra(a).push_back(std::string() + (Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + dest(f.level) + "}").value.c_str());
+				f.extra(a).push_back(Waypoint{ dest(f.level) });
 			}
 		}
 
@@ -1109,7 +1109,7 @@ namespace
 				if (f.tiles[i] == TileEnum::Empty && randomChance() < 0.2)
 				{
 					f.tiles[i] = TileEnum::Decoration;
-					f.extras[i].push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"spikesTrap\"}");
+					f.extras[i].push_back(Decoration{ "spikesTrap" });
 					Skill sk({});
 					sk.name = "Spikes";
 					sk.duration[AttributeEnum::Scalar] = 1000000;
@@ -1129,7 +1129,7 @@ namespace
 				if (f.tiles[i] == TileEnum::Empty && randomChance() < 0.05)
 				{
 					f.tiles[i] = TileEnum::Decoration;
-					f.extras[i].push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"rottenPile\"}");
+					f.extras[i].push_back(Decoration{ "rottenPile" });
 					Skill sk({});
 					sk.name = "Rot";
 					sk.radius[AttributeEnum::Scalar] = randomRange(1.0, 4.0);

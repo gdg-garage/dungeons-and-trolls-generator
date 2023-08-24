@@ -13,8 +13,11 @@ using namespace cage;
 struct Skill;
 struct Item;
 struct Monster;
+struct Decoration;
+struct Waypoint;
+struct Key;
 
-using Variant = std::variant<std::string, Skill, Item, Monster>;
+using Variant = std::variant<Skill, Item, Monster, Decoration, Waypoint, Key>;
 
 enum class SlotEnum : uint8
 {
@@ -126,6 +129,10 @@ using AttributesValuesList = std::map<AttributeEnum, sint32>;
 using AttributesEquationFactors = std::map<AttributeEnum, Real>;
 using SkillAttributes = std::map<AttributeEnum, AttributesEquationFactors>;
 
+using SkillFlag = StringPointer;
+struct Summon;
+using SkillFlagsVariant = std::variant<SkillFlag, Summon>;
+
 struct Skill : public Thing
 {
 	Skill(const Generate &generate) : Thing(generate){};
@@ -135,7 +142,7 @@ struct Skill : public Thing
 	AttributesEquationFactors range, radius, duration, damageAmount;
 	DamageTypeEnum damageType = DamageTypeEnum::None;
 	SkillAttributes casterAttributes, targetAttributes;
-	std::vector<std::string> casterFlags, targetFlags;
+	std::vector<SkillFlagsVariant> casterFlags, targetFlags;
 };
 
 struct Item : public Thing
@@ -161,6 +168,27 @@ struct Monster : public Thing
 	std::vector<Item> equippedItems;
 	std::vector<Variant> onDeath;
 	uint32 score = 0;
+};
+
+struct Decoration
+{
+	detail::StringBase<30> type;
+	std::string name;
+};
+
+struct Waypoint
+{
+	uint32 destinationFloor = 0;
+};
+
+struct Key
+{
+	std::vector<Vec2i> doors;
+};
+
+struct Summon
+{
+	Variant data;
 };
 
 enum class TileEnum : uint8
@@ -252,6 +280,7 @@ uint32 makeCost(Thing &sk, const Generate &generate, Real default_);
 
 Skill generateSkill(const Generate &generate);
 Item generateItem(const Generate &generate);
+Item generateSprayCan();
 Monster generateMonster(const Generate &generate);
 Monster generateMinion(const Generate &generate);
 Monster generateChest(const Generate &generate);
@@ -263,26 +292,32 @@ Monster generateZergling(uint32 level);
 Monster generateHydra(uint32 level);
 Monster generateSatyr(uint32 level);
 Monster generateElemental(uint32 level);
+Monster generateVandal();
 Floor generateFloor(uint32 level, uint32 maxLevel);
 
 std::string exportVariant(const Variant &variant);
+std::string exportVariant(const SkillFlagsVariant &variant);
 std::string exportSkill(const Skill &skill);
 std::string exportItem(const Item &item);
 std::string exportMonster(const Monster &monster);
+std::string exportDecoration(const Decoration &decor);
+std::string exportWaypoint(const Waypoint &waypoint);
+std::string exportKey(const Key &key);
+std::string exportSummon(const Summon &summon);
 FloorExport exportFloor(const Floor &floor);
 void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, const String &htmlPath);
 
 template<class... T>
 constexpr bool always_false = false;
 
-constexpr const char *SkillAlone = "\"alone\""; // requires that the caster is alone (no other creature (player or monster) are visible in 10 range)
-constexpr const char *SkillNoLineOfSight = "\"noLineOfSight\""; // does not require the target position be visible from the caster position
-constexpr const char *SkillAllowSelf = "\"allowSelf\""; // allows skills that target a character to target oneself
-constexpr const char *SkillMoves = "\"moves\""; // moves the caster to the target position, or the target to the caster position
-constexpr const char *SkillKnockback = "\"knockback\""; // moves the caster/target one tile away from the other
-constexpr const char *SkillStun = "\"stun\""; // prevents the caster/target from performing any actions for one tick, and grants immunity to stun for the following tick
-constexpr const char *SkillGroundEffect = "\"groundEffect\""; // creates ground effect at caster/target position, which applies the effects of the skill
-constexpr const char *SkillPassive = "\"passive\""; // the effects of the skill are automatically applied every tick, assuming the cost can be paid; multiple passive skills are allowed
+constexpr SkillFlag SkillAlone = "alone"; // requires that the caster is alone (no other creature (player or monster) are visible in 10 range)
+constexpr SkillFlag SkillNoLineOfSight = "noLineOfSight"; // does not require the target position be visible from the caster position
+constexpr SkillFlag SkillAllowSelf = "allowSelf"; // allows skills that target a character to target oneself
+constexpr SkillFlag SkillMoves = "moves"; // moves the caster to the target position, or the target to the caster position
+constexpr SkillFlag SkillKnockback = "knockback"; // moves the caster/target one tile away from the other
+constexpr SkillFlag SkillStun = "stun"; // prevents the caster/target from performing any actions for one tick, and grants immunity to stun for the following tick
+constexpr SkillFlag SkillGroundEffect = "groundEffect"; // creates ground effect at caster/target position, which applies the effects of the skill
+constexpr SkillFlag SkillPassive = "passive"; // the effects of the skill are automatically applied every tick, assuming the cost can be paid; multiple passive skills are allowed
 
 constexpr float H = 0.5;
 constexpr uint32 Nothing = 0;

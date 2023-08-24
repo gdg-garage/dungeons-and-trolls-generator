@@ -573,3 +573,23 @@ Item generateItem(const Generate &generate)
 	candidates.fallback(generateTrinket);
 	return candidates.pick()(generate);
 }
+
+Item generateSprayCan()
+{
+	Item item(Generate(1, 0, SlotEnum::MainHand));
+	item.slot = SlotEnum::MainHand;
+	item.updateName("Spray Can");
+
+	for (char c = 'A'; c <= 'Z'; c++)
+	{
+		Skill sk(item.generate);
+		sk.target = SkillTargetEnum::Position;
+		sk.range[AttributeEnum::Scalar] = 1;
+		sk.duration[AttributeEnum::Scalar] = 120;
+		sk.targetFlags.push_back(Summon{ Decoration{ "sprayPaint", std::string(1, c) } });
+		sk.updateName("Spray");
+		item.skills.push_back(std::move(sk));
+	}
+
+	return item;
+}

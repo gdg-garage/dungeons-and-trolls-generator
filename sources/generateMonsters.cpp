@@ -773,27 +773,6 @@ Monster generateMonster(const Generate &generate)
 	return generateMonsterImpl(generate, isHorrorFloor(generate.level) > 0.5 ? &generateHorror : &generateOutlaw);
 }
 
-namespace
-{
-	bool hasSummonMinionSkill(const Monster &mr)
-	{
-		const auto &isSummoning = [](const std::string &s) -> bool { return s.find("Minion") != s.npos; };
-		for (const Item &it : mr.equippedItems)
-		{
-			for (const Skill &sk : it.skills)
-			{
-				for (const auto &str : sk.casterFlags)
-					if (isSummoning(str))
-						return true;
-				for (const auto &str : sk.targetFlags)
-					if (isSummoning(str))
-						return true;
-			}
-		}
-		return false;
-	}
-}
-
 Monster generateMinion(const Generate &generate_)
 {
 	CAGE_ASSERT(generate_.valid());
@@ -809,8 +788,6 @@ Monster generateMinion(const Generate &generate_)
 
 	Monster mr = isHorrorFloor(g.level) > 0.5 ? generateHorror(g) : generateOutlaw(g);
 	mr.faction = "inherited";
-	CAGE_ASSERT(!hasSummonMinionSkill(mr));
-
 	return mr;
 }
 
@@ -842,7 +819,7 @@ namespace
 {
 	void addDeadBody(Monster &mr)
 	{
-		mr.onDeath.push_back(std::string() + "{\"class\":\"decoration\",\"type\":\"deadBody\",\"name\":\"" + mr.name.c_str() + "\"}");
+		mr.onDeath.push_back(Decoration{ "deadBody", mr.name });
 	}
 }
 
@@ -1172,4 +1149,23 @@ Monster generateElemental(uint32 level)
 	g.defensive = 0;
 	g.support = 0;
 	return generateMonsterImpl(g, &generateElementalImpl);
+}
+
+Monster generateVandal()
+{
+	Generate generate = Generate(1, 0);
+	generate.magic = 0;
+	generate.ranged = 0;
+	generate.defensive = 0;
+	generate.support = 1;
+
+	Monster mr(generate);
+	mr.updateName("Vandal");
+	mr.icon = "vandal";
+	mr.algorithm = "random";
+	mr.faction = "neutral";
+
+	mr.attributes[AttributeEnum::Life] = randomRange(30, 50);
+	mr.equippedItems.push_back(generateSprayCan());
+	return mr;
 }

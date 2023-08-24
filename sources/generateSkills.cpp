@@ -94,15 +94,8 @@ namespace
 			mr.faction = "inherited";
 			// todo
 			mr.updateName("Ballista");
-
-			std::string json;
-			json += "{\n";
-			json += "\"class\":\"summon\",\n";
-			json += "\"data\":" + exportMonster(mr) + "\n";
-			json += "}";
-
 			sk.addPower(mr, 1);
-			sk.targetFlags.push_back(std::move(json));
+			sk.targetFlags.push_back(Summon{ std::move(mr) });
 		}
 		sk.name = "Construct Ballista";
 		return sk;
@@ -303,15 +296,8 @@ namespace
 		sk.cost[AttributeEnum::Mana] = makeCost(sk, generate, 65);
 		{
 			Monster mr = generateMinion(Generate(generate.level, generate.powerOffset()));
-
-			std::string json;
-			json += "{\n";
-			json += "\"class\":\"summon\",\n";
-			json += "\"data\":" + exportMonster(mr) + "\n";
-			json += "}";
-
 			sk.addPower(mr, 1);
-			sk.targetFlags.push_back(std::move(json));
+			sk.targetFlags.push_back(Summon{ std::move(mr) });
 
 			sk.name = std::string() + "Summon Minion: " + mr.name;
 		}

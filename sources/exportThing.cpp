@@ -160,14 +160,34 @@ std::string exportVariant(const Variant &variant)
 		[](const auto &arg) -> std::string
 		{
 			using T = std::decay_t<decltype(arg)>;
-			if constexpr (std::is_same_v<T, std::string>)
-				return arg;
-			else if constexpr (std::is_same_v<T, Skill>)
+			if constexpr (std::is_same_v<T, Skill>)
 				return exportSkill(arg) + "\n";
 			else if constexpr (std::is_same_v<T, Item>)
 				return exportItem(arg) + "\n";
 			else if constexpr (std::is_same_v<T, Monster>)
 				return exportMonster(arg) + "\n";
+			else if constexpr (std::is_same_v<T, Decoration>)
+				return exportDecoration(arg) + "\n";
+			else if constexpr (std::is_same_v<T, Waypoint>)
+				return exportWaypoint(arg) + "\n";
+			else if constexpr (std::is_same_v<T, Key>)
+				return exportKey(arg) + "\n";
+			else
+				static_assert(always_false<T>, "non-exhaustive visitor");
+		},
+		variant);
+}
+
+std::string exportVariant(const SkillFlagsVariant &variant)
+{
+	return std::visit(
+		[](const auto &arg) -> std::string
+		{
+			using T = std::decay_t<decltype(arg)>;
+			if constexpr (std::is_same_v<T, SkillFlag>)
+				return std::string() + "\"" + (const char *)arg + "\"";
+			else if constexpr (std::is_same_v<T, Summon>)
+				return exportSummon(arg) + "\n";
 			else
 				static_assert(always_false<T>, "non-exhaustive visitor");
 		},
@@ -202,8 +222,8 @@ std::string exportSkill(const Skill &skill)
 	if (!skill.casterFlags.empty())
 	{
 		json += "\"casterFlags\":[\n";
-		for (const std::string &flag : skill.casterFlags)
-			json += flag + ",\n";
+		for (const auto &flag : skill.casterFlags)
+			json += exportVariant(flag) + ",\n";
 		removeLastComma(json);
 		json += "],\n";
 	}
@@ -211,8 +231,8 @@ std::string exportSkill(const Skill &skill)
 	if (!skill.targetFlags.empty())
 	{
 		json += "\"targetFlags\":[\n";
-		for (const std::string &flag : skill.targetFlags)
-			json += flag + ",\n";
+		for (const auto &flag : skill.targetFlags)
+			json += exportVariant(flag) + ",\n";
 		removeLastComma(json);
 		json += "],\n";
 	}
@@ -294,6 +314,56 @@ std::string exportMonster(const Monster &monster)
 	json += "\"_debug\":" + thingJson<true>(monster) + ",\n";
 #endif // CAGE_DEBUG
 
+	removeLastComma(json);
+	json += "}"; // /root
+	return json;
+}
+
+std::string exportDecoration(const Decoration &decor)
+{
+	std::string json;
+	json += "{\n";
+	json += "\"class\":\"decoration\",\n";
+	if (!decor.type.empty())
+		json += std::string() + "\"type\":\"" + decor.type.c_str() + "\",\n";
+	if (!decor.name.empty())
+		json += std::string() + "\"name\":\"" + decor.name + "\",\n";
+	removeLastComma(json);
+	json += "}"; // /root
+	return json;
+}
+
+std::string exportWaypoint(const Waypoint &waypoint)
+{
+	const String s = Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + waypoint.destinationFloor + "}";
+	return s.c_str();
+}
+
+std::string exportKey(const Key &key)
+{
+	std::string json;
+	json += "{\n";
+	json += "\"class\":\"key\",\n";
+	json += "\"doors\":[\n";
+	for (const Vec2i &door : key.doors)
+	{
+		json += "{\n";
+		json += (Stringizer() + "\"x\":" + door[0] + ",\n").value.c_str();
+		json += (Stringizer() + "\"y\":" + door[1] + "\n").value.c_str();
+		json += "},"; // /door
+	}
+	removeLastComma(json);
+	json += "]\n"; // /doors
+	json += "}"; // /root
+	return json;
+}
+
+std::string exportSummon(const Summon &summon)
+{
+	std::string json;
+	json += "{\n";
+	json += "\"class\":\"summon\",\n";
+	json += std::string() + "\"data\":" + exportVariant(summon.data) + ",\n";
 	removeLastComma(json);
 	json += "}"; // /root
 	return json;
