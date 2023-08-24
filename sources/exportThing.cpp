@@ -360,10 +360,11 @@ std::string exportKey(const Key &key)
 
 std::string exportSummon(const Summon &summon)
 {
+	CAGE_ASSERT(summon.data);
 	std::string json;
 	json += "{\n";
 	json += "\"class\":\"summon\",\n";
-	json += std::string() + "\"data\":" + exportVariant(summon.data) + ",\n";
+	json += std::string() + "\"data\":" + exportVariant(*summon.data) + ",\n";
 	removeLastComma(json);
 	json += "}"; // /root
 	return json;

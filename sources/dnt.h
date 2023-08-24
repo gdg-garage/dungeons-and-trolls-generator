@@ -19,6 +19,22 @@ struct Key;
 
 using Variant = std::variant<Skill, Item, Monster, Decoration, Waypoint, Key>;
 
+struct Decoration
+{
+	detail::StringBase<30> type;
+	std::string name;
+};
+
+struct Waypoint
+{
+	uint32 destinationFloor = 0;
+};
+
+struct Key
+{
+	std::vector<Vec2i> doors;
+};
+
 enum class SlotEnum : uint8
 {
 	None,
@@ -132,6 +148,10 @@ using SkillAttributes = std::map<AttributeEnum, AttributesEquationFactors>;
 using SkillFlag = StringPointer;
 struct Summon;
 using SkillFlagsVariant = std::variant<SkillFlag, Summon>;
+struct Summon
+{
+	Holder<Variant> data;
+};
 
 struct Skill : public Thing
 {
@@ -168,27 +188,6 @@ struct Monster : public Thing
 	std::vector<Item> equippedItems;
 	std::vector<Variant> onDeath;
 	uint32 score = 0;
-};
-
-struct Decoration
-{
-	detail::StringBase<30> type;
-	std::string name;
-};
-
-struct Waypoint
-{
-	uint32 destinationFloor = 0;
-};
-
-struct Key
-{
-	std::vector<Vec2i> doors;
-};
-
-struct Summon
-{
-	Variant data;
 };
 
 enum class TileEnum : uint8

@@ -95,7 +95,7 @@ namespace
 			// todo
 			mr.updateName("Ballista");
 			sk.addPower(mr, 1);
-			sk.targetFlags.push_back(Summon{ std::move(mr) });
+			sk.targetFlags.push_back(Summon{ systemMemory().createHolder<Variant>(std::move(mr)) });
 		}
 		sk.name = "Construct Ballista";
 		return sk;
@@ -297,7 +297,7 @@ namespace
 		{
 			Monster mr = generateMinion(Generate(generate.level, generate.powerOffset()));
 			sk.addPower(mr, 1);
-			sk.targetFlags.push_back(Summon{ std::move(mr) });
+			sk.targetFlags.push_back(Summon{ systemMemory().createHolder<Variant>(std::move(mr)) });
 
 			sk.name = std::string() + "Summon Minion: " + mr.name;
 		}

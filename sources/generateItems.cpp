@@ -586,7 +586,7 @@ Item generateSprayCan()
 		sk.target = SkillTargetEnum::Position;
 		sk.range[AttributeEnum::Scalar] = 1;
 		sk.duration[AttributeEnum::Scalar] = 120;
-		sk.targetFlags.push_back(Summon{ Decoration{ "sprayPaint", std::string(1, c) } });
+		sk.targetFlags.push_back(Summon{ systemMemory().createHolder<Variant>(Decoration{ "sprayPaint", std::string(1, c) }) });
 		sk.updateName("Spray");
 		item.skills.push_back(std::move(sk));
 	}
