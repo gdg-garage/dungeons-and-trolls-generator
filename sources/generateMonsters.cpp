@@ -859,7 +859,7 @@ Monster generateFloorBoss(uint32 level)
 		return randomChance();
 	};
 
-	Generate g = Generate(level, level / 5);
+	Generate g = Generate(level, numeric_cast<uint32>(pow(level / 5, 1.3)));
 	g.magic = levelSwitch(LevelMagic);
 	g.ranged = levelSwitch(LevelRanged);
 	g.defensive = randomChance();

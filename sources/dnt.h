@@ -147,6 +147,7 @@ struct Item : public Thing
 	AttributesValuesList attributes;
 	std::vector<Skill> skills;
 	uint32 buyPrice = 0;
+	bool unidentified = false;
 };
 
 struct Monster : public Thing

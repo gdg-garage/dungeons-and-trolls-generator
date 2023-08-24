@@ -230,7 +230,7 @@ std::string exportItem(const Item &item)
 {
 	std::string json;
 	json += "{\n";
-	json += "\"class\":\"item\",\n";
+	json += item.unidentified ? "\"class\":\"unidentifiedItem\",\n" : "\"class\":\"item\",\n";
 	json += std::string() + "\"name\":\"" + item.name + "\",\n";
 	json += std::string() + "\"slot\":\"" + slotName(item.slot) + "\",\n";
 	if (!item.requirements.empty())
