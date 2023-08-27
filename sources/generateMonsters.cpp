@@ -1,5 +1,6 @@
 #include "dnt.h"
 
+#include <cage-core/pointerRangeHolder.h>
 #include <cage-core/string.h>
 
 namespace
@@ -850,6 +851,14 @@ Monster generateFloorBoss(uint32 level)
 
 	addDeadBody(mr);
 	return mr;
+}
+
+Holder<PointerRange<Monster>> generateAntiHeroes()
+{
+	PointerRangeHolder<Monster> result;
+	for (uint32 i = 0; i < 7; i++)
+		result.push_back(generateFloorBoss(100));
+	return result;
 }
 
 Monster generateButcher(uint32 level)

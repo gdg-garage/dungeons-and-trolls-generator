@@ -553,18 +553,13 @@ namespace
 		}
 	}
 
-	void generateBossFloor(Floor &f)
+	void makeCircularRoom(Floor &f, uint32 r)
 	{
-		CAGE_ASSERT(isLevelBoss(f.level));
-		const uint32 bossIndex = levelToBossIndex(f.level);
-		const uint32 r = (min(f.level * 2, 50u) + 10 + randomRange(0u, min(f.level / 3, 30u) + 2)) / 2;
-		uint32 w = r * 2 + 7;
-		uint32 h = r + 4;
-		resizeFloor(f, Vec2i(w, h));
+		const uint32 w = f.width;
+		const uint32 h = f.height;
+		const auto &dist = [=](Vec2i p) -> Real { return distance(Vec2(p[0], p[1] * 2), Vec2(w / 2, h)); };
 
-		const auto &dist = [=](Vec2i p) -> Real { return distance(Vec2(p[0], p[1] * 2), Vec2(w / 2)); };
-
-		// generate circular room
+		// empty space
 		for (uint32 y = 0; y < h; y++)
 		{
 			for (uint32 x = 0; x < w; x++)
@@ -578,48 +573,68 @@ namespace
 		}
 
 		// random pillars
-		if (r > 10)
+		const uint32 cnt = min(levelToBossIndex(f.level) + 1, 10u);
+		for (uint32 i = 0; i < cnt; i++)
 		{
-			const uint32 cnt = min(bossIndex + 1, 10u);
-			for (uint32 i = 0; i < cnt; i++)
+			while (true)
 			{
-				while (true)
+				const uint32 x = randomRange(3u, w - 3);
+				const uint32 y = randomRange(3u, h - 3);
+				const Vec2i p = Vec2i(x, y);
 				{
-					const uint32 x = randomRange(3u, w - 3);
-					const uint32 y = randomRange(3u, h - 3);
-					const Vec2i p = Vec2i(x, y);
-					{
-						const Real d = dist(p);
-						if (d + 6 > r || d < 4)
-							continue;
-					}
-					const Vec2i ps[9] = {
-						p + Vec2i(-1, -1),
-						p + Vec2i(-1, +0),
-						p + Vec2i(-1, +1),
-						p + Vec2i(+0, -1),
-						p + Vec2i(+0, +0),
-						p + Vec2i(+0, +1),
-						p + Vec2i(+1, -1),
-						p + Vec2i(+1, +0),
-						p + Vec2i(+1, +1),
-					};
-					{
-						bool bad = false;
-						for (Vec2i k : ps)
-							if (f.tile(k) != TileEnum::Empty)
-								bad = true;
-						if (bad)
-							continue;
-					}
-					for (Vec2i k : ps)
-						f.tile(k) = TileEnum::Outside;
-					break;
+					const Real d = dist(p);
+					if (d + 6 > r || d < 4)
+						continue;
 				}
+				const Vec2i ps[9] = {
+					p + Vec2i(-1, -1),
+					p + Vec2i(-1, +0),
+					p + Vec2i(-1, +1),
+					p + Vec2i(+0, -1),
+					p + Vec2i(+0, +0),
+					p + Vec2i(+0, +1),
+					p + Vec2i(+1, -1),
+					p + Vec2i(+1, +0),
+					p + Vec2i(+1, +1),
+				};
+				{
+					bool bad = false;
+					for (Vec2i k : ps)
+						if (f.tile(k) != TileEnum::Empty)
+							bad = true;
+					if (bad)
+						continue;
+				}
+				for (Vec2i k : ps)
+					f.tile(k) = TileEnum::Outside;
+				break;
 			}
 		}
+	}
 
-		f.tile(w / 2, 1) = TileEnum::Spawn;
+	std::vector<Vec2i> findDoors(const Floor &f)
+	{
+		std::vector<Vec2i> res;
+		const uint32 cnt = f.width * f.height;
+		for (uint32 i = 0; i < cnt; i++)
+			if (f.tiles[i] == TileEnum::Door)
+				res.push_back(Vec2i(i % f.width, i / f.width));
+		return res;
+	}
+
+	void generateBossFloor(Floor &f)
+	{
+		CAGE_ASSERT(isLevelBoss(f.level));
+		const uint32 bossIndex = levelToBossIndex(f.level);
+		const uint32 r = (min(f.level * 2, 50u) + 10 + randomRange(0u, min(f.level / 3, 30u) + 2)) / 2;
+		uint32 w = r * 2 + 7;
+		uint32 h = r + 6;
+		resizeFloor(f, Vec2i(w, h));
+		makeCircularRoom(f, r);
+
+		f.tile(w / 2, 2) = TileEnum::Spawn;
+		f.tile(w / 2, 3) = TileEnum::Decoration;
+		f.extra(w / 2, 3).push_back(Decoration{ "rug" });
 
 		f.tile(w / 2, h - 3) = TileEnum::Door;
 		f.tile(w / 2, h - 2) = TileEnum::Stairs;
@@ -640,24 +655,55 @@ namespace
 
 		const auto &generateBossMonster = [&]()
 		{
-			const auto &generateKeyToAllDoors = [&]() -> Key
-			{
-				Key k;
-				const uint32 cnt = f.width * f.height;
-				for (uint32 i = 0; i < cnt; i++)
-					if (f.tiles[i] == TileEnum::Door)
-						k.doors.push_back(Vec2i(i % f.width, i / f.width));
-				return k;
-			};
-
 			Monster mr = generateFloorBoss(f.level);
-			mr.onDeath.push_back(generateKeyToAllDoors());
+			mr.onDeath.push_back(Key{ findDoors(f) });
 			return mr;
 		};
 		f.tile(w / 2, h / 2) = TileEnum::Monster;
 		f.extra(w / 2, h / 2).push_back(generateBossMonster());
 
 		placeMonsters(f, f.level / 20);
+	}
+
+	void generateAntiHeroesFloor(Floor &f)
+	{
+		CAGE_ASSERT(f.level == 100);
+		const uint32 r = 30;
+		uint32 w = r * 2 + 11;
+		uint32 h = r + 7;
+		resizeFloor(f, Vec2i(w, h));
+		makeCircularRoom(f, r);
+
+		f.tile(1, h / 2) = TileEnum::Spawn;
+		for (uint32 x = 2; x < 2 + 4; x++)
+		{
+			f.tile(x, h / 2) = TileEnum::Decoration;
+			f.extra(x, h / 2).push_back(Decoration{ "rug" });
+		}
+		for (uint32 x = w - 2 - 4; x < w - 2; x++)
+			f.tile(x, h / 2) = TileEnum::Door;
+		f.tile(w - 2, h / 2) = TileEnum::Stairs;
+
+		findOutlineWalls(f);
+
+		cutoutFloor(f);
+		w = f.width;
+		h = f.height;
+
+		std::vector<Vec2i> doors = findDoors(f);
+		for (Monster &hero : generateAntiHeroes())
+		{
+			if (!doors.empty())
+			{
+				hero.onDeath.push_back(Key{ { doors.back() } });
+				doors.pop_back();
+			}
+			const Vec2i p = findAny(f, TileEnum::Empty);
+			f.tile(p) = TileEnum::Monster;
+			f.extra(p).push_back(std::move(hero));
+		}
+
+		placeMonsters(f, 10);
 	}
 
 	void generateDungeonLayout(Floor &f)
@@ -1152,6 +1198,8 @@ Floor generateFloor(uint32 level, uint32 maxLevel)
 	f.level = level;
 	if (level == 0)
 		generateShopFloor(f, maxLevel);
+	else if (level == 100)
+		generateAntiHeroesFloor(f);
 	else if (isLevelBoss(level))
 		generateBossFloor(f);
 	else
