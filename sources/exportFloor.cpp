@@ -1,3 +1,5 @@
+#include <cstdio>
+
 #include "dnt.h"
 
 #include <cage-core/files.h>
@@ -185,6 +187,20 @@ namespace
 		r += "</span>";
 		return r;
 	}
+
+	void flush(Holder<File> &f, const String &p)
+	{
+		if (p.empty())
+			return;
+		f->seek(0);
+		if (p == "-")
+			printf("%s\n", f->readAll().data());
+		else
+		{
+			Holder<File> o = writeFile(p);
+			o->write(f->readAll());
+		}
+	}
 }
 
 FloorExport exportFloor(const Floor &floor)
@@ -219,7 +235,7 @@ FloorExport exportFloor(const Floor &floor)
 
 void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, const String &htmlPath)
 {
-	Holder<File> html = htmlPath.empty() ? newFileBuffer() : writeFile(htmlPath);
+	Holder<File> html = newFileBuffer();
 	html->writeLine("<!DOCTYPE html>");
 	html->writeLine("<html>");
 	html->writeLine("<head>");
@@ -240,7 +256,7 @@ void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, con
 	html->writeLine("</head>");
 	html->writeLine("<body>");
 
-	Holder<File> json = jsonPath.empty() ? newFileBuffer() : writeFile(jsonPath);
+	Holder<File> json = newFileBuffer();
 	json->writeLine("{");
 	json->writeLine("\"floors\":[");
 
@@ -287,4 +303,7 @@ document.body.addEventListener("click", function(event) {
 	json->writeLine("]"); // /floors
 	json->writeLine("}"); // /root
 	json->close();
+
+	flush(json, jsonPath);
+	flush(html, htmlPath);
 }

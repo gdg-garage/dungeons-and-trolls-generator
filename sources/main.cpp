@@ -8,7 +8,7 @@ int main(int argc, const char *args[])
 {
 	Holder<Logger> log1 = newLogger();
 	log1->format.bind<logFormatConsole>();
-	log1->output.bind<logOutputStdOut>();
+	log1->output.bind<logOutputStdErr>();
 	try
 	{
 		Holder<Ini> cmd = newIni();
