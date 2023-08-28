@@ -837,7 +837,7 @@ Monster generateFloorBoss(uint32 level)
 		return randomChance();
 	};
 
-	Generate g = Generate(level, numeric_cast<uint32>(pow(level / 5, 1.3)));
+	Generate g = Generate(level, numeric_cast<sint32>(pow(level / 5, 1.3)));
 	g.magic = levelSwitch(LevelMagic);
 	g.ranged = levelSwitch(LevelRanged);
 	g.defensive = randomChance();
@@ -856,8 +856,95 @@ Monster generateFloorBoss(uint32 level)
 Holder<PointerRange<Monster>> generateAntiHeroes()
 {
 	PointerRangeHolder<Monster> result;
+
+	{ // vit - barbarian
+		Generate g(100, 50);
+		g.magic = 0;
+		g.ranged = 0;
+		g.defensive = 0;
+		g.support = 0;
+		Monster mr = generateMonsterImpl(g, &generateOutlaw);
+		mr.name = "Vít";
+		mr.icon = "barbarian";
+		mr.algorithm = "antihero";
+		mr.faction = "monster";
+		addDeadBody(mr);
+		result.push_back(std::move(mr));
+	}
+
+	{ // eva - sorcerer
+		Generate g(100, 50);
+		g.magic = 1;
+		g.ranged = 1;
+		g.defensive = 0;
+		g.support = 0;
+		Monster mr = generateMonsterImpl(g, &generateOutlaw);
+		mr.name = "Eva";
+		mr.icon = "sorcerer";
+		mr.algorithm = "antihero";
+		mr.faction = "monster";
+		addDeadBody(mr);
+		result.push_back(std::move(mr));
+	}
+
+	{ // simon - druid
+		Generate g(100, 50);
+		g.ranged = 0;
+		g.defensive = 1;
+		g.support = 0;
+		Monster mr = generateMonsterImpl(g, &generateOutlaw);
+		mr.name = "Šimon";
+		mr.icon = "druid";
+		mr.algorithm = "antihero";
+		mr.faction = "monster";
+		addDeadBody(mr);
+		result.push_back(std::move(mr));
+	}
+
+	{ // tomas - necromancer
+		Generate g(100, 50);
+		g.magic = 1;
+		g.support = 1;
+		Monster mr = generateMonsterImpl(g, &generateOutlaw);
+		mr.name = "Tomáš";
+		mr.icon = "necromancer";
+		mr.algorithm = "antihero";
+		mr.faction = "monster";
+		addDeadBody(mr);
+		result.push_back(std::move(mr));
+	}
+
+	// druid wolves
+	for (uint32 i = 0; i < 3; i++)
+	{
+		Generate g(100, 40);
+		g.magic = 0;
+		g.ranged = 0;
+		g.support = 0;
+		Monster mr = generateMonsterImpl(g, &generateZombie);
+		mr.updateName("Wolf");
+		mr.icon = "wolf";
+		mr.algorithm = "antihero";
+		mr.faction = "monster";
+		result.push_back(std::move(mr));
+	}
+
+	// necromancer skeletons
 	for (uint32 i = 0; i < 7; i++)
-		result.push_back(generateFloorBoss(100));
+	{
+		Generate g(100, 35);
+		g.magic = 0;
+		g.ranged = 1;
+		g.defensive = 0;
+		g.support = 0;
+		Monster mr = generateMonsterImpl(g, &generateSkeleton);
+		mr.updateName("Skeleton");
+		mr.icon = "skeleton";
+		mr.algorithm = "antihero";
+		mr.faction = "monster";
+		result.push_back(std::move(mr));
+	}
+
 	return result;
 }
 
