@@ -194,11 +194,15 @@ namespace
 			return;
 		f->seek(0);
 		if (p == "-")
-			printf("%s\n", f->readAll().data());
+		{
+			const auto buff = f->readAll();
+			fwrite(buff.data(), buff.size(), 1, stdout);
+		}
 		else
 		{
 			Holder<File> o = writeFile(p);
 			o->write(f->readAll());
+			o->close();
 		}
 	}
 }
