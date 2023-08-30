@@ -152,6 +152,178 @@ namespace
 				CAGE_THROW_CRITICAL(Exception, "unknown slot enum");
 		}
 	}
+
+	std::string exportSkillEffects(const SkillEffects &effects)
+	{
+		std::string json;
+		json += "{\n";
+
+		if (!effects.attributes.empty())
+			json += std::string() + "\"attributes\":" + skillAttributesJson(effects.attributes) + ",\n";
+
+		if (!effects.flags.empty())
+		{
+			json += "\"flags\":[\n";
+			for (const auto &flag : effects.flags)
+				json += std::string() + "\"" + (const char *)flag + "\",\n";
+			removeLastComma(json);
+			json += "],\n";
+		}
+
+		if (!effects.summons.empty())
+		{
+			json += "\"summons\":[\n";
+			for (const auto &flag : effects.summons)
+				json += exportVariant(flag) + ",\n";
+			removeLastComma(json);
+			json += "],\n";
+		}
+
+		removeLastComma(json);
+		json += "}"; // /root
+		return json;
+	}
+
+	std::string exportSkill(const Skill &skill)
+	{
+		std::string json;
+		json += "{\n";
+		json += std::string() + "\"name\":\"" + skill.name + "\",\n";
+		if (skill.targetType != SkillTargetEnum::None)
+			json += std::string() + "\"targetType\":\"" + skillTargetName(skill.targetType) + "\",\n";
+		if (!skill.cost.empty())
+			json += std::string() + "\"cost\":" + attributesValueMappingJson(skill.cost) + ",\n";
+		if (!skill.range.empty())
+			json += std::string() + "\"range\":" + attributesValueMappingJson(skill.range) + ",\n";
+		if (!skill.radius.empty())
+			json += std::string() + "\"radius\":" + attributesValueMappingJson(skill.radius) + ",\n";
+		if (!skill.duration.empty())
+			json += std::string() + "\"duration\":" + attributesValueMappingJson(skill.duration) + ",\n";
+		if (!skill.damageAmount.empty())
+			json += std::string() + "\"damageAmount\":" + attributesValueMappingJson(skill.damageAmount) + ",\n";
+		if (skill.damageType != DamageTypeEnum::None)
+			json += std::string() + "\"damageType\":\"" + damageTypeName(skill.damageType) + "\",\n";
+		json += std::string() + "\"caster\":" + exportSkillEffects(skill.caster) + ",\n";
+		json += std::string() + "\"target\":" + exportSkillEffects(skill.target) + ",\n";
+
+#ifdef CAGE_DEBUG
+		json += "\"_debug\":" + thingJson<false>(skill) + ",\n";
+#endif // CAGE_DEBUG
+
+		removeLastComma(json);
+		json += "}"; // /root
+		return json;
+	}
+
+	std::string exportItem(const Item &item)
+	{
+		std::string json;
+		json += "{\n";
+		json += std::string() + "\"name\":\"" + item.name + "\",\n";
+		json += std::string() + "\"slot\":\"" + slotName(item.slot) + "\",\n";
+		if (item.unidentified)
+			json += (Stringizer() + "\"unidentified\":true,").value.c_str();
+		if (!item.requirements.empty())
+			json += "\"requirements\":" + attributesValueMappingJson(item.requirements) + ",\n";
+		if (!item.attributes.empty())
+			json += "\"attributes\":" + attributesValueMappingJson(item.attributes) + ",\n";
+
+		if (!item.skills.empty())
+		{
+			json += "\"skills\":[\n";
+			for (const Skill &skill : item.skills)
+				json += exportSkill(skill) + ",\n";
+			removeLastComma(json);
+			json += "],\n";
+		}
+
+		json += (Stringizer() + "\"buyPrice\":" + item.buyPrice + ",").value.c_str();
+
+#ifdef CAGE_DEBUG
+		json += "\"_debug\":" + thingJson<false>(item) + ",\n";
+#endif // CAGE_DEBUG
+
+		removeLastComma(json);
+		json += "}"; // /root
+		return json;
+	}
+
+	std::string exportMonster(const Monster &monster)
+	{
+		std::string json;
+		json += "{\n";
+		json += std::string() + "\"name\":\"" + monster.name + "\",\n";
+		json += std::string() + "\"icon\":\"" + monster.icon.c_str() + "\",\n";
+		json += std::string() + "\"algorithm\":\"" + monster.algorithm.c_str() + "\",\n";
+		json += std::string() + "\"faction\":\"" + monster.faction.c_str() + "\",\n";
+		if (!monster.attributes.empty())
+			json += "\"attributes\":" + attributesValueMappingJson(monster.attributes) + ",\n";
+
+		if (!monster.equippedItems.empty())
+		{
+			json += "\"equippedItems\":[\n";
+			for (const Item &item : monster.equippedItems)
+				json += exportItem(item) + ",\n";
+			removeLastComma(json);
+			json += "],\n";
+		}
+
+		if (!monster.onDeath.empty())
+		{
+			json += "\"onDeath\":[\n";
+			for (const auto &it : monster.onDeath)
+				json += exportVariant(it) + ",\n";
+			removeLastComma(json);
+			json += "],\n";
+		}
+
+		json += (Stringizer() + "\"score\":" + monster.score + ",").value.c_str();
+
+#ifdef CAGE_DEBUG
+		json += "\"_debug\":" + thingJson<true>(monster) + ",\n";
+#endif // CAGE_DEBUG
+
+		removeLastComma(json);
+		json += "}"; // /root
+		return json;
+	}
+
+	std::string exportDecoration(const Decoration &decor)
+	{
+		std::string json;
+		json += "{\n";
+		if (!decor.type.empty())
+			json += std::string() + "\"type\":\"" + decor.type.c_str() + "\",\n";
+		if (!decor.name.empty())
+			json += std::string() + "\"name\":\"" + decor.name + "\",\n";
+		removeLastComma(json);
+		json += "}"; // /root
+		return json;
+	}
+
+	std::string exportWaypoint(const Waypoint &waypoint)
+	{
+		const String s = Stringizer() + "{\"destinationFloor\":" + waypoint.destinationFloor + "}";
+		return s.c_str();
+	}
+
+	std::string exportKey(const Key &key)
+	{
+		std::string json;
+		json += "{\n";
+		json += "\"doors\":[\n";
+		for (const Vec2i &door : key.doors)
+		{
+			json += "{\n";
+			json += (Stringizer() + "\"x\":" + door[0] + ",\n").value.c_str();
+			json += (Stringizer() + "\"y\":" + door[1] + "\n").value.c_str();
+			json += "},"; // /door
+		}
+		removeLastComma(json);
+		json += "]\n"; // /doors
+		json += "}"; // /root
+		return json;
+	}
 }
 
 std::string exportVariant(const Variant &variant)
@@ -161,211 +333,19 @@ std::string exportVariant(const Variant &variant)
 		{
 			using T = std::decay_t<decltype(arg)>;
 			if constexpr (std::is_same_v<T, Skill>)
-				return exportSkill(arg) + "\n";
+				return "{\"skill\":" + exportSkill(arg) + "}\n";
 			else if constexpr (std::is_same_v<T, Item>)
-				return exportItem(arg) + "\n";
+				return "{\"item\":" + exportItem(arg) + "}\n";
 			else if constexpr (std::is_same_v<T, Monster>)
-				return exportMonster(arg) + "\n";
+				return "{\"monster\":" + exportMonster(arg) + "}\n";
 			else if constexpr (std::is_same_v<T, Decoration>)
-				return exportDecoration(arg) + "\n";
+				return "{\"decoration\":" + exportDecoration(arg) + "}\n";
 			else if constexpr (std::is_same_v<T, Waypoint>)
-				return exportWaypoint(arg) + "\n";
+				return "{\"waypoint\":" + exportWaypoint(arg) + "}\n";
 			else if constexpr (std::is_same_v<T, Key>)
-				return exportKey(arg) + "\n";
+				return "{\"key\":" + exportKey(arg) + "}\n";
 			else
 				static_assert(always_false<T>, "non-exhaustive visitor");
 		},
 		variant);
-}
-
-std::string exportVariant(const SkillFlagsVariant &variant)
-{
-	return std::visit(
-		[](const auto &arg) -> std::string
-		{
-			using T = std::decay_t<decltype(arg)>;
-			if constexpr (std::is_same_v<T, SkillFlag>)
-				return std::string() + "\"" + (const char *)arg + "\"";
-			else if constexpr (std::is_same_v<T, Summon>)
-				return exportSummon(arg) + "\n";
-			else
-				static_assert(always_false<T>, "non-exhaustive visitor");
-		},
-		variant);
-}
-
-std::string exportSkill(const Skill &skill)
-{
-	std::string json;
-	json += "{\n";
-	json += "\"class\":\"skill\",\n";
-	json += std::string() + "\"name\":\"" + skill.name + "\",\n";
-	if (skill.target != SkillTargetEnum::None)
-		json += std::string() + "\"target\":\"" + skillTargetName(skill.target) + "\",\n";
-	if (!skill.cost.empty())
-		json += std::string() + "\"cost\":" + attributesValueMappingJson(skill.cost) + ",\n";
-	if (!skill.range.empty())
-		json += std::string() + "\"range\":" + attributesValueMappingJson(skill.range) + ",\n";
-	if (!skill.radius.empty())
-		json += std::string() + "\"radius\":" + attributesValueMappingJson(skill.radius) + ",\n";
-	if (!skill.duration.empty())
-		json += std::string() + "\"duration\":" + attributesValueMappingJson(skill.duration) + ",\n";
-	if (!skill.damageAmount.empty())
-		json += std::string() + "\"damageAmount\":" + attributesValueMappingJson(skill.damageAmount) + ",\n";
-	if (skill.damageType != DamageTypeEnum::None)
-		json += std::string() + "\"damageType\":\"" + damageTypeName(skill.damageType) + "\",\n";
-	if (!skill.casterAttributes.empty())
-		json += std::string() + "\"casterAttributes\":" + skillAttributesJson(skill.casterAttributes) + ",\n";
-	if (!skill.targetAttributes.empty())
-		json += std::string() + "\"targetAttributes\":" + skillAttributesJson(skill.targetAttributes) + ",\n";
-
-	if (!skill.casterFlags.empty())
-	{
-		json += "\"casterFlags\":[\n";
-		for (const auto &flag : skill.casterFlags)
-			json += exportVariant(flag) + ",\n";
-		removeLastComma(json);
-		json += "],\n";
-	}
-
-	if (!skill.targetFlags.empty())
-	{
-		json += "\"targetFlags\":[\n";
-		for (const auto &flag : skill.targetFlags)
-			json += exportVariant(flag) + ",\n";
-		removeLastComma(json);
-		json += "],\n";
-	}
-
-#ifdef CAGE_DEBUG
-	json += "\"_debug\":" + thingJson<false>(skill) + ",\n";
-#endif // CAGE_DEBUG
-
-	removeLastComma(json);
-	json += "}"; // /root
-	return json;
-}
-
-std::string exportItem(const Item &item)
-{
-	std::string json;
-	json += "{\n";
-	json += item.unidentified ? "\"class\":\"unidentifiedItem\",\n" : "\"class\":\"item\",\n";
-	json += std::string() + "\"name\":\"" + item.name + "\",\n";
-	json += std::string() + "\"slot\":\"" + slotName(item.slot) + "\",\n";
-	if (!item.requirements.empty())
-		json += "\"requirements\":" + attributesValueMappingJson(item.requirements) + ",\n";
-	if (!item.attributes.empty())
-		json += "\"attributes\":" + attributesValueMappingJson(item.attributes) + ",\n";
-
-	if (!item.skills.empty())
-	{
-		json += "\"skills\":[\n";
-		for (const Skill &skill : item.skills)
-			json += exportSkill(skill) + ",\n";
-		removeLastComma(json);
-		json += "],\n";
-	}
-
-	json += (Stringizer() + "\"buyPrice\":" + item.buyPrice + ",").value.c_str();
-
-#ifdef CAGE_DEBUG
-	json += "\"_debug\":" + thingJson<false>(item) + ",\n";
-#endif // CAGE_DEBUG
-
-	removeLastComma(json);
-	json += "}"; // /root
-	return json;
-}
-
-std::string exportMonster(const Monster &monster)
-{
-	std::string json;
-	json += "{\n";
-	json += "\"class\":\"monster\",\n";
-	json += std::string() + "\"name\":\"" + monster.name + "\",\n";
-	json += std::string() + "\"icon\":\"" + monster.icon.c_str() + "\",\n";
-	json += std::string() + "\"algorithm\":\"" + monster.algorithm.c_str() + "\",\n";
-	json += std::string() + "\"faction\":\"" + monster.faction.c_str() + "\",\n";
-	if (!monster.attributes.empty())
-		json += "\"attributes\":" + attributesValueMappingJson(monster.attributes) + ",\n";
-
-	if (!monster.equippedItems.empty())
-	{
-		json += "\"equippedItems\":[\n";
-		for (const Item &item : monster.equippedItems)
-			json += exportItem(item) + ",\n";
-		removeLastComma(json);
-		json += "],\n";
-	}
-
-	if (!monster.onDeath.empty())
-	{
-		json += "\"onDeath\":[\n";
-		for (const auto &it : monster.onDeath)
-			json += exportVariant(it) + ",\n";
-		removeLastComma(json);
-		json += "],\n";
-	}
-
-	json += (Stringizer() + "\"score\":" + monster.score + ",").value.c_str();
-
-#ifdef CAGE_DEBUG
-	json += "\"_debug\":" + thingJson<true>(monster) + ",\n";
-#endif // CAGE_DEBUG
-
-	removeLastComma(json);
-	json += "}"; // /root
-	return json;
-}
-
-std::string exportDecoration(const Decoration &decor)
-{
-	std::string json;
-	json += "{\n";
-	json += "\"class\":\"decoration\",\n";
-	if (!decor.type.empty())
-		json += std::string() + "\"type\":\"" + decor.type.c_str() + "\",\n";
-	if (!decor.name.empty())
-		json += std::string() + "\"name\":\"" + decor.name + "\",\n";
-	removeLastComma(json);
-	json += "}"; // /root
-	return json;
-}
-
-std::string exportWaypoint(const Waypoint &waypoint)
-{
-	const String s = Stringizer() + "{\"class\":\"waypoint\",\"destinationFloor\":" + waypoint.destinationFloor + "}";
-	return s.c_str();
-}
-
-std::string exportKey(const Key &key)
-{
-	std::string json;
-	json += "{\n";
-	json += "\"class\":\"key\",\n";
-	json += "\"doors\":[\n";
-	for (const Vec2i &door : key.doors)
-	{
-		json += "{\n";
-		json += (Stringizer() + "\"x\":" + door[0] + ",\n").value.c_str();
-		json += (Stringizer() + "\"y\":" + door[1] + "\n").value.c_str();
-		json += "},"; // /door
-	}
-	removeLastComma(json);
-	json += "]\n"; // /doors
-	json += "}"; // /root
-	return json;
-}
-
-std::string exportSummon(const Summon &summon)
-{
-	CAGE_ASSERT(summon.data);
-	std::string json;
-	json += "{\n";
-	json += "\"class\":\"summon\",\n";
-	json += std::string() + "\"data\":" + exportVariant(*summon.data) + ",\n";
-	removeLastComma(json);
-	json += "}"; // /root
-	return json;
 }

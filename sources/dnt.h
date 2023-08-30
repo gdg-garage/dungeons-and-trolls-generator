@@ -144,25 +144,24 @@ enum class SkillTargetEnum : uint8
 using AttributesValuesList = std::map<AttributeEnum, sint32>;
 using AttributesEquationFactors = std::map<AttributeEnum, Real>;
 using SkillAttributes = std::map<AttributeEnum, AttributesEquationFactors>;
-
 using SkillFlag = StringPointer;
-struct Summon;
-using SkillFlagsVariant = std::variant<SkillFlag, Summon>;
-struct Summon
+
+struct SkillEffects
 {
-	Holder<Variant> data;
+	SkillAttributes attributes;
+	std::vector<SkillFlag> flags;
+	std::vector<Variant> summons;
 };
 
 struct Skill : public Thing
 {
 	Skill(const Generate &generate) : Thing(generate){};
 
-	SkillTargetEnum target = SkillTargetEnum::None;
+	SkillTargetEnum targetType = SkillTargetEnum::None;
 	AttributesValuesList cost;
 	AttributesEquationFactors range, radius, duration, damageAmount;
 	DamageTypeEnum damageType = DamageTypeEnum::None;
-	SkillAttributes casterAttributes, targetAttributes;
-	std::vector<SkillFlagsVariant> casterFlags, targetFlags;
+	SkillEffects caster, target;
 };
 
 struct Item : public Thing
@@ -296,14 +295,6 @@ Monster generateVandal();
 Floor generateFloor(uint32 level, uint32 maxLevel);
 
 std::string exportVariant(const Variant &variant);
-std::string exportVariant(const SkillFlagsVariant &variant);
-std::string exportSkill(const Skill &skill);
-std::string exportItem(const Item &item);
-std::string exportMonster(const Monster &monster);
-std::string exportDecoration(const Decoration &decor);
-std::string exportWaypoint(const Waypoint &waypoint);
-std::string exportKey(const Key &key);
-std::string exportSummon(const Summon &summon);
 FloorExport exportFloor(const Floor &floor);
 void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, const String &htmlPath);
 

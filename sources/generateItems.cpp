@@ -149,7 +149,7 @@ namespace
 
 		{
 			Skill sk(generate);
-			sk.target = SkillTargetEnum::Character;
+			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Scalar] = 1;
 			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Strong");
 			sk.damageType = DamageTypeEnum::Slash;
@@ -170,7 +170,7 @@ namespace
 
 		{
 			Skill sk(generate);
-			sk.target = SkillTargetEnum::Character;
+			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Scalar] = 2;
 			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Stout") * 0.5;
 			sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(sk, generate, 1, "Piercing") * 0.5;
@@ -212,7 +212,7 @@ namespace
 
 		{
 			Skill sk(generate);
-			sk.target = SkillTargetEnum::Character;
+			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Far") * 0.1;
 			sk.range[AttributeEnum::Scalar] = 4;
 			sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(sk, generate, 1, "Accurate") * 0.5;
@@ -249,7 +249,7 @@ namespace
 
 		{
 			Skill sk(generate);
-			sk.target = SkillTargetEnum::Character;
+			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Scalar] = 1;
 			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Strong") * 0.5;
 			sk.damageType = DamageTypeEnum::Slash;
@@ -329,8 +329,8 @@ namespace
 
 		{
 			Skill sk(generate);
-			sk.casterAttributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 1, "Refreshing");
-			sk.casterFlags.push_back(SkillAlone);
+			sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 1, "Refreshing");
+			sk.caster.flags.push_back(SkillAlone);
 			sk.updateName("Rest");
 			item.addPower(sk, 0.7);
 			item.skills.push_back(std::move(sk));
@@ -353,9 +353,9 @@ namespace
 
 		{
 			Skill sk(generate);
-			sk.casterAttributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(sk, generate, 1, "Energizing") * 0.8;
-			sk.casterAttributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 0.7, "Refreshing") * 0.2;
-			sk.casterFlags.push_back(SkillAlone);
+			sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(sk, generate, 1, "Energizing") * 0.8;
+			sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 0.7, "Refreshing") * 0.2;
+			sk.caster.flags.push_back(SkillAlone);
 			sk.updateName("Meditation");
 			item.addPower(sk, 0.7);
 			item.skills.push_back(std::move(sk));
@@ -417,10 +417,10 @@ namespace
 		{
 			Skill sk(generate);
 			if (randomChance() < 0.5)
-				sk.casterAttributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = interpolate(1.0, 6.0, sk.addPower(1, AffixEnum::Prefix, "Refreshing"));
+				sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = interpolate(1.0, 6.0, sk.addPower(1, AffixEnum::Prefix, "Refreshing"));
 			else
-				sk.casterAttributes[AttributeEnum::Mana][AttributeEnum::Scalar] = interpolate(1.0, 6.0, sk.addPower(1, AffixEnum::Prefix, "Energizing"));
-			sk.casterFlags.push_back(SkillPassive);
+				sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Scalar] = interpolate(1.0, 6.0, sk.addPower(1, AffixEnum::Prefix, "Energizing"));
+			sk.caster.flags.push_back(SkillPassive);
 			sk.updateName("Glow");
 			item.addPower(sk, 1);
 			item.skills.push_back(std::move(sk));
@@ -440,7 +440,7 @@ namespace
 		if (randomChance() < 0.7)
 		{
 			Skill sk(generate);
-			sk.target = SkillTargetEnum::Position;
+			sk.targetType = SkillTargetEnum::Position;
 			sk.range[AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 1, "Enduring") * 0.1;
 			sk.range[AttributeEnum::Scalar] = 1;
 			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 5);
@@ -451,7 +451,7 @@ namespace
 		else
 		{
 			Skill sk(generate);
-			sk.target = SkillTargetEnum::Position;
+			sk.targetType = SkillTargetEnum::Position;
 			sk.range[AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 1, "Enduring") * 0.075;
 			sk.range[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Fast") * 0.075;
 			sk.range[AttributeEnum::Scalar] = 2;
@@ -583,10 +583,10 @@ Item generateSprayCan()
 	for (char c = 'A'; c <= 'Z'; c++)
 	{
 		Skill sk(item.generate);
-		sk.target = SkillTargetEnum::Position;
+		sk.targetType = SkillTargetEnum::Position;
 		sk.range[AttributeEnum::Scalar] = 1;
 		sk.duration[AttributeEnum::Scalar] = 120;
-		sk.targetFlags.push_back(Summon{ systemMemory().createHolder<Variant>(Decoration{ "sprayPaint", std::string(1, c) }) });
+		sk.target.summons.push_back(Decoration{ "sprayPaint", std::string(1, c) });
 		sk.updateName("Spray");
 		item.skills.push_back(std::move(sk));
 	}

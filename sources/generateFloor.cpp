@@ -379,7 +379,7 @@ namespace
 				sk.duration[AttributeEnum::Scalar] = 1000000;
 				sk.damageAmount[AttributeEnum::Scalar] = randomRange(5.0, 20.0);
 				sk.damageType = DamageTypeEnum::Fire;
-				sk.casterFlags.push_back(SkillGroundEffect);
+				sk.caster.flags.push_back(SkillGroundEffect);
 				f.extra(x, y).push_back(std::move(sk));
 			}
 			switch (randomRange(0u, 5u))
@@ -1161,7 +1161,7 @@ namespace
 					sk.duration[AttributeEnum::Scalar] = 1000000;
 					sk.damageAmount[AttributeEnum::Scalar] = randomRange(10.0, 30.0);
 					sk.damageType = DamageTypeEnum::Piercing;
-					sk.casterFlags.push_back(SkillGroundEffect);
+					sk.caster.flags.push_back(SkillGroundEffect);
 					f.extras[i].push_back(std::move(sk));
 				}
 			}
@@ -1182,7 +1182,7 @@ namespace
 					sk.duration[AttributeEnum::Scalar] = 1000000;
 					sk.damageAmount[AttributeEnum::Scalar] = randomRange(3.0, 15.0);
 					sk.damageType = DamageTypeEnum::Poison;
-					sk.casterFlags.push_back(SkillGroundEffect);
+					sk.caster.flags.push_back(SkillGroundEffect);
 					f.extras[i].push_back(std::move(sk));
 				}
 			}
