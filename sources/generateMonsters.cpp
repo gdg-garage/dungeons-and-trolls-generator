@@ -3,6 +3,8 @@
 #include <cage-core/pointerRangeHolder.h>
 #include <cage-core/string.h>
 
+Monster::Monster(const Generate &generate) : Thing(generate){};
+
 namespace
 {
 	void matchAttributesRequirements(Monster &mr)
@@ -715,7 +717,14 @@ namespace
 		{ // magic
 			if (generate.support < 0.5)
 			{ // combat
-				return generateWarlock(generate);
+				if (generate.ranged < 0.5)
+				{ // melee
+					return generateDruid(generate);
+				}
+				else
+				{ // ranged
+					return generateWarlock(generate);
+				}
 			}
 			else
 			{ // support

@@ -1,5 +1,7 @@
 #include "dnt.h"
 
+Skill::Skill(const Generate &generate) : Thing(generate){};
+
 namespace
 {
 	Skill generateChainHook(const Generate &generate)

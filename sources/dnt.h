@@ -155,7 +155,7 @@ struct SkillEffects
 
 struct Skill : public Thing
 {
-	Skill(const Generate &generate) : Thing(generate){};
+	Skill(const Generate &generate);
 
 	SkillTargetEnum targetType = SkillTargetEnum::None;
 	AttributesValuesList cost;
@@ -166,7 +166,7 @@ struct Skill : public Thing
 
 struct Item : public Thing
 {
-	Item(const Generate &generate) : Thing(generate){};
+	Item(const Generate &generate);
 
 	SlotEnum slot = SlotEnum::None;
 	AttributesValuesList requirements;
@@ -178,7 +178,7 @@ struct Item : public Thing
 
 struct Monster : public Thing
 {
-	Monster(const Generate &generate) : Thing(generate){};
+	Monster(const Generate &generate);
 
 	detail::StringBase<30> icon = "monster";
 	detail::StringBase<30> algorithm = "default";

@@ -1,5 +1,7 @@
 #include "dnt.h"
 
+Item::Item(const Generate &generate) : Thing(generate){};
+
 namespace
 {
 	void addNothing(Item &item) {}
@@ -470,6 +472,8 @@ namespace
 						return "Boots";
 					case 1:
 						return "Shoes";
+					default:
+						CAGE_THROW_CRITICAL(Exception, "random out of range");
 				}
 			}());
 		return item;
@@ -497,6 +501,8 @@ namespace
 						return "Pendant";
 					case 2:
 						return "Necklace";
+					default:
+						CAGE_THROW_CRITICAL(Exception, "random out of range");
 				}
 			}());
 		return item;

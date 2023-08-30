@@ -625,7 +625,6 @@ namespace
 	void generateBossFloor(Floor &f)
 	{
 		CAGE_ASSERT(isLevelBoss(f.level));
-		const uint32 bossIndex = levelToBossIndex(f.level);
 		const uint32 r = (min(f.level * 2, 50u) + 10 + randomRange(0u, min(f.level / 3, 30u) + 2)) / 2;
 		uint32 w = r * 2 + 7;
 		uint32 h = r + 6;
