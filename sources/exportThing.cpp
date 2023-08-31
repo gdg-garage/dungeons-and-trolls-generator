@@ -203,8 +203,10 @@ namespace
 			json += std::string() + "\"damageAmount\":" + attributesValueMappingJson(skill.damageAmount) + ",\n";
 		if (skill.damageType != DamageTypeEnum::None)
 			json += std::string() + "\"damageType\":\"" + damageTypeName(skill.damageType) + "\",\n";
-		json += std::string() + "\"caster\":" + exportSkillEffects(skill.caster) + ",\n";
-		json += std::string() + "\"target\":" + exportSkillEffects(skill.target) + ",\n";
+		if (std::string j = exportSkillEffects(skill.caster); j.length() > 3)
+			json += std::string() + "\"caster\":" + j + ",\n";
+		if (std::string j = exportSkillEffects(skill.target); j.length() > 3)
+			json += std::string() + "\"target\":" + j + ",\n";
 
 #ifdef CAGE_DEBUG
 		json += "\"_debug\":" + thingJson<false>(skill) + ",\n";
