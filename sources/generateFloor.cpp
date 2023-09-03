@@ -339,6 +339,25 @@ namespace
 
 	void placeSpawnAndStairs(Floor &f)
 	{
+		const bool hasSpawn = countCells(f, TileEnum::Spawn);
+		const bool hasStairs = countCells(f, TileEnum::Stairs);
+		if (hasSpawn || hasStairs)
+		{
+			if (hasSpawn && !hasStairs)
+			{
+				Vec2i a = findAny(f, TileEnum::Spawn);
+				Vec2i b = findFarthest(f, a, TileEnum::Empty);
+				f.tile(b) = TileEnum::Stairs;
+			}
+			if (!hasSpawn && hasStairs)
+			{
+				Vec2i a = findAny(f, TileEnum::Stairs);
+				Vec2i b = findFarthest(f, a, TileEnum::Empty);
+				f.tile(b) = TileEnum::Spawn;
+			}
+			return;
+		}
+
 		if (f.level > 15 && randomChance() < 0.3)
 		{
 			Vec2i a = findAny(f, TileEnum::Empty);
@@ -411,7 +430,7 @@ namespace
 		const uint32 r = randomRange(6u, 10u);
 		CAGE_ASSERT(r * 2 + 6 < w && r * 2 + 6 < h);
 		const Vec2i c = Vec2i(randomRange(r + 3, w - r - 4), randomRange(r + 3, h - r - 4));
-		const Vec2i a = Vec2i(c - r - 3);
+		const Vec2i a = Vec2i(c - r - 2);
 		const Vec2i b = Vec2i(c + r + 3);
 
 		// generate circular room
@@ -451,6 +470,62 @@ namespace
 			f.tile(p) = TileEnum::Monster;
 			f.extra(p).push_back(generateWitch(f.level));
 		}
+	}
+
+	void placeCastle(Floor &f)
+	{
+		const Vec2i c = Vec2i(f.width, f.height) / 2;
+		const Vec2i a = Vec2i(c - 5);
+		const Vec2i b = Vec2i(c + 6);
+
+		// basic shape
+		for (uint32 y = a[1]; y < b[1]; y++)
+		{
+			for (uint32 x = a[0]; x < b[0]; x++)
+			{
+				const Vec2i p = Vec2i(x, y);
+				CAGE_ASSERT(f.extra(p).empty());
+				CAGE_ASSERT(f.tile(p) == TileEnum::Empty || f.tile(p) == TileEnum::Outside);
+				const uint32 layer = max(cage::abs(p[0] - c[0]), cage::abs(p[1] - c[1]));
+				switch (layer)
+				{
+					case 0:
+						f.tile(p) = randomChance() < 0.4 ? TileEnum::Stairs : TileEnum::Spawn;
+						break;
+					case 1:
+						f.tile(p) = TileEnum::Empty;
+						break;
+					case 2:
+					case 4:
+						f.tile(p) = TileEnum::Outside;
+						break;
+					case 3:
+					{
+						f.tile(p) = TileEnum::Decoration;
+						f.extra(p).push_back(Decoration{ "rug" });
+						break;
+					}
+					case 5:
+					{
+						f.tile(p) = TileEnum::Decoration;
+						f.extra(p).push_back(Decoration{ "moat" });
+						Skill sk({});
+						sk.name = "Moat";
+						sk.duration[AttributeEnum::Scalar] = 1000000;
+						sk.caster.flags.push_back(SkillGroundEffect);
+						sk.target.flags.push_back(SkillStun);
+						f.extra(p).push_back(std::move(sk));
+						break;
+					}
+				}
+			}
+		}
+
+		// hallways
+		f.tile(c + Vec2i(0, -2)) = TileEnum::Empty;
+		f.tile(c + Vec2i(0, +2)) = TileEnum::Empty;
+		f.tile(c + Vec2i(-4, 0)) = TileEnum::Empty;
+		f.tile(c + Vec2i(+4, 0)) = TileEnum::Empty;
 	}
 
 	void placeCorridors(Floor &f)
@@ -728,11 +803,31 @@ namespace
 			rectReplace(f, a, b, TileEnum::Empty, TileEnum::Outside);
 		}
 
-		// witches
-		if (f.level > 50 && randomChance() < 0.07)
-			placeWitchCoven(f);
+		if (randomChance() < 0.07)
+		{
+			switch (randomRange(0, 2))
+			{
+				case 0: // witches
+					if (f.level > 50)
+					{
+						placeWitchCoven(f);
+						placeCorridors(f); // after
+						return;
+					}
+					break;
+				case 1: // castle
+					if (f.level > 70)
+					{
+						placeCorridors(f); // before
+						placeCastle(f);
+						return;
+					}
+					break;
+				default:
+					CAGE_THROW_CRITICAL(Exception, "switch value out of range");
+			}
+		}
 
-		// corridors
 		placeCorridors(f);
 	}
 
@@ -779,6 +874,11 @@ namespace
 			}
 		}
 
+		// castle
+		if (f.level > 70 && randomChance() < 0.07)
+			placeCastle(f);
+
+		// always lava river
 		if (f.level > 60)
 			placeLavaRiver(f);
 	}
@@ -910,6 +1010,10 @@ namespace
 				open.push_back(c);
 			}
 		}
+
+		// castle
+		if (f.level > 70 && randomChance() < 0.07)
+			placeCastle(f);
 	}
 
 	void generateNaturalCavesLayout(Floor &f)
