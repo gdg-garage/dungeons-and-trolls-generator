@@ -140,6 +140,29 @@ namespace
 
 		return item;
 	}
+
+	void finalizeBasicItem(Item &item)
+	{
+		// ethereal
+		if (item.generate.level > LevelEthereal && !item.attributes.empty() && randomChance() < 0.05)
+		{
+			Generate g = item.generate;
+			g.magic = 1;
+			g.ranged = 0;
+			g.defensive = 0;
+			g.support = 0;
+			Skill sk(g);
+			const Real mult = interpolate(1.2, 1.5, sk.addPower(1, AffixEnum::Prefix, "Celestial"));
+			for (const auto &it : item.attributes)
+				sk.caster.attributes[it.first][AttributeEnum::Scalar] = it.second * mult;
+			sk.caster.flags.push_back(SkillPassive);
+			sk.updateName("Ether");
+			item.addPower(sk, 0.5);
+			item.addAffix(0.8, AffixEnum::Prefix, "Ethereal");
+			item.skills.push_back(std::move(sk));
+			item.attributes.clear();
+		}
+	}
 }
 
 namespace
@@ -161,6 +184,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName("Sword");
 		return item;
 	}
@@ -183,6 +207,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName("Pike");
 		return item;
 	}
@@ -203,6 +228,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName("Scythe");
 		return item;
 	}
@@ -225,6 +251,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName("Bow");
 		return item;
 	}
@@ -240,6 +267,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName("Staff");
 		return item;
 	}
@@ -261,6 +289,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName("Dagger");
 		return item;
 	}
@@ -272,6 +301,7 @@ namespace
 
 		makeBoost(item);
 
+		finalizeBasicItem(item);
 		item.updateName("Shield");
 		return item;
 	}
@@ -287,6 +317,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName("Wand");
 		return item;
 	}
@@ -302,6 +333,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName("Scroll");
 		return item;
 	}
@@ -317,6 +349,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName("Talisman");
 		return item;
 	}
@@ -338,6 +371,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName(generate.defensive < 0.5 ? "Leather Mail" : "Plated Mail");
 		return item;
 	}
@@ -363,6 +397,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName("Cape");
 		return item;
 	}
@@ -374,6 +409,7 @@ namespace
 
 		makeBoost(item);
 
+		finalizeBasicItem(item);
 		item.updateName("Helmet");
 		return item;
 	}
@@ -389,6 +425,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName("Circlet");
 		return item;
 	}
@@ -463,6 +500,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName(
 			[]()
 			{
@@ -490,6 +528,7 @@ namespace
 			item.skills.push_back(std::move(sk));
 		}
 
+		finalizeBasicItem(item);
 		item.updateName(
 			[]()
 			{

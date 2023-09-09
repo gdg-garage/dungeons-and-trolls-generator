@@ -186,7 +186,7 @@ struct Monster : public Thing
 	AttributesValuesList attributes;
 	std::vector<Item> equippedItems;
 	std::vector<Variant> onDeath;
-	uint32 score = 0;
+	uint64 score = 0;
 };
 
 enum class TileEnum : uint8
@@ -322,6 +322,7 @@ constexpr uint32 LevelMagic = 16;
 constexpr uint32 LevelDuration = 22;
 constexpr uint32 LevelSupport = 29;
 constexpr uint32 LevelPoison = 37;
+constexpr uint32 LevelEthereal = 42;
 constexpr uint32 LevelGroundEffect = 46;
 constexpr uint32 LevelStun = 56;
 constexpr uint32 LevelSummoning = 67;
