@@ -24,7 +24,6 @@ namespace
 	Skill generateStomp(const Generate &generate)
 	{
 		Skill sk(generate);
-		sk.targetType = SkillTargetEnum::None;
 		sk.radius[AttributeEnum::Scalar] = interpolate(2.0, 4.0, sk.addPower(1, AffixEnum::Prefix, "Expansive"));
 		sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Forceful") * 0.3;
 		sk.damageType = DamageTypeEnum::Slash;
@@ -106,7 +105,6 @@ namespace
 	Skill generateWarcry(const Generate &generate)
 	{
 		Skill sk(generate);
-		sk.targetType = SkillTargetEnum::None;
 		sk.radius[AttributeEnum::Scalar] = interpolate(2.0, 4.0, sk.addPower(1, AffixEnum::Prefix, "Loud"));
 		sk.duration[AttributeEnum::Scalar] = interpolate(2.0, 5.0, sk.addPower(0.8, AffixEnum::Prefix, "Motivating"));
 		sk.caster.attributes[AttributeEnum::Strength][AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 0.8, "Strengthening") * 0.1;
@@ -120,7 +118,6 @@ namespace
 	Skill generateFocus(const Generate &generate)
 	{
 		Skill sk(generate);
-		sk.targetType = SkillTargetEnum::None;
 		sk.duration[AttributeEnum::Scalar] = interpolate(2.0, 5.0, sk.addPower(1, AffixEnum::Prefix, "Prolonged"));
 		sk.caster.attributes[AttributeEnum::Intelligence][AttributeEnum::Willpower] = makeAttrFactor(sk, generate, 1, "Deep") * 0.2;
 		sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 10);
@@ -144,8 +141,7 @@ namespace
 	Skill generateBerserk(const Generate &generate)
 	{
 		Skill sk(generate);
-		sk.targetType = SkillTargetEnum::None;
-		sk.target.attributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = makeAttrFactor(sk, generate, 1, "Raging") * 25;
+		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = makeAttrFactor(sk, generate, 1, "Raging") * 25;
 		sk.cost[AttributeEnum::Life] = makeCost(sk, generate, 15);
 		sk.updateName("Berserk");
 		return sk;
@@ -168,7 +164,6 @@ namespace
 	Skill generateShockNova(const Generate &generate)
 	{
 		Skill sk(generate);
-		sk.targetType = SkillTargetEnum::None;
 		sk.radius[AttributeEnum::Scalar] = interpolate(3.0, 5.0, sk.addPower(1, AffixEnum::Prefix, "Vast"));
 		sk.damageAmount[AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Energetic") * 0.3;
 		sk.damageType = DamageTypeEnum::Electric;
@@ -282,8 +277,7 @@ namespace
 	Skill generateBloodMagic(const Generate &generate)
 	{
 		Skill sk(generate);
-		sk.targetType = SkillTargetEnum::None;
-		sk.target.attributes[AttributeEnum::Mana][AttributeEnum::Scalar] = makeAttrFactor(sk, generate, 1, "Puissant") * 35;
+		sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Scalar] = makeAttrFactor(sk, generate, 1, "Puissant") * 35;
 		sk.cost[AttributeEnum::Life] = makeCost(sk, generate, 20);
 		sk.updateName("Blood Magic");
 		return sk;
@@ -299,8 +293,8 @@ namespace
 		{
 			Monster mr = generateMinion(Generate(generate.level, generate.powerOffset()));
 			sk.addPower(mr, 1);
-			sk.target.summons.push_back(std::move(mr));
 			sk.name = std::string() + "Summon Minion: " + mr.name;
+			sk.target.summons.push_back(std::move(mr));
 		}
 		return sk;
 	}
@@ -314,7 +308,6 @@ namespace
 		sk.duration[AttributeEnum::Scalar] = interpolate(3.0, 6.0, sk.addPower(0.8, AffixEnum::Prefix, "Constricting"));
 		sk.target.attributes[AttributeEnum::Strength][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Choking") * -0.2;
 		sk.target.attributes[AttributeEnum::ElectricResist][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Conductive") * -0.15;
-		sk.caster.flags.push_back(SkillAllowSelf);
 		sk.cost[AttributeEnum::Mana] = makeCost(sk, generate, 20);
 		sk.updateName("Electrocute");
 		return sk;
@@ -370,7 +363,6 @@ namespace
 	Skill generateLaugh(const Generate &generate)
 	{
 		Skill sk(generate);
-		sk.targetType = SkillTargetEnum::None;
 		sk.updateName("Laugh");
 		return sk;
 	}

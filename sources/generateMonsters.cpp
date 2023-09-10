@@ -772,7 +772,7 @@ namespace
 		// loot
 		if (randomChance() < 0.4)
 			mr.onDeath.push_back(generateItem(Generate(generate_.level, generate_.powerOffset()))); // use the original power
-		mr.score = numeric_cast<uint64>(mr.goldCost / empower);
+		mr.score = mr.goldCost / empower;
 
 		return mr;
 	}
