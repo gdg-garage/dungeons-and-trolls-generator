@@ -93,6 +93,7 @@ namespace
 		{
 			it.slot = SlotEnum::Head;
 			it.name = "Teeth";
+			it.icon = "teeth";
 			sk.name = "Bite";
 			sk.damageType = DamageTypeEnum::Poison;
 		}
@@ -100,6 +101,7 @@ namespace
 		{
 			it.slot = SlotEnum::MainHand;
 			it.name = "Claws";
+			it.icon = "claws";
 			sk.name = "Scratch";
 			sk.range[AttributeEnum::Scalar] = 1;
 			sk.damageType = DamageTypeEnum::Slash;
@@ -127,6 +129,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::MainHand;
 		it.name = "Bow";
+		it.icon = "bow";
 
 		{
 			Skill sk(generate);
@@ -158,6 +161,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::MainHand;
 		it.name = "Mace";
+		it.icon = "mace";
 
 		{
 			Skill sk(generate);
@@ -199,6 +203,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::MainHand;
 		it.name = "Spear";
+		it.icon = "spear";
 
 		{
 			Skill sk(generate);
@@ -237,6 +242,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::Head;
 		it.name = "Teeth";
+		it.icon = "teeth";
 
 		{
 			Skill sk(generate);
@@ -288,6 +294,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::MainHand;
 		it.name = "Bow";
+		it.icon = "bow";
 
 		{
 			Skill sk(generate);
@@ -331,6 +338,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::Body;
 		it.name = "Lingerie";
+		it.icon = "lingerie";
 
 		if (generate.level > LevelPoison)
 		{
@@ -377,6 +385,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::MainHand;
 		it.name = "Claws";
+		it.icon = "claws";
 
 		{
 			Skill sk(generate);
@@ -432,6 +441,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::Body;
 		it.name = "Cloth";
+		it.icon = "cloth";
 
 		{
 			Skill sk(generate);
@@ -468,6 +478,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::Head;
 		it.name = "Mouth";
+		it.icon = "teeth";
 
 		for (AttributeEnum attr : { AttributeEnum::Strength, AttributeEnum::Dexterity, AttributeEnum::Intelligence, AttributeEnum::SlashArmor, AttributeEnum::PiercingArmor })
 		{
@@ -501,6 +512,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::MainHand;
 		it.name = "Staff";
+		it.icon = "staff";
 
 		for (AttributeEnum attr : { AttributeEnum::SlashArmor, AttributeEnum::PiercingArmor, AttributeEnum::FireResist, AttributeEnum::PoisonResist, AttributeEnum::ElectricResist })
 		{
@@ -1031,6 +1043,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::MainHand;
 		it.name = "Claws";
+		it.icon = "claws";
 
 		{
 			Skill sk(generate);
@@ -1085,6 +1098,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::Head;
 		it.name = "Head";
+		it.icon = "head";
 
 		{
 			Skill sk(generate);
@@ -1167,6 +1181,7 @@ Monster generateSatyr(uint32 level)
 	Item it(generate);
 	it.slot = SlotEnum::Head;
 	it.name = "Horns";
+	it.icon = "horns";
 
 	{
 		Skill sk(generate);
@@ -1213,6 +1228,7 @@ namespace
 		Item it(generate);
 		it.slot = SlotEnum::Body;
 		it.name = "Element";
+		it.icon = "element";
 
 		{
 			Skill sk(generate);

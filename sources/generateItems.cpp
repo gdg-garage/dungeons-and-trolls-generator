@@ -186,6 +186,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Sword");
+		item.icon = "sword";
 		return item;
 	}
 
@@ -209,6 +210,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Pike");
+		item.icon = "pike";
 		return item;
 	}
 
@@ -230,6 +232,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Scythe");
+		item.icon = "scythe";
 		return item;
 	}
 
@@ -253,6 +256,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Bow");
+		item.icon = "bow";
 		return item;
 	}
 
@@ -269,6 +273,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Staff");
+		item.icon = "staff";
 		return item;
 	}
 
@@ -291,6 +296,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Dagger");
+		item.icon = "dagger";
 		return item;
 	}
 
@@ -303,6 +309,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Shield");
+		item.icon = "shield";
 		return item;
 	}
 
@@ -319,6 +326,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Wand");
+		item.icon = "wand";
 		return item;
 	}
 
@@ -335,6 +343,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Scroll");
+		item.icon = "scroll";
 		return item;
 	}
 
@@ -351,6 +360,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Talisman");
+		item.icon = "talisman";
 		return item;
 	}
 
@@ -372,7 +382,19 @@ namespace
 		}
 
 		finalizeBasicItem(item);
-		item.updateName(generate.defensive < 0.5 ? "Leather Mail" : "Plated Mail");
+		switch (randomRange(0, 2))
+		{
+			case 0:
+				item.updateName("Leather Mail");
+				item.icon = "leahermail";
+				break;
+			case 1:
+				item.updateName("Plated Mail");
+				item.icon = "platedmail";
+				break;
+			default:
+				CAGE_THROW_CRITICAL(Exception, "random out of range");
+		}
 		return item;
 	}
 
@@ -399,6 +421,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Cape");
+		item.icon = "cape";
 		return item;
 	}
 
@@ -411,6 +434,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Helmet");
+		item.icon = "helmet";
 		return item;
 	}
 
@@ -427,6 +451,7 @@ namespace
 
 		finalizeBasicItem(item);
 		item.updateName("Circlet");
+		item.icon = "circlet";
 		return item;
 	}
 
@@ -444,6 +469,7 @@ namespace
 			item.attributes[AttributeEnum::ElectricResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Isolating"));
 
 		item.updateName("Tattoos");
+		item.icon = "tattoos";
 		return item;
 	}
 
@@ -466,6 +492,7 @@ namespace
 		}
 
 		item.updateName("Tattoos");
+		item.icon = "tattoos";
 		return item;
 	}
 
@@ -501,19 +528,19 @@ namespace
 		}
 
 		finalizeBasicItem(item);
-		item.updateName(
-			[]()
-			{
-				switch (randomRange(0, 2))
-				{
-					case 0:
-						return "Boots";
-					case 1:
-						return "Shoes";
-					default:
-						CAGE_THROW_CRITICAL(Exception, "random out of range");
-				}
-			}());
+		switch (randomRange(0, 2))
+		{
+			case 0:
+				item.updateName("Boots");
+				item.icon = "boots";
+				break;
+			case 1:
+				item.updateName("Shoes");
+				item.icon = "shoes";
+				break;
+			default:
+				CAGE_THROW_CRITICAL(Exception, "random out of range");
+		}
 		return item;
 	}
 
@@ -529,21 +556,23 @@ namespace
 		}
 
 		finalizeBasicItem(item);
-		item.updateName(
-			[]()
-			{
-				switch (randomRange(0, 3))
-				{
-					case 0:
-						return "Amulet";
-					case 1:
-						return "Pendant";
-					case 2:
-						return "Necklace";
-					default:
-						CAGE_THROW_CRITICAL(Exception, "random out of range");
-				}
-			}());
+		switch (randomRange(0, 3))
+		{
+			case 0:
+				item.updateName("Amulet");
+				item.icon = "amulet";
+				break;
+			case 1:
+				item.updateName("Pendant");
+				item.icon = "pendant";
+				break;
+			case 2:
+				item.updateName("Necklace");
+				item.icon = "necklace";
+				break;
+			default:
+				CAGE_THROW_CRITICAL(Exception, "random out of range");
+		}
 		return item;
 	}
 }
@@ -554,6 +583,7 @@ namespace
 	{
 		Item item = generateBasicItem(generate);
 		item.updateName("Trinket");
+		item.icon = "trinket";
 		return item;
 	}
 }
@@ -624,6 +654,7 @@ Item generateSprayCan()
 	Item item(Generate(1, 0, SlotEnum::MainHand));
 	item.slot = SlotEnum::MainHand;
 	item.updateName("Spray Can");
+	item.icon = "spraycan";
 
 	for (char c = 'A'; c <= 'Z'; c++)
 	{

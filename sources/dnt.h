@@ -168,6 +168,7 @@ struct Item : public Thing
 {
 	Item(const Generate &generate);
 
+	detail::StringBase<30> icon = "item";
 	SlotEnum slot = SlotEnum::None;
 	AttributesValuesList requirements;
 	AttributesValuesList attributes;

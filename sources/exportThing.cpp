@@ -222,6 +222,7 @@ namespace
 		std::string json;
 		json += "{\n";
 		json += std::string() + "\"name\":\"" + item.name + "\",\n";
+		json += std::string() + "\"icon\":\"" + item.icon.c_str() + "\",\n";
 		json += std::string() + "\"slot\":\"" + slotName(item.slot) + "\",\n";
 		if (item.unidentified)
 			json += (Stringizer() + "\"unidentified\":true,").value.c_str();
