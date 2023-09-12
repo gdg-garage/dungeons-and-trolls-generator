@@ -318,8 +318,8 @@ namespace
 		for (const Vec2i &door : key.doors)
 		{
 			json += "{\n";
-			json += (Stringizer() + "\"x\":" + door[0] + ",\n").value.c_str();
-			json += (Stringizer() + "\"y\":" + door[1] + "\n").value.c_str();
+			json += (Stringizer() + "\"positionX\":" + door[0] + ",\n").value.c_str();
+			json += (Stringizer() + "\"positionY\":" + door[1] + "\n").value.c_str();
 			json += "},"; // /door
 		}
 		removeLastComma(json);

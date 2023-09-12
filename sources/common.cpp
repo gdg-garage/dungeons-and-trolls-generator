@@ -2,7 +2,7 @@
 
 Thing::Thing(const Generate &generate) : generate(generate)
 {
-	goldCost = 15 + generate.power * 3 + randomRange(0, generate.power);
+	goldCost = 10 + generate.power / 2 + randomRange(0, generate.power / 3);
 }
 
 Real Thing::weightedRoll() const
@@ -24,7 +24,7 @@ Real Thing::addPower(Real roll, Real weight)
 	CAGE_ASSERT(weight >= 0);
 	totalRolls += roll * weight;
 	totalWeight += weight;
-	goldCost *= 1 + interpolate(0.1, 4.0, sqr(roll)) * weight;
+	goldCost *= 1 + interpolate(0.1, 3.0, sqr(roll)) * weight;
 	return roll;
 }
 

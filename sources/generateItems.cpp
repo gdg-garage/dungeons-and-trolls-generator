@@ -386,11 +386,11 @@ namespace
 		{
 			case 0:
 				item.updateName("Leather Mail");
-				item.icon = "leahermail";
+				item.icon = "leaherMail";
 				break;
 			case 1:
 				item.updateName("Plated Mail");
-				item.icon = "platedmail";
+				item.icon = "platedMail";
 				break;
 			default:
 				CAGE_THROW_CRITICAL(Exception, "random out of range");
@@ -654,7 +654,7 @@ Item generateSprayCan()
 	Item item(Generate(1, 0, SlotEnum::MainHand));
 	item.slot = SlotEnum::MainHand;
 	item.updateName("Spray Can");
-	item.icon = "spraycan";
+	item.icon = "sprayCan";
 
 	for (char c = 'A'; c <= 'Z'; c++)
 	{
