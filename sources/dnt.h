@@ -110,8 +110,8 @@ enum class AttributeEnum : uint8
 	Willpower,
 	Constitution,
 	// secondary
-	SlashArmor,
-	PiercingArmor,
+	SlashResist,
+	PierceResist,
 	FireResist,
 	PoisonResist,
 	ElectricResist,
@@ -127,7 +127,7 @@ enum class DamageTypeEnum : uint8
 {
 	None,
 	Slash,
-	Piercing,
+	Pierce,
 	Fire,
 	Poison,
 	Electric,

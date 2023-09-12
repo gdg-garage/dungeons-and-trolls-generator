@@ -11,7 +11,7 @@ namespace
 		sk.range[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Stretching") * 0.1;
 		sk.range[AttributeEnum::Scalar] = 3;
 		sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(sk, generate, 0.7, "Surgical") * 0.5;
-		sk.damageType = DamageTypeEnum::Piercing;
+		sk.damageType = DamageTypeEnum::Pierce;
 		sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 35);
 		sk.addPower(1, 1);
 		sk.target.flags.push_back(SkillMoves);
@@ -41,7 +41,7 @@ namespace
 		sk.range[AttributeEnum::Scalar] = interpolate(4.0, 6.0, sk.addPower(0.5));
 		sk.duration[AttributeEnum::Scalar] = interpolate(2.0, 5.0, sk.addPower(1, AffixEnum::Prefix, "Durable"));
 		sk.damageAmount[AttributeEnum::Scalar] = interpolate(5.0, 10.0, sk.addPower(1, AffixEnum::Prefix, "Sprung"));
-		sk.damageType = DamageTypeEnum::Piercing;
+		sk.damageType = DamageTypeEnum::Pierce;
 		sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 15);
 		sk.target.flags.push_back(SkillGroundEffect);
 		sk.updateName("Bear Trap");
@@ -320,7 +320,7 @@ namespace
 		sk.range[AttributeEnum::Willpower] = makeAttrFactor(sk, generate, 0.7, "Distant") * 0.1;
 		sk.range[AttributeEnum::Scalar] = 3;
 		sk.duration[AttributeEnum::Scalar] = interpolate(2.0, 5.0, sk.addPower(0.9, AffixEnum::Prefix, "Durable"));
-		sk.target.attributes[AttributeEnum::PiercingArmor][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Impenetrable") * 0.2;
+		sk.target.attributes[AttributeEnum::PierceResist][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Impenetrable") * 0.2;
 		sk.target.attributes[AttributeEnum::FireResist][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Fireproof") * 0.2;
 		sk.caster.flags.push_back(SkillAllowSelf);
 		sk.cost[AttributeEnum::Mana] = makeCost(sk, generate, 20);
@@ -335,7 +335,7 @@ namespace
 		sk.range[AttributeEnum::Willpower] = makeAttrFactor(sk, generate, 0.7, "Distant") * 0.1;
 		sk.range[AttributeEnum::Scalar] = 3;
 		sk.duration[AttributeEnum::Scalar] = interpolate(2.0, 5.0, sk.addPower(0.9, AffixEnum::Prefix, "Durable"));
-		sk.target.attributes[AttributeEnum::SlashArmor][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Slipping") * 0.2;
+		sk.target.attributes[AttributeEnum::SlashResist][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Slipping") * 0.2;
 		sk.target.attributes[AttributeEnum::PoisonResist][AttributeEnum::Intelligence] = makeAttrFactor(sk, generate, 1, "Resilient") * 0.2;
 		sk.caster.flags.push_back(SkillAllowSelf);
 		sk.cost[AttributeEnum::Mana] = makeCost(sk, generate, 20);

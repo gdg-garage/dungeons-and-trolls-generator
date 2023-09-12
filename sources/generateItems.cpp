@@ -28,7 +28,7 @@ namespace
 		};
 		static_assert(sizeof(names) / sizeof(names[0]) == (uint32)AttributeEnum::Scalar);
 		Real r = interpolate(a, b, item.addPower(0.8, AffixEnum::Prefix, names[(uint32)Attr]));
-		if constexpr (Attr >= AttributeEnum::SlashArmor)
+		if constexpr (Attr >= AttributeEnum::SlashResist)
 			r *= 1.5;
 		item.attributes[Attr] += numeric_cast<sint32>(r + 0.5);
 	}
@@ -40,28 +40,28 @@ namespace
 		candidates.add(0, 0, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Strength>);
 		candidates.add(0, 1, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Dexterity>);
 		candidates.add(1, H, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Intelligence>);
-		candidates.add(0, H, 1, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::SlashArmor>);
+		candidates.add(0, H, 1, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::SlashResist>);
 
 		candidates.add(0, 0, 0, H, SlotEnum::OffHand, { Nothing }, addBoost<AttributeEnum::Strength>);
 		candidates.add(0, 1, 0, H, SlotEnum::OffHand, { Nothing }, addBoost<AttributeEnum::Dexterity>);
 		candidates.add(1, H, H, H, SlotEnum::OffHand, { Nothing }, addBoost<AttributeEnum::Willpower>);
-		candidates.add(0, H, 1, H, SlotEnum::OffHand, { Nothing }, addBoost<AttributeEnum::PiercingArmor>);
+		candidates.add(0, H, 1, H, SlotEnum::OffHand, { Nothing }, addBoost<AttributeEnum::PierceResist>);
 
 		candidates.add(0, H, H, H, SlotEnum::Body, { Nothing }, addBoost<AttributeEnum::Constitution>);
 		candidates.add(1, H, 0, H, SlotEnum::Body, { Nothing }, addBoost<AttributeEnum::Intelligence>);
-		candidates.add(0, 0, 1, H, SlotEnum::Body, { Nothing }, addBoost<AttributeEnum::SlashArmor>);
-		candidates.add(0, 1, 1, H, SlotEnum::Body, { Nothing }, addBoost<AttributeEnum::PiercingArmor>);
+		candidates.add(0, 0, 1, H, SlotEnum::Body, { Nothing }, addBoost<AttributeEnum::SlashResist>);
+		candidates.add(0, 1, 1, H, SlotEnum::Body, { Nothing }, addBoost<AttributeEnum::PierceResist>);
 		candidates.add(1, H, 1, H, SlotEnum::Body, { LevelFire }, addBoost<AttributeEnum::FireResist>);
 
 		candidates.add(0, H, 0, H, SlotEnum::Head, { Nothing }, addBoost<AttributeEnum::Dexterity>);
 		candidates.add(1, H, 0, H, SlotEnum::Head, { Nothing }, addBoost<AttributeEnum::Intelligence>);
-		candidates.add(0, 1, 1, H, SlotEnum::Head, { Nothing }, addBoost<AttributeEnum::PiercingArmor>);
+		candidates.add(0, 1, 1, H, SlotEnum::Head, { Nothing }, addBoost<AttributeEnum::PierceResist>);
 		candidates.add(1, H, 1, H, SlotEnum::Head, { LevelPoison }, addBoost<AttributeEnum::PoisonResist>);
 
 		candidates.add(0, H, 0, H, SlotEnum::Legs, { Nothing }, addBoost<AttributeEnum::Strength>);
 		candidates.add(1, H, H, H, SlotEnum::Legs, { Nothing }, addBoost<AttributeEnum::Willpower>);
 		candidates.add(0, H, H, H, SlotEnum::Legs, { Nothing }, addBoost<AttributeEnum::Constitution>);
-		candidates.add(0, 0, 1, H, SlotEnum::Legs, { Nothing }, addBoost<AttributeEnum::SlashArmor>);
+		candidates.add(0, 0, 1, H, SlotEnum::Legs, { Nothing }, addBoost<AttributeEnum::SlashResist>);
 		candidates.add(1, H, 1, H, SlotEnum::Legs, { LevelElectric }, addBoost<AttributeEnum::ElectricResist>);
 
 		candidates.add(1, H, 0, H, SlotEnum::Neck, { Nothing }, addBoost<AttributeEnum::Willpower>);
@@ -201,7 +201,7 @@ namespace
 			sk.range[AttributeEnum::Scalar] = 2;
 			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Stout") * 0.5;
 			sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(sk, generate, 1, "Piercing") * 0.5;
-			sk.damageType = DamageTypeEnum::Piercing;
+			sk.damageType = DamageTypeEnum::Pierce;
 			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 13);
 			sk.updateName("Attack");
 			item.addPower(sk, 1);
@@ -247,7 +247,7 @@ namespace
 			sk.range[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Far") * 0.1;
 			sk.range[AttributeEnum::Scalar] = 4;
 			sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(sk, generate, 1, "Accurate") * 0.5;
-			sk.damageType = DamageTypeEnum::Piercing;
+			sk.damageType = DamageTypeEnum::Pierce;
 			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 10);
 			sk.updateName("Attack");
 			item.addPower(sk, 1);
@@ -386,7 +386,7 @@ namespace
 		{
 			case 0:
 				item.updateName("Leather Mail");
-				item.icon = "leaherMail";
+				item.icon = "leatherMail";
 				break;
 			case 1:
 				item.updateName("Plated Mail");

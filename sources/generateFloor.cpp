@@ -1263,7 +1263,7 @@ namespace
 					sk.name = "Spikes";
 					sk.duration[AttributeEnum::Scalar] = 1000000;
 					sk.damageAmount[AttributeEnum::Scalar] = randomRange(10.0, 30.0);
-					sk.damageType = DamageTypeEnum::Piercing;
+					sk.damageType = DamageTypeEnum::Pierce;
 					sk.caster.flags.push_back(SkillGroundEffect);
 					f.extras[i].push_back(std::move(sk));
 				}

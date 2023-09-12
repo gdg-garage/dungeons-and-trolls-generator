@@ -41,10 +41,10 @@ namespace
 				return "willpower";
 			case AttributeEnum::Constitution:
 				return "constitution";
-			case AttributeEnum::SlashArmor:
-				return "slashArmor";
-			case AttributeEnum::PiercingArmor:
-				return "piercingArmor";
+			case AttributeEnum::SlashResist:
+				return "slashResist";
+			case AttributeEnum::PierceResist:
+				return "pierceResist";
 			case AttributeEnum::FireResist:
 				return "fireResist";
 			case AttributeEnum::PoisonResist:
@@ -87,8 +87,8 @@ namespace
 				return "none";
 			case DamageTypeEnum::Slash:
 				return "slash";
-			case DamageTypeEnum::Piercing:
-				return "piercing";
+			case DamageTypeEnum::Pierce:
+				return "pierce";
 			case DamageTypeEnum::Fire:
 				return "fire";
 			case DamageTypeEnum::Poison:
@@ -190,7 +190,7 @@ namespace
 		json += "{\n";
 		json += std::string() + "\"name\":\"" + skill.name + "\",\n";
 		if (skill.targetType != SkillTargetEnum::None)
-			json += std::string() + "\"targetType\":\"" + skillTargetName(skill.targetType) + "\",\n";
+			json += std::string() + "\"target\":\"" + skillTargetName(skill.targetType) + "\",\n";
 		if (!skill.cost.empty())
 			json += std::string() + "\"cost\":" + attributesValueMappingJson(skill.cost) + ",\n";
 		if (!skill.range.empty())
@@ -204,9 +204,9 @@ namespace
 		if (skill.damageType != DamageTypeEnum::None)
 			json += std::string() + "\"damageType\":\"" + damageTypeName(skill.damageType) + "\",\n";
 		if (std::string j = exportSkillEffects(skill.caster); j.length() > 3)
-			json += std::string() + "\"caster\":" + j + ",\n";
+			json += std::string() + "\"casterEffects\":" + j + ",\n";
 		if (std::string j = exportSkillEffects(skill.target); j.length() > 3)
-			json += std::string() + "\"target\":" + j + ",\n";
+			json += std::string() + "\"targetEffects\":" + j + ",\n";
 
 #ifdef CAGE_DEBUG
 		json += "\"_debug\":" + thingJson<false>(skill) + ",\n";
@@ -240,7 +240,7 @@ namespace
 			json += "],\n";
 		}
 
-		json += (Stringizer() + "\"buyPrice\":" + item.buyPrice + ",").value.c_str();
+		json += (Stringizer() + "\"price\":" + item.buyPrice + ",").value.c_str();
 
 #ifdef CAGE_DEBUG
 		json += "\"_debug\":" + thingJson<false>(item) + ",\n";

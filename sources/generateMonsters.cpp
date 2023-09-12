@@ -57,7 +57,7 @@ namespace
 			}
 		}
 
-		for (AttributeEnum a = AttributeEnum::SlashArmor; a <= AttributeEnum::Scalar; a = AttributeEnum((uint32)a + 1))
+		for (AttributeEnum a = AttributeEnum::SlashResist; a <= AttributeEnum::Scalar; a = AttributeEnum((uint32)a + 1))
 			weights.erase(a);
 
 		Real sum = 0;
@@ -82,7 +82,7 @@ namespace
 		mr.faction = "horror";
 
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
-		mr.attributes[AttributeEnum::SlashArmor] = generate.power * 0.1 + 1;
+		mr.attributes[AttributeEnum::SlashResist] = generate.power * 0.1 + 1;
 		mr.attributes[AttributeEnum::PoisonResist] = generate.power * 0.1 + 1;
 
 		Item it(generate);
@@ -123,7 +123,7 @@ namespace
 		mr.faction = "horror";
 
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
-		mr.attributes[AttributeEnum::PiercingArmor] = generate.power * 0.1 + 1;
+		mr.attributes[AttributeEnum::PierceResist] = generate.power * 0.1 + 1;
 		mr.attributes[AttributeEnum::PoisonResist] = generate.power * 0.1 + 1;
 
 		Item it(generate);
@@ -137,7 +137,7 @@ namespace
 			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Scalar] = randomRange(4, 8);
 			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
-			sk.damageType = generate.level > LevelFire && randomChance() < 0.5 ? DamageTypeEnum ::Fire : DamageTypeEnum::Piercing;
+			sk.damageType = generate.level > LevelFire && randomChance() < 0.5 ? DamageTypeEnum ::Fire : DamageTypeEnum::Pierce;
 			it.addPower(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -210,7 +210,7 @@ namespace
 			sk.name = "Attack";
 			sk.radius[AttributeEnum::Scalar] = 3;
 			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
-			sk.damageType = DamageTypeEnum::Piercing;
+			sk.damageType = DamageTypeEnum::Pierce;
 			it.addPower(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -302,7 +302,7 @@ namespace
 			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Scalar] = randomRange(5, 10);
 			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
-			sk.damageType = DamageTypeEnum::Piercing;
+			sk.damageType = DamageTypeEnum::Pierce;
 			it.addPower(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -435,8 +435,8 @@ namespace
 		mr.faction = "horror";
 
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
-		mr.attributes[AttributeEnum::SlashArmor] = generate.power * 0.4 + 10;
-		mr.attributes[AttributeEnum::PiercingArmor] = generate.power * 0.4 + 10;
+		mr.attributes[AttributeEnum::SlashResist] = generate.power * 0.4 + 10;
+		mr.attributes[AttributeEnum::PierceResist] = generate.power * 0.4 + 10;
 
 		Item it(generate);
 		it.slot = SlotEnum::Body;
@@ -480,7 +480,7 @@ namespace
 		it.name = "Mouth";
 		it.icon = "teeth";
 
-		for (AttributeEnum attr : { AttributeEnum::Strength, AttributeEnum::Dexterity, AttributeEnum::Intelligence, AttributeEnum::SlashArmor, AttributeEnum::PiercingArmor })
+		for (AttributeEnum attr : { AttributeEnum::Strength, AttributeEnum::Dexterity, AttributeEnum::Intelligence, AttributeEnum::SlashResist, AttributeEnum::PierceResist })
 		{
 			Skill sk(generate);
 			sk.name = "Scream";
@@ -514,7 +514,7 @@ namespace
 		it.name = "Staff";
 		it.icon = "staff";
 
-		for (AttributeEnum attr : { AttributeEnum::SlashArmor, AttributeEnum::PiercingArmor, AttributeEnum::FireResist, AttributeEnum::PoisonResist, AttributeEnum::ElectricResist })
+		for (AttributeEnum attr : { AttributeEnum::SlashResist, AttributeEnum::PierceResist, AttributeEnum::FireResist, AttributeEnum::PoisonResist, AttributeEnum::ElectricResist })
 		{
 			Skill sk(generate);
 			sk.name = "Harden";
@@ -1115,7 +1115,7 @@ namespace
 				sk.name = "Bite";
 				sk.range[AttributeEnum::Scalar] = 1;
 				sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.15 + 5;
-				sk.damageType = DamageTypeEnum::Piercing;
+				sk.damageType = DamageTypeEnum::Pierce;
 			}
 			it.addPower(sk, 1);
 			it.skills.push_back(std::move(sk));
