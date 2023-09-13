@@ -279,9 +279,11 @@ uint32 makeCost(Thing &sk, const Generate &generate, Real default_);
 
 Skill generateSkill(const Generate &generate);
 Item generateItem(const Generate &generate);
+Item generatePrimitiveItem(SlotEnum slot);
 Item generateSprayCan();
 Monster generateMonster(const Generate &generate);
 Monster generateMinion(const Generate &generate);
+std::string floorBossName(uint32 level);
 Monster generateChest(const Generate &generate);
 Monster generateFloorBoss(uint32 level);
 Holder<PointerRange<Monster>> generateAntiHeroes();

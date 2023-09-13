@@ -440,8 +440,8 @@ namespace
 
 		Item it(generate);
 		it.slot = SlotEnum::Body;
-		it.name = "Cloth";
-		it.icon = "cloth";
+		it.name = "Tunic";
+		it.icon = "tunic";
 
 		{
 			Skill sk(generate);
@@ -845,6 +845,11 @@ namespace
 	}
 }
 
+std::string floorBossName(uint32 level)
+{
+	return (Stringizer() + "Guardian of " + level + "th floor").value.c_str();
+}
+
 Monster generateFloorBoss(uint32 level)
 {
 	const auto &levelSwitch = [level](uint32 floor) -> Real
@@ -865,7 +870,7 @@ Monster generateFloorBoss(uint32 level)
 	g.support = levelSwitch(LevelSupport);
 
 	Monster mr = generateMonsterImpl(g, &generateOutlaw);
-	mr.updateName((Stringizer() + "Guardian of " + level + "th floor").value.c_str());
+	mr.updateName(floorBossName(level));
 	mr.icon = "guardian";
 	mr.algorithm = "guardian";
 	mr.faction = "monster";

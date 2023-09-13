@@ -649,6 +649,70 @@ Item generateItem(const Generate &generate)
 	return candidates.pick()(generate);
 }
 
+Item generatePrimitiveItem(SlotEnum slot)
+{
+	Item item = Item({});
+	item.slot = slot;
+
+	item.addAffix(randomChance() * 10 + 10, AffixEnum::Prefix, "Primitive");
+	item.addAffix(randomChance() * 10 + 10, AffixEnum::Prefix, "Pathetic");
+	item.addAffix(randomChance() * 10 + 10, AffixEnum::Prefix, "Beginner");
+	item.addAffix(randomChance() * 10 + 10, AffixEnum::Prefix, "Useless");
+	item.addAffix(randomChance() * 10 + 10, AffixEnum::Prefix, "Worthless");
+
+	switch (slot)
+	{
+		case SlotEnum::Body:
+		{
+			item.attributes[randomChance() < 0.5 ? AttributeEnum::Strength : AttributeEnum::Constitution] = randomRange(3, 6);
+			{
+				Skill sk(item.generate);
+				sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = 5;
+				sk.caster.flags.push_back(SkillAlone);
+				sk.updateName("Rest");
+				item.skills.push_back(std::move(sk));
+			}
+			item.updateName("Tunic");
+			item.icon = "tunic";
+			break;
+		}
+		case SlotEnum::Head:
+		{
+			item.attributes[randomChance() < 0.5 ? AttributeEnum::Willpower : AttributeEnum::Intelligence] = randomRange(2, 5);
+			item.updateName("Cap");
+			item.icon = "cap";
+			break;
+		}
+		case SlotEnum::MainHand:
+		{
+			item.attributes[randomChance() < 0.5 ? AttributeEnum::Strength : AttributeEnum::Dexterity] = randomRange(3, 6);
+			{
+				Skill sk(item.generate);
+				sk.targetType = SkillTargetEnum::Character;
+				sk.damageAmount[AttributeEnum::Scalar] = 2;
+				sk.damageType = DamageTypeEnum::Pierce;
+				sk.cost[AttributeEnum::Stamina] = 3;
+				sk.updateName("Poke");
+				item.skills.push_back(std::move(sk));
+			}
+			item.updateName("Stick");
+			item.icon = "stick";
+			break;
+		}
+		case SlotEnum::Legs:
+		{
+			item.attributes[randomChance() < 0.5 ? AttributeEnum::Dexterity : AttributeEnum::Constitution] = randomRange(2, 5);
+			item.updateName("Slippers");
+			item.icon = "slippers";
+			break;
+		}
+		default:
+			CAGE_THROW_ERROR(Exception, "invalid slot for primitive item");
+	}
+
+	return item;
+}
+
 Item generateSprayCan()
 {
 	Item item(Generate(1, 0, SlotEnum::MainHand));

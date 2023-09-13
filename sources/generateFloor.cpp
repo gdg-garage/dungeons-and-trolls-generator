@@ -548,59 +548,88 @@ namespace
 		rectReplace(f, Vec2i(), Vec2i(f.width, f.height), tmp, TileEnum::Empty); // restore back
 	}
 
+	void makeShopItems(TileExtra &extra, uint32 maxLevel)
+	{
+		for (uint32 i = 0; i < 10; i++)
+		{
+			Generate gen;
+			switch (randomRange(0u, 4u))
+			{
+				case 0:
+					gen = Generate(randomRange(1u, maxLevel), 0); // default
+					break;
+				case 1:
+					gen = Generate(randomRange(max(maxLevel * 3 / 4, 1u), maxLevel), 0); // stronger than default
+					break;
+				case 2:
+					gen = Generate(maxLevel, -randomRange(0u, maxLevel / 4)); // any features, but possibly slightly weak
+					break;
+				case 3:
+					gen = Generate(maxLevel, -randomRange(0u, maxLevel)); // any features, but possibly very weak
+					break;
+			}
+			CAGE_ASSERT(gen.level > 0);
+			CAGE_ASSERT(gen.power > 0);
+			bool unidentified = false;
+			Real costMult = 1;
+			const Real uniChance = clamp((Real(maxLevel) - 50) * 0.01, 0, 0.5);
+			if (gen.power > 10 && randomChance() < uniChance)
+			{
+				unidentified = true;
+				costMult = pow(randomChance() + 0.9, 5);
+				Real powMult = pow(randomChance() + 0.4, 2);
+				gen.power = numeric_cast<sint32>(gen.power * powMult);
+				CAGE_ASSERT(gen.power > 0);
+			}
+			Item item = generateItem(gen);
+			item.unidentified = unidentified;
+			item.buyPrice = numeric_cast<uint32>(item.goldCost * costMult);
+			extra.push_back(std::move(item));
+		}
+		if (maxLevel > LevelSummoning && maxLevel > LevelDuration && randomChance() < 0.02)
+		{
+			Item item = generateSprayCan();
+			item.buyPrice = randomRange(100, 1000);
+			extra.push_back(std::move(item));
+		}
+	}
+
+	Decoration floorBossPedestalDecoration(uint32 bossIndex)
+	{
+		switch (bossIndex)
+		{
+			case 1:
+				return Decoration{ "sword" };
+			case 2:
+				return Decoration{ "bow" };
+			case 3:
+				return Decoration{ "scythe" };
+			case 4:
+				return Decoration{ "magic" };
+			case 5:
+				return Decoration{ "duration" };
+			case 6:
+				return Decoration{ "support" };
+			case 7:
+				return Decoration{ "poison" };
+			case 8:
+				return Decoration{ "ground" };
+			case 9:
+				return Decoration{ "stun" };
+			case 10:
+				return Decoration{ "summon" };
+			case 11:
+				return Decoration{ "electric" };
+			default:
+				return Decoration{ "scroll", "Certificate of excellence" };
+		}
+	}
+
 	void generateShopFloor(Floor &f, uint32 maxLevel)
 	{
 		const uint32 portals = levelToBossIndex(maxLevel - 1);
 		const uint32 w = 11 + portals * 2, h = 9;
 		resizeFloor(f, Vec2i(w, h));
-
-		const auto &isDecoration = [=](uint32 x, uint32 y) -> bool { return ((x == 2 || x == w - 3) && (y >= 2 && y <= h - 3)) || ((y == 2 || y == h - 3) && (x >= 2 && x <= w - 3)); };
-
-		const auto &makeShopItems = [&](TileExtra &extra)
-		{
-			for (uint32 i = 0; i < 10; i++)
-			{
-				Generate gen;
-				switch (randomRange(0u, 4u))
-				{
-					case 0:
-						gen = Generate(randomRange(1u, maxLevel), 0); // default
-						break;
-					case 1:
-						gen = Generate(randomRange(max(maxLevel * 3 / 4, 1u), maxLevel), 0); // stronger than default
-						break;
-					case 2:
-						gen = Generate(maxLevel, -randomRange(0u, maxLevel / 4)); // any features, but possibly slightly weak
-						break;
-					case 3:
-						gen = Generate(maxLevel, -randomRange(0u, maxLevel)); // any features, but possibly very weak
-						break;
-				}
-				CAGE_ASSERT(gen.level > 0);
-				CAGE_ASSERT(gen.power > 0);
-				bool unidentified = false;
-				Real costMult = 1;
-				const Real uniChance = clamp((Real(maxLevel) - 50) * 0.01, 0, 0.5);
-				if (gen.power > 10 && randomChance() < uniChance)
-				{
-					unidentified = true;
-					costMult = pow(randomChance() + 0.9, 5);
-					Real powMult = pow(randomChance() + 0.4, 2);
-					gen.power = numeric_cast<sint32>(gen.power * powMult);
-					CAGE_ASSERT(gen.power > 0);
-				}
-				Item item = generateItem(gen);
-				item.unidentified = unidentified;
-				item.buyPrice = numeric_cast<uint32>(item.goldCost * costMult);
-				extra.push_back(std::move(item));
-			}
-			if (maxLevel > LevelSummoning && maxLevel > LevelDuration && randomChance() < 0.02)
-			{
-				Item item = generateSprayCan();
-				item.buyPrice = randomRange(100, 1000);
-				extra.push_back(std::move(item));
-			}
-		};
 
 		for (uint32 y = 0; y < h; y++)
 		{
@@ -608,23 +637,69 @@ namespace
 			{
 				if (y == 0 || x == 0 || y + 1 == h || x + 1 == w)
 					f.tile(x, y) = TileEnum::Wall;
-				else if (isDecoration(x, y))
+				else if (y == 1 || y + 2 == h)
 				{
 					f.tile(x, y) = TileEnum::Decoration;
-					f.extra(x, y).push_back(Decoration{ "pedestal" });
-					makeShopItems(f.extra(x, y));
+					makeShopItems(f.extra(x, y), maxLevel);
 				}
 				else
 					f.tile(x, y) = TileEnum::Empty;
 			}
 		}
 
+		f.tile(4, 2) = TileEnum::Decoration;
+		f.extra(4, 2).push_back(Decoration{ "rack" });
+		for (uint32 i = 0; i < 5; i++)
+			f.extra(4, 2).push_back(generatePrimitiveItem(SlotEnum::Body));
+		f.tile(6, 2) = TileEnum::Decoration;
+		f.extra(6, 2).push_back(Decoration{ "rack" });
+		for (uint32 i = 0; i < 5; i++)
+			f.extra(6, 2).push_back(generatePrimitiveItem(SlotEnum::Head));
+		f.tile(4, 6) = TileEnum::Decoration;
+		f.extra(4, 6).push_back(Decoration{ "rack" });
+		for (uint32 i = 0; i < 5; i++)
+			f.extra(4, 6).push_back(generatePrimitiveItem(SlotEnum::MainHand));
+		f.tile(6, 6) = TileEnum::Decoration;
+		f.extra(6, 6).push_back(Decoration{ "rack" });
+		for (uint32 i = 0; i < 5; i++)
+			f.extra(6, 6).push_back(generatePrimitiveItem(SlotEnum::Legs));
+
 		f.tile(4, h / 2) = TileEnum::Spawn;
 		f.tile(6, h / 2) = TileEnum::Stairs;
-		for (uint32 i = 0; i < portals; i++)
+		for (uint32 i = 1; i < portals + 1; i++)
 		{
-			f.tile(8 + i * 2, h / 2) = TileEnum::Waypoint;
-			f.extra(8 + i * 2, h / 2).push_back(Waypoint{ bossIndexToLevel(i + 1) + 1 });
+			const sint32 x = 6 + i * 2;
+			f.tile(x, h / 2) = TileEnum::Waypoint;
+			f.extra(x, h / 2).push_back(Waypoint{ bossIndexToLevel(i) + 1 });
+			f.tile(x, 2) = TileEnum::Decoration;
+			f.extra(x, 2).push_back(Decoration{ "pedestal" });
+			f.extra(x, 2).push_back(Decoration{ "trophy", floorBossName(bossIndexToLevel(i)) });
+			f.tile(x, 6) = TileEnum::Decoration;
+			f.extra(x, 6).push_back(Decoration{ "pedestal" });
+			f.extra(x, 6).push_back(floorBossPedestalDecoration(i));
+		}
+
+		if (maxLevel > 100)
+		{
+			f.tile(1, 2) = TileEnum::Decoration;
+			f.extra(1, 2).push_back(Decoration{ "pedestal" });
+			f.extra(1, 2).push_back(Decoration{ "barbarian", "Vít" });
+			f.tile(1, 6) = TileEnum::Decoration;
+			f.extra(1, 6).push_back(Decoration{ "pedestal" });
+			f.extra(1, 6).push_back(Decoration{ "sorcerer", "Eva" });
+			f.tile(w - 2, 2) = TileEnum::Decoration;
+			f.extra(w - 2, 2).push_back(Decoration{ "pedestal" });
+			f.extra(w - 2, 2).push_back(Decoration{ "druid", "Šimon" });
+			f.tile(w - 2, 6) = TileEnum::Decoration;
+			f.extra(w - 2, 6).push_back(Decoration{ "pedestal" });
+			f.extra(w - 2, 6).push_back(Decoration{ "necromancer", "Tomáš" });
+		}
+		else
+		{
+			f.tile(1, 4) = TileEnum::Decoration;
+			f.extra(1, 4).push_back(Decoration{ "sign", "Welcome to Dungeons and Trolls" });
+			f.tile(w - 2, 4) = TileEnum::Decoration;
+			f.extra(w - 2, 4).push_back(Decoration{ "sign", "Motivational Note: 404 (Not Found)" });
 		}
 	}
 
