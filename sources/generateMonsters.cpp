@@ -1214,7 +1214,7 @@ namespace
 		mr.algorithm = "elemental";
 		mr.faction = "monster";
 
-		const auto type = [&]()
+		const auto icon = [&]()
 		{
 			std::vector<std::pair<DamageTypeEnum, AttributeEnum>> cns;
 			if (generate.level > LevelFire)
@@ -1228,7 +1228,7 @@ namespace
 		}();
 
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
-		mr.attributes[type.second] = 1000000;
+		mr.attributes[icon.second] = 1000000;
 
 		Item it(generate);
 		it.slot = SlotEnum::Body;
@@ -1250,7 +1250,7 @@ namespace
 			sk.name = "Shedding";
 			sk.radius[AttributeEnum::Scalar] = 2;
 			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
-			sk.damageType = type.first;
+			sk.damageType = icon.first;
 			if (generate.level > LevelDuration)
 				sk.duration[AttributeEnum::Scalar] = generate.power * 0.1 + 1;
 			if (generate.level > LevelGroundEffect)

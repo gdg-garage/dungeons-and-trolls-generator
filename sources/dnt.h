@@ -21,7 +21,7 @@ using Variant = std::variant<Skill, Item, Monster, Decoration, Waypoint, Key>;
 
 struct Decoration
 {
-	detail::StringBase<30> type;
+	detail::StringBase<30> icon;
 	std::string name;
 };
 

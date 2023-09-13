@@ -772,6 +772,89 @@ namespace
 		return res;
 	}
 
+	Decoration makeRandomSign()
+	{
+		static constexpr const char *texts[] = {
+			"The path of the righteous man is beset on all sides",
+			"By the inequities of the selfish and the tyranny of evil men",
+			"Blessed is he who, in the name of charity and good will",
+			"Shepherds the weak through the valley of darkness",
+			"For he is truly his brother's keeper and the finder of lost children",
+			"And I will strike down upon thee",
+			"With great vengeance and furious anger",
+			"Those who attempt to poison and destroy my brothers",
+			"And you will know my name is the Lord",
+			"When I lay my vengeance upon thee",
+			"Go left",
+			"Go right",
+			"Stay away",
+			"R.I.P",
+			"This is the land of outlaws. You are legally obliged to NOT enter",
+			"Horror ahead. You have been warned.",
+			"In the name of God: DO NOT ENTER",
+			"Walk by faith, not by sight.",
+			"Stay on the path. It's not your concern.",
+			"You know what's good about no soap? you can smell a hijacker from a mile away.",
+			"Nobody",
+			"Look up!",
+			"Watch out",
+			"No entry",
+			"Caution",
+			"Danger",
+			"Private Property",
+			"No Trespassing",
+			"Trap Door Ahead",
+			"Live, Laugh, Leave",
+			"Another one bites the dust",
+			"Cellar",
+			"Eat the Rich",
+			"The Name’s Bond. Sommelier Bond.",
+			"I Got Problems, But 2 Million Bottles Ain’t One",
+			"Ominous sounds playing now...",
+			"Beware the Minotaur",
+			"Plague",
+			"Enter at your own risk",
+			"No going back",
+			"ᚽᛗ᛫᛫ᛁᛘ᛫ᛁᚾᛁᛁᛒᛁᚾᛁ᛫ᛁᛗ᛫ᛁ᛫ᛘ᛫ᛁᚽ",
+			"No return beyond this point",
+			"Everybody is a hero, a lover, a fool, a villain.",
+			"Fool's errand",
+			"Words offer the means to meaning, and for those who will listen, the enunciation of truth.",
+			"People shouldn’t be afraid of their government. Governments should be afraid of their people.",
+			"It seems strange that my life should end in such a terrible place, but for three years I had roses, and apologized to no one.",
+			"If you’re looking for the guilty, you need only look into a mirror.",
+			"Love your rage, not your cage.",
+			"They say that life’s a game, & then they take the board away.",
+			"Your pretty empire took so long to build, now, with a snap of history’s fingers, down it goes.",
+			"Our masters have not heard the people’s voice for generations and it is much, much louder than they care to remember.",
+			"Artists use lies to tell the truth.",
+			"You wear a mask for so long, you forget who you were beneath it.",
+			"The past can’t hurt you anymore, not unless you let it.",
+			"Knowledge, like air, is vital to life. Like air, no one should be denied it.",
+			"Happiness is the most insidious prison of all.",
+			"We’re all mad here. I’m mad. You’re mad.",
+			"Imagination is the only weapon in the war with reality.",
+			"Only a few find the way, some don’t recognize it when they do – most… don’t ever want to.",
+			"I don’t see how he can ever finish, if he doesn’t begin.",
+			"I am not crazy; my reality is just different from yours.",
+			"Every adventure requires a first step.",
+			"Not all who wander are lost.",
+			"Well, some go this way, and some go that way. But as for me, myself, personally, I prefer the short-cut.",
+			"If you don’t know where you are going any road can take you there.",
+			"Can you stand on your head?",
+			"We are all victims in-waiting.",
+			"It is not despair, for despair is only for those who see the end beyond all doubt. We do not.",
+			"You cannot pass. You shall not pass.",
+			"He that breaks a thing to find out what it is has left the path of wisdom.",
+			"There is a bottom, just beyond light and knowledge.",
+			"The treacherous are ever distrustful.",
+			"Json, motherfucker, do you speak it?",
+			"That’s how you’re gonna beat ’em. They keep underestimating you.",
+			"And when you gone, you stay gone or you be gone.",
+		};
+		return Decoration{ "sign", texts[randomRange({}, sizeof(texts) / sizeof(texts[0]))] };
+	}
+
 	void generateBossFloor(Floor &f)
 	{
 		CAGE_ASSERT(isLevelBoss(f.level));
@@ -1306,6 +1389,17 @@ namespace
 					}
 				};
 				f.extra(a).push_back(Waypoint{ dest(f.level) });
+			}
+		}
+
+		// signs
+		for (uint32 i = 0; i < 3; i++)
+		{
+			if (f.level > 1 && randomChance() < 0.3)
+			{
+				const Vec2i p = findAny(f, TileEnum::Empty);
+				f.tile(p) = TileEnum::Decoration;
+				f.extra(p).push_back(makeRandomSign());
 			}
 		}
 

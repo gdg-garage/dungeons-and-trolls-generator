@@ -295,10 +295,10 @@ namespace
 	{
 		std::string json;
 		json += "{\n";
-		if (!decor.type.empty())
-			json += std::string() + "\"type\":\"" + decor.type.c_str() + "\",\n";
 		if (!decor.name.empty())
 			json += std::string() + "\"name\":\"" + decor.name + "\",\n";
+		if (!decor.icon.empty())
+			json += std::string() + "\"icon\":\"" + decor.icon.c_str() + "\",\n";
 		removeLastComma(json);
 		json += "}"; // /root
 		return json;

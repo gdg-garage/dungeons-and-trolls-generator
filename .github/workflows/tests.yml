@@ -119,7 +119,7 @@ jobs:
           build/result/${{ matrix.build-config }}/dntgenerator
 
     - name: List Icons
-      if: matrix.build-config == 'release' && matrix.compiler.cc == 'g++-13'
+      if: matrix.build-config == 'release' && matrix.compiler.cc == 'gcc-13'
       shell: bash
       run: |
         cd build/result/${{ matrix.build-config }}
@@ -127,11 +127,10 @@ jobs:
         cat dungeon.json | jq ".. | .icon?" | sort -u > icons.txt
         cat dungeon.json | jq ".. | .algorithm?" | sort -u > algorithms.txt
         cat dungeon.json | jq ".. | .faction?" | sort -u > factions.txt
-        cat dungeon.json | jq ".. | .type?" | sort -u > types.txt
         cat dungeon.json | jq ".. | .name?" | sort -u > names.txt
 
     - name: Upload Icons List
-      if: matrix.build-config == 'release' && matrix.compiler.cc == 'g++-13'
+      if: matrix.build-config == 'release' && matrix.compiler.cc == 'gcc-13'
       uses: actions/upload-artifact@v3
       with:
         name: dntgenerator
@@ -139,7 +138,6 @@ jobs:
           build/result/${{ matrix.build-config }}/icons.txt
           build/result/${{ matrix.build-config }}/algorithms.txt
           build/result/${{ matrix.build-config }}/factions.txt
-          build/result/${{ matrix.build-config }}/types.txt
           build/result/${{ matrix.build-config }}/names.txt
 
 
