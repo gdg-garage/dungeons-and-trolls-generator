@@ -28,7 +28,7 @@ Real Thing::addPower(Real roll, Real weight)
 	return roll;
 }
 
-Real Thing::subtractPower(Real weight, AffixEnum affix, const std::string &name)
+Real Thing::subtractPower(Real weight, const std::string &affixName, AffixEnum affixPos)
 {
 	CAGE_ASSERT(generate.level > 0); // generate was not initialized
 	CAGE_ASSERT(weight >= 0);
@@ -36,22 +36,22 @@ Real Thing::subtractPower(Real weight, AffixEnum affix, const std::string &name)
 	totalRolls += roll * weight;
 	totalWeight += weight;
 	goldCost /= 1 + interpolate(0.2, 2.0, sqr(roll)) * weight;
-	addAffix(roll * weight, affix, name);
+	addAffix(roll * weight, affixName, affixPos);
 	return roll;
 }
 
-Real Thing::addPower(Real weight, AffixEnum affix, const std::string &name)
+Real Thing::addPower(Real weight, const std::string &affixName, AffixEnum affixPos)
 {
-	return addPower(randomChance(), weight, affix, name);
+	return addPower(randomChance(), weight, affixName, affixPos);
 }
 
-Real Thing::addPower(Real roll, Real weight, AffixEnum affix, const std::string &name)
+Real Thing::addPower(Real roll, Real weight, const std::string &affixName, AffixEnum affixPos)
 {
-	addAffix(roll * weight, affix, name);
+	addAffix(roll * weight, affixName, affixPos);
 	return addPower(roll, weight);
 }
 
-void Thing::addPower(const Thing &other, Real weight)
+void Thing::addOther(const Thing &other, Real weight)
 {
 	if (other.totalWeight > 1e-3)
 	{
@@ -63,20 +63,20 @@ void Thing::addPower(const Thing &other, Real weight)
 			if (it != s.npos)
 				s.erase(it);
 		}
-		addAffix(r * weight, AffixEnum::Suffix, "With " + s);
+		addAffix(r * weight, "With " + s, AffixEnum::Suffix);
 	}
-	goldCost += other.goldCost;
+	goldCost += other.goldCost * weight;
 }
 
-void Thing::addAffix(Real relevance, AffixEnum affix, const std::string &name)
+void Thing::addAffix(Real relevance, const std::string &affixName, AffixEnum affixPos)
 {
-	CAGE_ASSERT(affix < AffixEnum::_Total);
+	CAGE_ASSERT(affixPos < AffixEnum::_Total);
 	CAGE_ASSERT(!name.empty());
-	Affix &a = affixes[(uint32)affix];
+	Affix &a = affixes[(uint32)affixPos];
 	if (relevance > a.relevance)
 	{
 		a.relevance = relevance;
-		a.name = name;
+		a.name = affixName;
 	}
 }
 
@@ -84,7 +84,7 @@ void Thing::updateName(const std::string &basicName, Real relevance)
 {
 	Thing t({});
 	t.affixes = affixes;
-	t.addAffix(relevance, AffixEnum::Infix, basicName);
+	t.addAffix(relevance, basicName, AffixEnum::Infix);
 	std::string r;
 	for (const Affix &a : t.affixes)
 	{
@@ -191,23 +191,13 @@ Real isHorrorFloor(uint32 level)
 
 Real makeAttrFactor(uint32 power, Real roll)
 {
-	return interpolate(0.1, 1.0, roll) + power * 0.05;
+	return (power * 0.002 + 0.2) * interpolate(0.8, 1.2, roll);
 }
 
-Real makeAttrFactor(Thing &sk, const Generate &generate, Real weight)
+uint32 makeCost(Thing &sk, Real default_)
 {
-	return makeAttrFactor(generate.power, sk.addPower(weight));
-}
-
-Real makeAttrFactor(Thing &sk, const Generate &generate, Real weight, const std::string &affixName, AffixEnum affixPos)
-{
-	return makeAttrFactor(generate.power, sk.addPower(weight, affixPos, affixName));
-}
-
-uint32 makeCost(Thing &sk, const Generate &generate, Real default_)
-{
-	const Real roll = sk.addPower(0.6, AffixEnum::Prefix, "Thrifty");
-	const Real p = interpolate(default_ * 1.10, default_ * 0.95 * 100 / (100 + generate.power), roll);
+	const Real roll = sk.addPower(0.6, "Thrifty");
+	const Real p = default_ * interpolate(1.2, 0.8, roll);
 	return numeric_cast<uint32>(max(p, 1));
 }
 

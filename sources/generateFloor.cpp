@@ -1393,13 +1393,16 @@ namespace
 		}
 
 		// signs
-		for (uint32 i = 0; i < 3; i++)
+		if (f.level > 1 && isHorrorFloor(f.level) < 0.5)
 		{
-			if (f.level > 1 && randomChance() < 0.3)
+			for (uint32 i = 0; i < 3; i++)
 			{
-				const Vec2i p = findAny(f, TileEnum::Empty);
-				f.tile(p) = TileEnum::Decoration;
-				f.extra(p).push_back(makeRandomSign());
+				if (randomChance() < 0.3)
+				{
+					const Vec2i p = findAny(f, TileEnum::Empty);
+					f.tile(p) = TileEnum::Decoration;
+					f.extra(p).push_back(makeRandomSign());
+				}
 			}
 		}
 

@@ -68,6 +68,8 @@ namespace
 
 		for (const auto &w : weights)
 			mr.attributes[w.first] += numeric_cast<uint32>(available * w.second / sum);
+
+		std::erase_if(mr.attributes, [](const auto &it) { return it.second <= 0; });
 	}
 }
 
@@ -106,10 +108,10 @@ namespace
 			sk.range[AttributeEnum::Scalar] = 1;
 			sk.damageType = DamageTypeEnum::Slash;
 		}
-		it.addPower(sk, 1);
+		it.addOther(sk, 1);
 		it.skills.push_back(std::move(sk));
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
@@ -138,11 +140,11 @@ namespace
 			sk.range[AttributeEnum::Scalar] = randomRange(4, 8);
 			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
 			sk.damageType = generate.level > LevelFire && randomChance() < 0.5 ? DamageTypeEnum ::Fire : DamageTypeEnum::Pierce;
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
@@ -170,7 +172,7 @@ namespace
 			sk.range[AttributeEnum::Scalar] = 1;
 			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
 			sk.damageType = DamageTypeEnum::Slash;
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
@@ -181,11 +183,11 @@ namespace
 			sk.radius[AttributeEnum::Scalar] = 2;
 			sk.cost[AttributeEnum::Stamina] = 20;
 			sk.target.flags.push_back(SkillKnockback);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
@@ -211,7 +213,7 @@ namespace
 			sk.radius[AttributeEnum::Scalar] = 3;
 			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
 			sk.damageType = DamageTypeEnum::Pierce;
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
@@ -220,11 +222,11 @@ namespace
 			sk.name = "Regenerate";
 			sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Scalar] = generate.power * 0.1 + 1;
 			sk.caster.flags.push_back(SkillPassive);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
@@ -251,7 +253,7 @@ namespace
 			sk.range[AttributeEnum::Scalar] = 1;
 			sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Scalar] = generate.power * 0.1 + 1;
 			sk.target.attributes[AttributeEnum::Life][AttributeEnum::Scalar] = generate.power * -0.05 - 5; // bypasses resistances
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
@@ -261,7 +263,7 @@ namespace
 			sk.targetType = SkillTargetEnum::Position;
 			sk.range[AttributeEnum::Scalar] = 4;
 			sk.caster.flags.push_back(SkillMoves);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
@@ -271,11 +273,11 @@ namespace
 			sk.name = "Heal";
 			sk.targetType = SkillTargetEnum::Character;
 			sk.target.attributes[AttributeEnum::Life][AttributeEnum::Scalar] = generate.power * 0.2 + 1;
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
@@ -303,7 +305,7 @@ namespace
 			sk.range[AttributeEnum::Scalar] = randomRange(5, 10);
 			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
 			sk.damageType = DamageTypeEnum::Pierce;
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
@@ -316,11 +318,11 @@ namespace
 			sk.radius[AttributeEnum::Scalar] = 2;
 			sk.cost[AttributeEnum::Stamina] = 40;
 			sk.target.flags.push_back(SkillStun);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
@@ -351,7 +353,7 @@ namespace
 			if (generate.level > LevelDuration)
 				sk.duration[AttributeEnum::Scalar] = 3;
 			sk.caster.flags.push_back(SkillMoves);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
@@ -361,11 +363,11 @@ namespace
 			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Scalar] = 7;
 			sk.target.flags.push_back(SkillMoves);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
@@ -394,7 +396,7 @@ namespace
 			sk.range[AttributeEnum::Scalar] = 1;
 			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
 			sk.damageType = DamageTypeEnum::Slash;
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
@@ -408,7 +410,7 @@ namespace
 			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
 			sk.damageType = DamageTypeEnum::Fire;
 			sk.cost[AttributeEnum::Mana] = 10;
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
@@ -417,11 +419,11 @@ namespace
 			sk.name = "Regenerate";
 			sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Scalar] = 5;
 			sk.caster.flags.push_back(SkillPassive);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
@@ -455,11 +457,11 @@ namespace
 			}
 			if (generate.level > LevelStun)
 				sk.target.flags.push_back(SkillStun);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
@@ -489,11 +491,11 @@ namespace
 			if (generate.level > LevelDuration)
 				sk.duration[AttributeEnum::Scalar] = 6;
 			sk.target.attributes[attr][AttributeEnum::Scalar] = generate.power * -0.1 - 5;
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
@@ -524,11 +526,11 @@ namespace
 				sk.duration[AttributeEnum::Scalar] = 5;
 			sk.target.attributes[attr][AttributeEnum::Scalar] = generate.power * 0.1 + 5;
 			sk.caster.flags.push_back(SkillAllowSelf);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
@@ -628,7 +630,7 @@ namespace
 			Generate g = generate;
 			g.slot = slot;
 			Item item = generateItem(g);
-			mr.addPower(item, 1);
+			mr.addOther(item, 1);
 			mr.equippedItems.push_back(std::move(item));
 		};
 		equip(SlotEnum::MainHand, 1.2);
@@ -1058,7 +1060,7 @@ namespace
 			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
 			sk.damageType = DamageTypeEnum::Slash;
 			sk.caster.flags.push_back(SkillMoves);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
@@ -1068,11 +1070,11 @@ namespace
 			sk.targetType = SkillTargetEnum::Position;
 			sk.range[AttributeEnum::Scalar] = 2;
 			sk.caster.flags.push_back(SkillMoves);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}
@@ -1122,7 +1124,7 @@ namespace
 				sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.15 + 5;
 				sk.damageType = DamageTypeEnum::Pierce;
 			}
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
@@ -1132,11 +1134,11 @@ namespace
 			sk.targetType = SkillTargetEnum::Position;
 			sk.range[AttributeEnum::Scalar] = 3;
 			sk.caster.flags.push_back(SkillMoves);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 
 		if (nested < 5)
@@ -1195,11 +1197,11 @@ Monster generateSatyr(uint32 level)
 		sk.range[AttributeEnum::Scalar] = 30;
 		sk.caster.flags.push_back(SkillMoves);
 		sk.target.flags.push_back(SkillMoves);
-		it.addPower(sk, 1);
+		it.addOther(sk, 1);
 		it.skills.push_back(std::move(sk));
 	}
 
-	mr.addPower(it, 1);
+	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 	return mr;
 }
@@ -1241,7 +1243,7 @@ namespace
 			sk.targetType = SkillTargetEnum::Position;
 			sk.range[AttributeEnum::Scalar] = 3;
 			sk.caster.flags.push_back(SkillMoves);
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
@@ -1257,11 +1259,11 @@ namespace
 				sk.caster.flags.push_back(SkillGroundEffect);
 			sk.caster.flags.push_back(SkillPassive);
 			sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Scalar] = 10;
-			it.addPower(sk, 1);
+			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
-		mr.addPower(it, 1);
+		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
 		return mr;
 	}

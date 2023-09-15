@@ -93,11 +93,11 @@ struct Thing : private Noncopyable
 
 	Real addPower(Real weight);
 	Real addPower(Real roll, Real weight);
-	Real addPower(Real weight, AffixEnum affix, const std::string &name);
-	Real subtractPower(Real weight, AffixEnum affix, const std::string &name);
-	Real addPower(Real roll, Real weight, AffixEnum affix, const std::string &name);
-	void addPower(const Thing &other, Real weight);
-	void addAffix(Real relevance, AffixEnum affix, const std::string &name);
+	Real addPower(Real weight, const std::string &affixName, AffixEnum affixPos = AffixEnum::Prefix);
+	Real subtractPower(Real weight, const std::string &affixName, AffixEnum affixPos = AffixEnum::Prefix);
+	Real addPower(Real roll, Real weight, const std::string &affixName, AffixEnum affixPos = AffixEnum::Prefix);
+	void addOther(const Thing &other, Real weight);
+	void addAffix(Real relevance, const std::string &affixName, AffixEnum affixPos = AffixEnum::Prefix);
 	void updateName(const std::string &basicName, Real relevance = 0.5);
 };
 
@@ -273,9 +273,7 @@ uint32 levelToBossIndex(uint32 level);
 uint32 bossIndexToLevel(uint32 index);
 Real isHorrorFloor(uint32 level);
 Real makeAttrFactor(uint32 power, Real roll);
-Real makeAttrFactor(Thing &sk, const Generate &generate, Real weight);
-Real makeAttrFactor(Thing &sk, const Generate &generate, Real weight, const std::string &affixName, AffixEnum affixPos = AffixEnum::Prefix);
-uint32 makeCost(Thing &sk, const Generate &generate, Real default_);
+uint32 makeCost(Thing &sk, Real default_);
 
 Skill generateSkill(const Generate &generate);
 Item generateItem(const Generate &generate);
@@ -322,6 +320,7 @@ constexpr uint32 LevelAoe = 11;
 constexpr uint32 LevelKnockback = 11;
 constexpr uint32 LevelFire = 16;
 constexpr uint32 LevelMagic = 16;
+constexpr uint32 LevelRequirements = 22;
 constexpr uint32 LevelDuration = 22;
 constexpr uint32 LevelSupport = 29;
 constexpr uint32 LevelPoison = 37;
@@ -339,7 +338,8 @@ struct Candidates : private Immovable
 	const Generate &generate;
 	std::optional<T> data;
 	Real bestPenalty = Real::Infinity();
-	Real slotMismatchPenalty = 1;
+	Real slotMismatchPenalty = 0.5;
+	Real randomness = 0.3;
 #ifdef CAGE_DEBUG
 	std::vector<std::pair<Real, T>> vec;
 #endif // CAGE_DEBUG
@@ -356,7 +356,7 @@ struct Candidates : private Immovable
 		const Real a = abs(generate.magic - magic) + abs(generate.ranged - ranged) + abs(generate.defensive - defensive) + abs(generate.support - support);
 		const Real s = generate.slot == preferredSlot ? 0 : slotMismatchPenalty;
 		const Real l = generate.level > minLevel ? 0 : 10;
-		const Real p = a + s + l + randomChance() * 0.3;
+		const Real p = a + s + l + randomChance() * randomness;
 		if (p < bestPenalty)
 		{
 			bestPenalty = p;

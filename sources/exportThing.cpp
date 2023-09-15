@@ -79,6 +79,24 @@ namespace
 		return "{" + r + "}";
 	}
 
+	template<class AttributesValueMapping>
+	requires(std::is_same_v<AttributesValueMapping, AttributesValuesList> || std::is_same_v<AttributesValueMapping, AttributesEquationFactors>)
+	std::string attributesSum(const AttributesValueMapping &factors, const AttributesValuesList &attr)
+	{
+		Real sum = 0;
+		for (const auto &it : factors)
+			sum += it.second * (it.first == AttributeEnum::Scalar ? 1 : attr.count(it.first) ? attr.at(it.first) : 0);
+		return (Stringizer() + sum).value.c_str();
+	}
+
+	std::string costSum(const AttributesValuesList &cost)
+	{
+		sint32 sum = 0;
+		for (const auto &it : cost)
+			sum += it.second;
+		return (Stringizer() + sum).value.c_str();
+	}
+
 	const char *damageTypeName(DamageTypeEnum damageType)
 	{
 		switch (damageType)
@@ -217,6 +235,26 @@ namespace
 		return json;
 	}
 
+	std::string exportSkill(const Skill &skill, const AttributesValuesList &attr)
+	{
+		std::string json;
+		json += "{\n";
+		json += std::string() + "\"name\":\"" + skill.name + "\",\n";
+		if (!skill.cost.empty())
+			json += std::string() + "\"cost\":" + costSum(skill.cost) + ",\n";
+		if (!skill.range.empty())
+			json += std::string() + "\"range\":" + attributesSum(skill.range, attr) + ",\n";
+		if (!skill.radius.empty())
+			json += std::string() + "\"radius\":" + attributesSum(skill.radius, attr) + ",\n";
+		if (!skill.duration.empty())
+			json += std::string() + "\"duration\":" + attributesSum(skill.duration, attr) + ",\n";
+		if (!skill.damageAmount.empty())
+			json += std::string() + "\"damageAmount\":" + attributesSum(skill.damageAmount, attr) + ",\n";
+		removeLastComma(json);
+		json += "}"; // /root
+		return json;
+	}
+
 	std::string exportItem(const Item &item)
 	{
 		std::string json;
@@ -245,6 +283,60 @@ namespace
 #ifdef CAGE_DEBUG
 		json += "\"_debug\":" + thingJson<false>(item) + ",\n";
 #endif // CAGE_DEBUG
+
+		removeLastComma(json);
+		json += "}"; // /root
+		return json;
+	}
+
+	bool isPassive(const Skill &sk)
+	{
+		for (const auto &it : sk.caster.flags)
+			if (it == SkillPassive)
+				return true;
+		for (const auto &it : sk.target.flags)
+			if (it == SkillPassive)
+				return true;
+		return false;
+	}
+
+	std::string monsterStatistics(const Monster &monster)
+	{
+		std::string json;
+		json += "{\n";
+
+		AttributesValuesList totalAttributes;
+		for (const Item &it : monster.equippedItems)
+		{
+			for (const auto &at : it.attributes)
+				totalAttributes[at.first] += at.second;
+			// count ethereal attributes
+			for (const auto &sk : it.skills)
+				if (isPassive(sk))
+					for (const auto &at : sk.caster.attributes)
+						if (at.second.count(AttributeEnum::Scalar))
+							totalAttributes[at.first] += numeric_cast<sint32>(at.second.at(AttributeEnum::Scalar));
+		}
+		sint32 attrsFromItems = 0, attrsFromLevels = 0;
+		for (const auto &it : totalAttributes)
+			attrsFromItems += it.second;
+		for (const auto &it : monster.attributes)
+		{
+			if (it.first < AttributeEnum::Life)
+				attrsFromLevels += it.second;
+			totalAttributes[it.first] += it.second;
+		}
+		json += std::string() + "\"attributesFromLevels\":" + (Stringizer() + attrsFromLevels).value.c_str() + ",\n";
+		json += std::string() + "\"attributesFromItems\":" + (Stringizer() + attrsFromItems).value.c_str() + ",\n";
+		json += "\"totalAttributes\":" + attributesValueMappingJson(totalAttributes) + ",\n";
+
+		json += "\"attacks\":[\n";
+		for (const Item &it : monster.equippedItems)
+			for (const Skill &sk : it.skills)
+				if (sk.damageType != DamageTypeEnum::None)
+					json += exportSkill(sk, totalAttributes) + ",\n";
+		removeLastComma(json);
+		json += "],\n"; // attacks
 
 		removeLastComma(json);
 		json += "}"; // /root
@@ -284,6 +376,7 @@ namespace
 
 #ifdef CAGE_DEBUG
 		json += "\"_debug\":" + thingJson<true>(monster) + ",\n";
+		json += "\"_statistics\":" + monsterStatistics(monster) + ",\n";
 #endif // CAGE_DEBUG
 
 		removeLastComma(json);

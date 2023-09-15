@@ -1,6 +1,6 @@
 #include "dnt.h"
 
-Item::Item(const Generate &generate) : Thing(generate){};
+Item::Item(const Generate &generate) : Thing(generate), slot(generate.slot){};
 
 namespace
 {
@@ -9,8 +9,6 @@ namespace
 	template<AttributeEnum Attr>
 	void addBoost(Item &item)
 	{
-		const Real a = item.generate.power / 20 + 1;
-		const Real b = item.generate.power / 10 + 3;
 		static constexpr const char *names[] = {
 			"Strengthening",
 			"Dexterous",
@@ -27,15 +25,16 @@ namespace
 			"Vigorous",
 		};
 		static_assert(sizeof(names) / sizeof(names[0]) == (uint32)AttributeEnum::Scalar);
-		Real r = interpolate(a, b, item.addPower(0.8, AffixEnum::Prefix, names[(uint32)Attr]));
-		if constexpr (Attr >= AttributeEnum::SlashResist)
-			r *= 1.5;
-		item.attributes[Attr] += numeric_cast<sint32>(r + 0.5);
+
+		const Real a = item.generate.power * 0.1 + 5;
+		const Real r = a * interpolate(0.8, 1.2, item.addPower(1, names[(uint32)Attr]));
+		item.attributes[Attr] += numeric_cast<sint32>(r);
 	}
 
 	void makeBoost(Item &item)
 	{
 		Candidates<void (*)(Item &)> candidates(item.generate);
+		candidates.randomness = 0.6;
 
 		candidates.add(0, 0, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Strength>);
 		candidates.add(0, 1, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Dexterity>);
@@ -77,15 +76,15 @@ namespace
 	template<AttributeEnum Attr>
 	void addRequirement(Item &item)
 	{
-		const Real a = item.generate.power / 6 + 1;
-		const Real b = item.generate.power / 3 + 3;
-		const Real r = interpolate(a, b, item.subtractPower(0.6, AffixEnum::Suffix, "Of Need"));
-		item.requirements[Attr] += numeric_cast<sint32>(r + 0.5);
+		const Real a = item.generate.power * 0.3 + 15;
+		const Real r = a * interpolate(0.8, 1.2, item.subtractPower(0.6, "Of Need", AffixEnum::Suffix));
+		item.requirements[Attr] += numeric_cast<sint32>(r);
 	}
 
 	void makeRequirement(Item &item)
 	{
 		Candidates<void (*)(Item &)> candidates(item.generate);
+		candidates.randomness = 0.4;
 
 		candidates.add(0, 0, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Strength>);
 		candidates.add(0, 1, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Dexterity>);
@@ -118,23 +117,26 @@ namespace
 	{
 		CAGE_ASSERT(generate.slot != SlotEnum::None);
 		Item item(generate);
-		item.slot = generate.slot;
 
 		makeBoost(item);
-		if (item.addPower(0.5, AffixEnum::Prefix, "Rare") > 0.7)
+		if (randomChance() < 0.7)
+		{
+			item.addAffix(0.5, "Rare");
 			makeBoost(item);
+		}
 
-		if (generate.level > 22)
+		if (generate.level > LevelRequirements)
 		{
 			makeRequirement(item);
-			if ((randomChance() < 0.3))
+			if (randomChance() < 0.3)
 				makeRequirement(item);
 		}
 
-		if (item.addPower(0.5, AffixEnum::Prefix, "Skilled") > 0.7)
+		if (randomChance() < 0.5)
 		{
+			item.addAffix(0.7, "Skilled");
 			Skill sk = generateSkill(generate);
-			item.addPower(sk, 0.8);
+			item.addOther(sk, 0.5);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -152,13 +154,13 @@ namespace
 			g.defensive = 0;
 			g.support = 0;
 			Skill sk(g);
-			const Real mult = interpolate(1.2, 1.5, sk.addPower(1, AffixEnum::Prefix, "Celestial"));
+			const Real mult = interpolate(1.2, 1.5, sk.addPower(1, "Celestial"));
 			for (const auto &it : item.attributes)
 				sk.caster.attributes[it.first][AttributeEnum::Scalar] = it.second * mult;
 			sk.caster.flags.push_back(SkillPassive);
 			sk.updateName("Ether");
-			item.addPower(sk, 0.5);
-			item.addAffix(0.8, AffixEnum::Prefix, "Ethereal");
+			item.addOther(sk, 0.5);
+			item.addAffix(0.8, "Ethereal");
 			item.skills.push_back(std::move(sk));
 			item.attributes.clear();
 		}
@@ -176,11 +178,11 @@ namespace
 			Skill sk(generate);
 			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Scalar] = 1;
-			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Strong");
+			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Strong"));
 			sk.damageType = DamageTypeEnum::Slash;
-			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 10);
+			sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
 			sk.updateName("Attack");
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -199,12 +201,12 @@ namespace
 			Skill sk(generate);
 			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Scalar] = 2;
-			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Stout") * 0.5;
-			sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(sk, generate, 1, "Piercing") * 0.5;
+			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Stout")) * 0.5;
+			sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Piercing")) * 0.5;
 			sk.damageType = DamageTypeEnum::Pierce;
-			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 13);
+			sk.cost[AttributeEnum::Stamina] = makeCost(sk, 13);
 			sk.updateName("Attack");
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -221,12 +223,12 @@ namespace
 
 		{
 			Skill sk(generate);
-			sk.radius[AttributeEnum::Scalar] = interpolate(1.0, 3.0, sk.addPower(1, AffixEnum::Prefix, "Wide"));
-			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Strong") * 0.3;
+			sk.radius[AttributeEnum::Scalar] = interpolate(1.5, 3.0, sk.addPower(1, "Wide"));
+			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Strong")) * 0.3;
 			sk.damageType = DamageTypeEnum::Slash;
-			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 10);
+			sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
 			sk.updateName("Attack");
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -244,13 +246,13 @@ namespace
 		{
 			Skill sk(generate);
 			sk.targetType = SkillTargetEnum::Character;
-			sk.range[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Far") * 0.1;
+			sk.range[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Accurate")) * 0.1;
 			sk.range[AttributeEnum::Scalar] = 4;
-			sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(sk, generate, 1, "Accurate") * 0.5;
+			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Piercing")) * 0.5;
 			sk.damageType = DamageTypeEnum::Pierce;
-			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 10);
+			sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
 			sk.updateName("Attack");
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -267,7 +269,7 @@ namespace
 
 		{
 			Skill sk = generateSkill(generate);
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -286,11 +288,11 @@ namespace
 			Skill sk(generate);
 			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Scalar] = 1;
-			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Strong") * 0.5;
+			sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Surprise")) * 0.5;
 			sk.damageType = DamageTypeEnum::Slash;
-			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 7);
+			sk.cost[AttributeEnum::Stamina] = makeCost(sk, 7);
 			sk.updateName("Attack");
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -320,7 +322,7 @@ namespace
 
 		{
 			Skill sk = generateSkill(generate);
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -337,7 +339,7 @@ namespace
 
 		{
 			Skill sk = generateSkill(generate);
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -354,7 +356,7 @@ namespace
 
 		{
 			Skill sk = generateSkill(generate);
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -370,14 +372,13 @@ namespace
 		Item item = generateBasicItem(generate);
 
 		makeBoost(item);
-		makeBoost(item);
 
 		{
 			Skill sk(generate);
-			sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 1, "Refreshing");
+			sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Refreshing"));
 			sk.caster.flags.push_back(SkillAlone);
 			sk.updateName("Rest");
-			item.addPower(sk, 0.7);
+			item.addOther(sk, 0.7);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -405,17 +406,17 @@ namespace
 
 		{
 			Skill sk = generateSkill(generate);
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
 		{
 			Skill sk(generate);
-			sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(sk, generate, 1, "Energizing") * 0.8;
-			sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 0.7, "Refreshing") * 0.2;
+			sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Energizing")) * 0.8;
+			sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(0.7, "Refreshing")) * 0.2;
 			sk.caster.flags.push_back(SkillAlone);
 			sk.updateName("Meditation");
-			item.addPower(sk, 0.7);
+			item.addOther(sk, 0.7);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -445,7 +446,7 @@ namespace
 
 		{
 			Skill sk = generateSkill(generate);
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -459,14 +460,13 @@ namespace
 	{
 		CAGE_ASSERT(generate.slot == SlotEnum::Body);
 		Item item(generate); // no generateBasicItem -> no stats
-		item.slot = generate.slot;
 
-		if (generate.level > 16)
-			item.attributes[AttributeEnum::FireResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Watering"));
-		if (generate.level > 37)
-			item.attributes[AttributeEnum::PoisonResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Antidote"));
-		if (generate.level > 79)
-			item.attributes[AttributeEnum::ElectricResist] = interpolate(0.0, 10.0, item.addPower(1, AffixEnum::Prefix, "Isolating"));
+		if (generate.level > LevelFire)
+			item.attributes[AttributeEnum::FireResist] = interpolate(8.5, 12.5, item.addPower(1, "Watering"));
+		if (generate.level > LevelPoison)
+			item.attributes[AttributeEnum::PoisonResist] = interpolate(8.5, 12.5, item.addPower(1, "Antidote"));
+		if (generate.level > LevelElectric)
+			item.attributes[AttributeEnum::ElectricResist] = interpolate(8.5, 12.5, item.addPower(1, "Isolating"));
 
 		item.updateName("Tattoos");
 		item.icon = "tattoos";
@@ -477,17 +477,16 @@ namespace
 	{
 		CAGE_ASSERT(generate.slot == SlotEnum::Head);
 		Item item(generate); // no generateBasicItem -> no stats
-		item.slot = generate.slot;
 
 		{
 			Skill sk(generate);
 			if (randomChance() < 0.5)
-				sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = interpolate(1.0, 6.0, sk.addPower(1, AffixEnum::Prefix, "Refreshing"));
+				sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Refreshing")) * 0.2;
 			else
-				sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Scalar] = interpolate(1.0, 6.0, sk.addPower(1, AffixEnum::Prefix, "Energizing"));
+				sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Energizing")) * 0.2;
 			sk.caster.flags.push_back(SkillPassive);
 			sk.updateName("Glow");
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -507,23 +506,23 @@ namespace
 		{
 			Skill sk(generate);
 			sk.targetType = SkillTargetEnum::Position;
-			sk.range[AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 1, "Enduring") * 0.1;
-			sk.range[AttributeEnum::Scalar] = 1;
-			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 5);
+			sk.range[AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Enduring")) * 0.05;
+			sk.range[AttributeEnum::Scalar] = 2;
+			sk.cost[AttributeEnum::Stamina] = makeCost(sk, 5);
 			sk.updateName("Walk");
-			item.addPower(sk, 0.6);
+			item.addOther(sk, 0.6);
 			item.skills.push_back(std::move(sk));
 		}
 		else
 		{
 			Skill sk(generate);
 			sk.targetType = SkillTargetEnum::Position;
-			sk.range[AttributeEnum::Constitution] = makeAttrFactor(sk, generate, 1, "Enduring") * 0.075;
-			sk.range[AttributeEnum::Strength] = makeAttrFactor(sk, generate, 1, "Fast") * 0.075;
-			sk.range[AttributeEnum::Scalar] = 2;
-			sk.cost[AttributeEnum::Stamina] = makeCost(sk, generate, 10);
+			sk.range[AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Enduring")) * 0.03;
+			sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Fast")) * 0.03;
+			sk.range[AttributeEnum::Scalar] = 3;
+			sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
 			sk.updateName("Run");
-			item.addPower(sk, 0.8);
+			item.addOther(sk, 0.8);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -551,7 +550,7 @@ namespace
 
 		{
 			Skill sk = generateSkill(generate);
-			item.addPower(sk, 1);
+			item.addOther(sk, 1);
 			item.skills.push_back(std::move(sk));
 		}
 
@@ -651,14 +650,13 @@ Item generateItem(const Generate &generate)
 
 Item generatePrimitiveItem(SlotEnum slot)
 {
-	Item item = Item({});
-	item.slot = slot;
+	Item item = Item(Generate(1, 0, slot));
 
-	item.addAffix(randomChance() * 10 + 10, AffixEnum::Prefix, "Primitive");
-	item.addAffix(randomChance() * 10 + 10, AffixEnum::Prefix, "Pathetic");
-	item.addAffix(randomChance() * 10 + 10, AffixEnum::Prefix, "Beginner");
-	item.addAffix(randomChance() * 10 + 10, AffixEnum::Prefix, "Useless");
-	item.addAffix(randomChance() * 10 + 10, AffixEnum::Prefix, "Worthless");
+	item.addAffix(randomChance() * 10 + 10, "Primitive");
+	item.addAffix(randomChance() * 10 + 10, "Pathetic");
+	item.addAffix(randomChance() * 10 + 10, "Beginner");
+	item.addAffix(randomChance() * 10 + 10, "Useless");
+	item.addAffix(randomChance() * 10 + 10, "Worthless");
 
 	switch (slot)
 	{
@@ -667,7 +665,7 @@ Item generatePrimitiveItem(SlotEnum slot)
 			item.attributes[randomChance() < 0.5 ? AttributeEnum::Strength : AttributeEnum::Constitution] = randomRange(3, 6);
 			{
 				Skill sk(item.generate);
-				sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = 5;
+				sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = randomRange(0.8, 1.2) * 5;
 				sk.caster.flags.push_back(SkillAlone);
 				sk.updateName("Rest");
 				item.skills.push_back(std::move(sk));
@@ -689,9 +687,9 @@ Item generatePrimitiveItem(SlotEnum slot)
 			{
 				Skill sk(item.generate);
 				sk.targetType = SkillTargetEnum::Character;
-				sk.damageAmount[AttributeEnum::Scalar] = 2;
+				sk.damageAmount[AttributeEnum::Scalar] = randomRange(0.8, 1.2) * 2;
 				sk.damageType = DamageTypeEnum::Pierce;
-				sk.cost[AttributeEnum::Stamina] = 3;
+				sk.cost[AttributeEnum::Stamina] = randomRange(0.8, 1.2) * 4;
 				sk.updateName("Poke");
 				item.skills.push_back(std::move(sk));
 			}
@@ -716,7 +714,6 @@ Item generatePrimitiveItem(SlotEnum slot)
 Item generateSprayCan()
 {
 	Item item(Generate(1, 0, SlotEnum::MainHand));
-	item.slot = SlotEnum::MainHand;
 	item.updateName("Spray Can");
 	item.icon = "sprayCan";
 
