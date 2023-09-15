@@ -34,7 +34,7 @@ namespace
 	void makeBoost(Item &item)
 	{
 		Candidates<void (*)(Item &)> candidates(item.generate);
-		candidates.randomness = 0.6;
+		candidates.randomness = 0.7;
 
 		candidates.add(0, 0, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Strength>);
 		candidates.add(0, 1, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Dexterity>);
@@ -84,7 +84,6 @@ namespace
 	void makeRequirement(Item &item)
 	{
 		Candidates<void (*)(Item &)> candidates(item.generate);
-		candidates.randomness = 0.4;
 
 		candidates.add(0, 0, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Strength>);
 		candidates.add(0, 1, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Dexterity>);
@@ -119,9 +118,14 @@ namespace
 		Item item(generate);
 
 		makeBoost(item);
-		if (randomChance() < 0.7)
+		if (randomChance() < 0.6)
 		{
-			item.addAffix(0.5, "Rare");
+			item.addPower(0.7, "Boosting");
+			makeBoost(item);
+		}
+		if (randomChance() < 0.2)
+		{
+			item.addPower(0.9, "Rare");
 			makeBoost(item);
 		}
 
@@ -132,7 +136,7 @@ namespace
 				makeRequirement(item);
 		}
 
-		if (randomChance() < 0.5)
+		if (randomChance() < 0.3)
 		{
 			item.addAffix(0.7, "Skilled");
 			Skill sk = generateSkill(generate);
@@ -312,6 +316,19 @@ namespace
 		finalizeBasicItem(item);
 		item.updateName("Shield");
 		item.icon = "shield";
+		return item;
+	}
+
+	Item generateCrystalBall(const Generate &generate)
+	{
+		CAGE_ASSERT(generate.slot == SlotEnum::OffHand);
+		Item item = generateBasicItem(generate);
+
+		addBoost<AttributeEnum::Mana>(item);
+
+		finalizeBasicItem(item);
+		item.updateName("CrystalBall");
+		item.icon = "crystalBall";
 		return item;
 	}
 
@@ -574,13 +591,15 @@ namespace
 		}
 		return item;
 	}
-}
 
-namespace
-{
 	Item generateTrinket(const Generate &generate)
 	{
+		CAGE_ASSERT(generate.slot != SlotEnum::None);
 		Item item = generateBasicItem(generate);
+
+		makeBoost(item);
+
+		finalizeBasicItem(item);
 		item.updateName("Trinket");
 		item.icon = "trinket";
 		return item;
@@ -626,12 +645,13 @@ Item generateItem(const Generate &generate)
 
 	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelSlash }, generateSword);
 	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelPierce }, generatePike);
-	candidates.add(0, H, 0, 0, SlotEnum::MainHand, { LevelSlash, LevelAoe }, generateScythe);
+	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelSlash, LevelAoe }, generateScythe);
 	candidates.add(0, 1, 0, 0, SlotEnum::MainHand, { LevelPierce }, generateBow);
-	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { Nothing }, generateStaff);
+	candidates.add(H, 0, 1, 0, SlotEnum::MainHand, { Nothing }, generateStaff);
 	candidates.add(1, 1, 0, 0, SlotEnum::MainHand, { Nothing }, generateWand);
 	candidates.add(0, 0, 0, 0, SlotEnum::OffHand, { Nothing }, generateDagger);
 	candidates.add(0, H, 1, 0, SlotEnum::OffHand, { Nothing }, generateShield);
+	candidates.add(1, H, H, 1, SlotEnum::OffHand, { Nothing }, generateCrystalBall);
 	candidates.add(1, 1, 0, H, SlotEnum::OffHand, { Nothing }, generateWand);
 	candidates.add(1, 0, H, 0, SlotEnum::OffHand, { Nothing }, generateScroll);
 	candidates.add(1, H, 1, 1, SlotEnum::OffHand, { Nothing }, generateTalisman);

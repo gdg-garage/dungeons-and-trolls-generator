@@ -339,7 +339,7 @@ struct Candidates : private Immovable
 	std::optional<T> data;
 	Real bestPenalty = Real::Infinity();
 	Real slotMismatchPenalty = 0.5;
-	Real randomness = 0.3;
+	Real randomness = 0.5;
 #ifdef CAGE_DEBUG
 	std::vector<std::pair<Real, T>> vec;
 #endif // CAGE_DEBUG

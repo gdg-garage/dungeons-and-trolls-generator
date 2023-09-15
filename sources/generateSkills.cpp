@@ -4,6 +4,28 @@ Skill::Skill(const Generate &generate) : Thing(generate){};
 
 namespace
 {
+	Skill generatePunch(const Generate &generate)
+	{
+		Skill sk(generate);
+		sk.targetType = SkillTargetEnum::Character;
+		sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "High")) * 0.7;
+		sk.damageType = DamageTypeEnum::Pierce;
+		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 6);
+		sk.updateName("Punch");
+		return sk;
+	}
+
+	Skill generateKick(const Generate &generate)
+	{
+		Skill sk(generate);
+		sk.targetType = SkillTargetEnum::Character;
+		sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Low")) * 0.8;
+		sk.damageType = DamageTypeEnum::Slash;
+		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 8);
+		sk.updateName("Kick");
+		return sk;
+	}
+
 	Skill generateChainHook(const Generate &generate)
 	{
 		Skill sk(generate);
@@ -160,6 +182,17 @@ namespace
 
 namespace
 {
+	Skill generateScorch(const Generate &generate)
+	{
+		Skill sk(generate);
+		sk.targetType = SkillTargetEnum::Character;
+		sk.damageAmount[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Burning")) * 0.6;
+		sk.damageType = DamageTypeEnum::Fire;
+		sk.cost[AttributeEnum::Mana] = makeCost(sk, 7);
+		sk.updateName("Scorch");
+		return sk;
+	}
+
 	Skill generateShockNova(const Generate &generate)
 	{
 		Skill sk(generate);
@@ -371,6 +404,8 @@ Skill generateSkill(const Generate &generate)
 
 	Candidates<Skill (*)(const Generate &generate)> candidates(generate);
 
+	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelPierce }, generatePunch);
+	candidates.add(0, 0, 0, 0, SlotEnum::Legs, { LevelSlash }, generateKick);
 	candidates.add(0, 1, 0, 0, SlotEnum::MainHand, { LevelPierce, LevelStun }, generateChainHook);
 	candidates.add(0, 0, 1, 0, SlotEnum::Legs, { LevelSlash, LevelAoe, LevelKnockback }, generateStomp);
 	candidates.add(0, 1, 1, 0, SlotEnum::MainHand, { LevelPierce, LevelDuration, LevelGroundEffect }, generateBearTrap);
@@ -383,6 +418,7 @@ Skill generateSkill(const Generate &generate)
 	candidates.add(0, 0, 0, 1, SlotEnum::Head, { Nothing }, generateBerserk);
 	candidates.add(0, 0, 0, 1, SlotEnum::Head, { LevelDuration }, generateIntimidate);
 
+	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { LevelFire }, generateScorch);
 	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { LevelElectric, LevelAoe }, generateShockNova);
 	candidates.add(1, 1, 0, 0, SlotEnum::MainHand, { LevelFire }, generateFireball);
 	candidates.add(1, 1, 0, 0, SlotEnum::Legs, { LevelElectric, LevelStun }, generateThunderboltLeap);

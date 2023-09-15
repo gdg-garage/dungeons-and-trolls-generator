@@ -716,9 +716,9 @@ namespace
 			{
 				const Vec2i p = Vec2i(x, y);
 				if (dist(p) < r)
-					f.tile(x, y) = TileEnum::Empty;
+					f.tile(p) = TileEnum::Empty;
 				else
-					f.tile(x, y) = TileEnum::Outside;
+					f.tile(p) = TileEnum::Outside;
 			}
 		}
 
@@ -1121,6 +1121,37 @@ namespace
 		}
 	}
 
+	void generateBoobsLayout(Floor &f)
+	{
+		if (f.level <= 25)
+			return generateDungeonLayout(f);
+
+		const uint32 w = f.width;
+		const uint32 h = f.height;
+		const Real r = length(Vec2(w, h)) * interpolate(0.25, 0.35, randomChance());
+		const Vec2 c1 = Vec2(w * 1 / 10, h * 1 / 3);
+		const Vec2 c2 = Vec2(w * 9 / 10, h * 2 / 3);
+
+		for (uint32 y = 1; y < h - 1; y++)
+		{
+			for (uint32 x = 1; x < w - 1; x++)
+			{
+				const Vec2i p = Vec2i(x, y);
+				const Vec2 pf = Vec2(p);
+				if (min(distance(pf, c1), distance(pf, c2)) < r)
+					f.tile(p) = TileEnum::Empty;
+				else
+					f.tile(p) = TileEnum::Outside;
+			}
+		}
+
+		// witches
+		if (f.level > 50 && randomChance() < 0.07)
+			placeWitchCoven(f);
+
+		placeCorridors(f);
+	}
+
 	void generateMazeLayout(Floor &f)
 	{
 		if (f.level <= 40)
@@ -1213,7 +1244,7 @@ namespace
 			generateSingleRoomLayout(f);
 		else
 		{
-			switch (randomRange(0u, 10u))
+			switch (randomRange(0u, 11u))
 			{
 				case 0:
 					generateSingleRoomLayout(f);
@@ -1228,8 +1259,11 @@ namespace
 					generateMazeLayout(f);
 					break;
 				case 4:
+					generateBoobsLayout(f);
+					break;
 				case 5:
 				case 6:
+				case 7:
 					generateNaturalCavesLayout(f);
 					break;
 				default:
