@@ -1,6 +1,6 @@
 #include "dnt.h"
 
-Item::Item(const Generate &generate) : Thing(generate), slot(generate.slot){};
+Item::Item(const Generate &generate) : Thing(generate), slot(generate.slot) {}
 
 namespace
 {
@@ -12,7 +12,7 @@ namespace
 		static constexpr const char *names[] = {
 			"Strengthening",
 			"Dexterous",
-			"Intelligent",
+			"Genius",
 			"Strong-willed",
 			"Constitutional",
 			"Slashproof",
@@ -29,6 +29,7 @@ namespace
 		const Real a = item.generate.power * 0.1 + 5;
 		const Real r = a * interpolate(0.8, 1.2, item.addPower(1, names[(uint32)Attr]));
 		item.attributes[Attr] += numeric_cast<sint32>(r);
+		item.addPower(1); // make attributes more expensive
 	}
 
 	void makeBoost(Item &item)
@@ -120,12 +121,12 @@ namespace
 		makeBoost(item);
 		if (randomChance() < 0.6)
 		{
-			item.addPower(0.7, "Boosting");
+			item.addAffix(0.7, "Boosting");
 			makeBoost(item);
 		}
 		if (randomChance() < 0.2)
 		{
-			item.addPower(0.9, "Rare");
+			item.addAffix(0.85, "Rare");
 			makeBoost(item);
 		}
 
@@ -136,7 +137,7 @@ namespace
 				makeRequirement(item);
 		}
 
-		if (randomChance() < 0.3)
+		if (randomChance() < 0.15)
 		{
 			item.addAffix(0.7, "Skilled");
 			Skill sk = generateSkill(generate);
