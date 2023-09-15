@@ -1152,6 +1152,21 @@ namespace
 		placeCorridors(f);
 	}
 
+	void generateTunnelsLayout(Floor &f)
+	{
+		if (f.level <= 35)
+			return generateDungeonLayout(f);
+
+		const uint32 w = f.width;
+		const uint32 h = f.height;
+
+		const uint32 cnt = randomRange(10, 30);
+		for (uint32 i = 0; i < cnt; i++)
+			f.tile(randomRange(1u, w - 1), randomRange(1u, h - 1)) = TileEnum::Empty;
+
+		placeCorridors(f);
+	}
+
 	void generateMazeLayout(Floor &f)
 	{
 		if (f.level <= 40)
@@ -1233,7 +1248,7 @@ namespace
 		placeCorridors(f);
 	}
 
-	void generateGenericFloor(Floor &f)
+	void generateGenericFloor(Floor &f, uint32 maxLevel)
 	{
 		{
 			auto [w, h] = defaultFloorSize(f.level);
@@ -1244,7 +1259,7 @@ namespace
 			generateSingleRoomLayout(f);
 		else
 		{
-			switch (randomRange(0u, 11u))
+			switch (randomRange(0u, 10u))
 			{
 				case 0:
 					generateSingleRoomLayout(f);
@@ -1262,12 +1277,13 @@ namespace
 					generateBoobsLayout(f);
 					break;
 				case 5:
+					generateTunnelsLayout(f);
+					break;
 				case 6:
-				case 7:
-					generateNaturalCavesLayout(f);
+					generateDungeonLayout(f);
 					break;
 				default:
-					generateDungeonLayout(f);
+					generateNaturalCavesLayout(f);
 					break;
 			}
 		}
@@ -1310,7 +1326,7 @@ namespace
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
-			f.extra(p).push_back(generateButcher(f.level));
+			f.extra(p).push_back(generateButcher(maxLevel)); // maxLevel -> the butcher does not scale down
 			surroundWithDecorations(f, p, "bones");
 		}
 
@@ -1512,7 +1528,7 @@ Floor generateFloor(uint32 level, uint32 maxLevel)
 	else if (isLevelBoss(level))
 		generateBossFloor(f);
 	else
-		generateGenericFloor(f);
+		generateGenericFloor(f, maxLevel);
 	CAGE_ASSERT(countCells(f, TileEnum::Spawn) == 1);
 	CAGE_ASSERT(countCells(f, TileEnum::Stairs) == 1);
 	CAGE_ASSERT(isConnected(f));
