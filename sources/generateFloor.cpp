@@ -989,56 +989,32 @@ namespace
 		placeCorridors(f);
 	}
 
-	void generateSingleRoomLayout(Floor &f)
+	void generateNaturalCavesLayout(Floor &f)
 	{
-		if (f.level >= 4 && f.level <= 30)
+		if (f.level <= 10)
 			return generateDungeonLayout(f);
 
-		const uint32 w = f.width;
-		const uint32 h = f.height;
+		NoiseFunctionCreateConfig cfg;
+		cfg.seed = randomRange((uint32)0, (uint32)m);
+		cfg.fractalType = NoiseFractalTypeEnum::Fbm;
+		cfg.frequency = randomRange(0.02, 0.07);
+		Holder<NoiseFunction> noise = newNoiseFunction(cfg);
 
-		rectReplace(f, Vec2i(1), Vec2i(w, h) - 1, TileEnum::Outside, TileEnum::Empty);
-
-		// random pillars
-		if (w > 20 && h > 10)
+		for (uint32 y = 1; y < f.height - 1; y++)
 		{
-			const uint32 cnt = randomRange(5u, 15u);
-			for (uint32 i = 0; i < cnt; i++)
+			for (uint32 x = 1; x < f.width - 1; x++)
 			{
-				const uint32 x = randomRange(3u, w - 3);
-				const uint32 y = randomRange(3u, h - 3);
-				const Vec2i p = Vec2i(x, y);
-				const Vec2i ps[9] = {
-					p + Vec2i(-1, -1),
-					p + Vec2i(-1, +0),
-					p + Vec2i(-1, +1),
-					p + Vec2i(+0, -1),
-					p + Vec2i(+0, +0),
-					p + Vec2i(+0, +1),
-					p + Vec2i(+1, -1),
-					p + Vec2i(+1, +0),
-					p + Vec2i(+1, +1),
-				};
-				{
-					bool bad = false;
-					for (Vec2i k : ps)
-						if (f.tile(k) != TileEnum::Empty)
-							bad = true;
-					if (bad)
-						continue;
-				}
-				for (Vec2i k : ps)
-					f.tile(k) = TileEnum::Outside;
+				if (noise->evaluate(Vec2(x, y)) > 0)
+					f.tile(x, y) = TileEnum::Empty;
 			}
 		}
 
-		// castle
-		if (f.level > 70 && randomChance() < 0.07)
-			placeCastle(f);
+		// witches
+		if (f.level > 50 && randomChance() < 0.07)
+			placeWitchCoven(f);
 
-		// always lava river
-		if (f.level > 60)
-			placeLavaRiver(f);
+		// corridors
+		placeCorridors(f);
 	}
 
 	void generateShiftedGridLayout(Floor &f)
@@ -1102,25 +1078,6 @@ namespace
 		}
 	}
 
-	void generateStripesLayout(Floor &f)
-	{
-		if (f.level <= 50)
-			return generateDungeonLayout(f);
-
-		uint32 x = 1;
-		while (x + 5 < f.width)
-		{
-			const uint32 s = randomRange(1, 5);
-			rectReplace(f, Vec2i(x, 1), Vec2i(x + s, f.height - 1), TileEnum::Outside, TileEnum::Empty);
-			if (x > 1)
-			{
-				const uint32 y = randomRange(3u, f.height - 5);
-				f.tile(x - 1, y) = TileEnum::Empty;
-			}
-			x += s + 1;
-		}
-	}
-
 	void generateBoobsLayout(Floor &f)
 	{
 		if (f.level <= 25)
@@ -1150,6 +1107,76 @@ namespace
 			placeWitchCoven(f);
 
 		placeCorridors(f);
+	}
+
+	void generateHollowRoomLayout(Floor &f)
+	{
+		if (f.level <= 25)
+			return generateDungeonLayout(f);
+
+		const uint32 w = f.width;
+		const uint32 h = f.height;
+
+		rectReplace(f, Vec2i(1), Vec2i(w, h) - 1, TileEnum::Outside, TileEnum::Empty);
+		rectReplace(f, Vec2i(w, h) / 5 + 1, Vec2i(w, h) * 4 / 5 - 2, TileEnum::Empty, TileEnum::Outside);
+
+		// witches
+		if (f.level > 50 && randomChance() < 0.07)
+			placeWitchCoven(f);
+
+		placeCorridors(f);
+	}
+
+	void generateSingleRoomLayout(Floor &f)
+	{
+		if (f.level >= 4 && f.level <= 30)
+			return generateDungeonLayout(f);
+
+		const uint32 w = f.width;
+		const uint32 h = f.height;
+
+		rectReplace(f, Vec2i(1), Vec2i(w, h) - 1, TileEnum::Outside, TileEnum::Empty);
+
+		// random pillars
+		if (w > 20 && h > 10)
+		{
+			const uint32 cnt = randomRange(5u, 15u);
+			for (uint32 i = 0; i < cnt; i++)
+			{
+				const uint32 x = randomRange(3u, w - 3);
+				const uint32 y = randomRange(3u, h - 3);
+				const Vec2i p = Vec2i(x, y);
+				const Vec2i ps[9] = {
+					p + Vec2i(-1, -1),
+					p + Vec2i(-1, +0),
+					p + Vec2i(-1, +1),
+					p + Vec2i(+0, -1),
+					p + Vec2i(+0, +0),
+					p + Vec2i(+0, +1),
+					p + Vec2i(+1, -1),
+					p + Vec2i(+1, +0),
+					p + Vec2i(+1, +1),
+				};
+				{
+					bool bad = false;
+					for (Vec2i k : ps)
+						if (f.tile(k) != TileEnum::Empty)
+							bad = true;
+					if (bad)
+						continue;
+				}
+				for (Vec2i k : ps)
+					f.tile(k) = TileEnum::Outside;
+			}
+		}
+
+		// castle
+		if (f.level > 70 && randomChance() < 0.07)
+			placeCastle(f);
+
+		// always lava river
+		if (f.level > 60)
+			placeLavaRiver(f);
 	}
 
 	void generateTunnelsLayout(Floor &f)
@@ -1220,32 +1247,23 @@ namespace
 			placeCastle(f);
 	}
 
-	void generateNaturalCavesLayout(Floor &f)
+	void generateStripesLayout(Floor &f)
 	{
-		if (f.level <= 10)
+		if (f.level <= 50)
 			return generateDungeonLayout(f);
 
-		NoiseFunctionCreateConfig cfg;
-		cfg.seed = randomRange((uint32)0, (uint32)m);
-		cfg.fractalType = NoiseFractalTypeEnum::Fbm;
-		cfg.frequency = randomRange(0.02, 0.07);
-		Holder<NoiseFunction> noise = newNoiseFunction(cfg);
-
-		for (uint32 y = 1; y < f.height - 1; y++)
+		uint32 x = 1;
+		while (x + 5 < f.width)
 		{
-			for (uint32 x = 1; x < f.width - 1; x++)
+			const uint32 s = randomRange(1, 5);
+			rectReplace(f, Vec2i(x, 1), Vec2i(x + s, f.height - 1), TileEnum::Outside, TileEnum::Empty);
+			if (x > 1)
 			{
-				if (noise->evaluate(Vec2(x, y)) > 0)
-					f.tile(x, y) = TileEnum::Empty;
+				const uint32 y = randomRange(3u, f.height - 5);
+				f.tile(x - 1, y) = TileEnum::Empty;
 			}
+			x += s + 1;
 		}
-
-		// witches
-		if (f.level > 50 && randomChance() < 0.07)
-			placeWitchCoven(f);
-
-		// corridors
-		placeCorridors(f);
 	}
 
 	void generateGenericFloor(Floor &f, uint32 maxLevel)
@@ -1262,25 +1280,28 @@ namespace
 			switch (randomRange(0u, 10u))
 			{
 				case 0:
-					generateSingleRoomLayout(f);
+					generateDungeonLayout(f);
 					break;
 				case 1:
 					generateShiftedGridLayout(f);
 					break;
 				case 2:
-					generateStripesLayout(f);
+					generateBoobsLayout(f);
 					break;
 				case 3:
-					generateMazeLayout(f);
+					generateHollowRoomLayout(f);
 					break;
 				case 4:
-					generateBoobsLayout(f);
+					generateSingleRoomLayout(f);
 					break;
 				case 5:
 					generateTunnelsLayout(f);
 					break;
 				case 6:
-					generateDungeonLayout(f);
+					generateMazeLayout(f);
+					break;
+				case 7:
+					generateStripesLayout(f);
 					break;
 				default:
 					generateNaturalCavesLayout(f);
