@@ -1090,6 +1090,37 @@ Monster generateZergling(uint32 level)
 	return generateMonsterImpl(g, &generateZerglingImpl);
 }
 
+Monster generateHealingTotem(uint32 level)
+{
+	Monster mr = Monster(Generate(level, 0));
+	mr.updateName("Healing Totem");
+	mr.icon = "healingTotem";
+	mr.algorithm = "none";
+	mr.faction = "neutral";
+
+	mr.attributes[AttributeEnum::Life] = level * 5 + randomRange(0, 200);
+
+	Item it(mr.generate);
+	it.slot = SlotEnum::Body;
+	it.name = "Totem";
+	it.icon = "totem";
+
+	{
+		Skill sk(mr.generate);
+		sk.name = "Blessed Healing";
+		sk.range[AttributeEnum::Scalar] = randomRange(2.0, 4.0);
+		sk.target.attributes[AttributeEnum::Life][AttributeEnum::Scalar] = level / 2;
+		sk.caster.flags.push_back(SkillPassive);
+		sk.caster.flags.push_back(SkillGroundEffect);
+		it.addOther(sk, 1);
+		it.skills.push_back(std::move(sk));
+	}
+
+	mr.addOther(it, 1);
+	mr.equippedItems.push_back(std::move(it));
+	return mr;
+}
+
 namespace
 {
 	Monster generateHydraImpl(const Generate &generate, uint32 nested)

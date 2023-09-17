@@ -289,6 +289,7 @@ Monster generateButcher(uint32 level);
 Monster generateWitch(uint32 level);
 Monster generateTemplar(uint32 level);
 Monster generateZergling(uint32 level);
+Monster generateHealingTotem(uint32 level);
 Monster generateHydra(uint32 level);
 Monster generateSatyr(uint32 level);
 Monster generateElemental(uint32 level);

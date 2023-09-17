@@ -327,8 +327,7 @@ namespace
 	{
 		const uint32 a = f.level / 2 + 1;
 		const uint32 b = f.width * f.height / 50;
-		const uint32 cnt = min(randomRange(min(a, b), max(a, b)), 40u);
-		CAGE_ASSERT(cnt * 2 < countCells(f, TileEnum::Empty));
+		const uint32 cnt = min(min(randomRange(min(a, b), max(a, b)), 40u), countCells(f, TileEnum::Empty));
 		for (uint32 i = 0; i < cnt; i++)
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
@@ -1530,6 +1529,19 @@ namespace
 					sk.damageType = DamageTypeEnum::Poison;
 					sk.caster.flags.push_back(SkillGroundEffect);
 					f.extras[i].push_back(std::move(sk));
+				}
+			}
+		}
+
+		// healing totems
+		if (f.level > 60 && randomChance() < 0.05)
+		{
+			for (uint32 i = 0; i < f.tiles.size(); i++)
+			{
+				if (f.tiles[i] == TileEnum::Empty && randomChance() < 0.05)
+				{
+					f.tiles[i] = TileEnum::Decoration;
+					f.extras[i].push_back(generateHealingTotem(f.level));
 				}
 			}
 		}
