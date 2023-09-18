@@ -89,21 +89,18 @@ namespace
 
 		Item it(generate);
 		Skill sk(generate);
+		it.slot = SlotEnum::MainHand;
+		it.name = "Claws";
+		it.icon = "claws";
 		sk.targetType = SkillTargetEnum::Character;
 		sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
 		if (generate.level > LevelPoison && randomChance() < 0.5)
 		{
-			it.slot = SlotEnum::Head;
-			it.name = "Teeth";
-			it.icon = "teeth";
 			sk.name = "Bite";
 			sk.damageType = DamageTypeEnum::Poison;
 		}
 		else
 		{
-			it.slot = SlotEnum::MainHand;
-			it.name = "Claws";
-			it.icon = "claws";
 			sk.name = "Scratch";
 			sk.range[AttributeEnum::Scalar] = 1;
 			sk.damageType = DamageTypeEnum::Slash;
@@ -242,9 +239,9 @@ namespace
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
 
 		Item it(generate);
-		it.slot = SlotEnum::Head;
-		it.name = "Teeth";
-		it.icon = "teeth";
+		it.slot = SlotEnum::MainHand;
+		it.name = "Claws";
+		it.icon = "claws";
 
 		{
 			Skill sk(generate);
@@ -338,9 +335,9 @@ namespace
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
 
 		Item it(generate);
-		it.slot = SlotEnum::Body;
-		it.name = "Lingerie";
-		it.icon = "lingerie";
+		it.slot = SlotEnum::MainHand;
+		it.name = "Claws";
+		it.icon = "claws";
 
 		if (generate.level > LevelPoison)
 		{
@@ -441,9 +438,9 @@ namespace
 		mr.attributes[AttributeEnum::PierceResist] = generate.power * 0.4 + 10;
 
 		Item it(generate);
-		it.slot = SlotEnum::Body;
-		it.name = "Tunic";
-		it.icon = "tunic";
+		it.slot = SlotEnum::MainHand;
+		it.name = "Glow";
+		it.icon = "glow";
 
 		{
 			Skill sk(generate);
@@ -478,9 +475,9 @@ namespace
 		mr.attributes[AttributeEnum::ElectricResist] = generate.power * 0.1 + 1;
 
 		Item it(generate);
-		it.slot = SlotEnum::Head;
-		it.name = "Mouth";
-		it.icon = "teeth";
+		it.slot = SlotEnum::MainHand;
+		it.name = "Claws";
+		it.icon = "claws";
 
 		for (AttributeEnum attr : { AttributeEnum::Strength, AttributeEnum::Dexterity, AttributeEnum::Intelligence, AttributeEnum::SlashResist, AttributeEnum::PierceResist })
 		{
@@ -1094,16 +1091,16 @@ Monster generateHealingTotem(uint32 level)
 {
 	Monster mr = Monster(Generate(level, 0));
 	mr.updateName("Healing Totem");
-	mr.icon = "healingTotem";
+	mr.icon = "totem";
 	mr.algorithm = "none";
 	mr.faction = "neutral";
 
 	mr.attributes[AttributeEnum::Life] = level * 5 + randomRange(0, 200);
 
 	Item it(mr.generate);
-	it.slot = SlotEnum::Body;
-	it.name = "Totem";
-	it.icon = "totem";
+	it.slot = SlotEnum::MainHand;
+	it.name = "Glow";
+	it.icon = "glow";
 
 	{
 		Skill sk(mr.generate);
@@ -1134,9 +1131,9 @@ namespace
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
 
 		Item it(generate);
-		it.slot = SlotEnum::Head;
-		it.name = "Head";
-		it.icon = "head";
+		it.slot = SlotEnum::MainHand;
+		it.name = "Claws";
+		it.icon = "claws";
 
 		{
 			Skill sk(generate);
@@ -1217,9 +1214,9 @@ Monster generateSatyr(uint32 level)
 	mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
 
 	Item it(generate);
-	it.slot = SlotEnum::Head;
-	it.name = "Horns";
-	it.icon = "horns";
+	it.slot = SlotEnum::MainHand;
+	it.name = "Claws";
+	it.icon = "claws";
 
 	{
 		Skill sk(generate);
@@ -1264,9 +1261,9 @@ namespace
 		mr.attributes[icon.second] = 1000000;
 
 		Item it(generate);
-		it.slot = SlotEnum::Body;
-		it.name = "Element";
-		it.icon = "element";
+		it.slot = SlotEnum::MainHand;
+		it.name = "Glow";
+		it.icon = "glow";
 
 		{
 			Skill sk(generate);

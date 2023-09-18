@@ -109,11 +109,31 @@ namespace
 		sk.duration[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Lasting"));
 		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 55);
 		{
-			Monster mr(generate);
-			mr.icon = "ballista";
+			Generate g = generate;
+			g.magic = 0;
+			g.ranged = 1;
+			g.defensive = 0;
+			g.support = 0;
+			Monster mr(g);
+			mr.icon = "totem";
 			mr.algorithm = "ballista";
 			mr.faction = "inherited";
-			// todo
+			Item it(g);
+			it.slot = SlotEnum::MainHand;
+			it.name = "Bow";
+			it.icon = "bow";
+			{
+				Skill sk(g);
+				sk.name = "Attack";
+				sk.targetType = SkillTargetEnum::Character;
+				sk.range[AttributeEnum::Scalar] = randomRange(4, 8);
+				sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+				sk.damageType = DamageTypeEnum::Pierce;
+				it.addOther(sk, 1);
+				it.skills.push_back(std::move(sk));
+			}
+			mr.addOther(it, 1);
+			mr.equippedItems.push_back(std::move(it));
 			mr.updateName("Ballista");
 			sk.addOther(mr, 1);
 			sk.target.summons.push_back(std::move(mr));
