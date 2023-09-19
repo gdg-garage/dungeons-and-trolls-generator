@@ -125,6 +125,9 @@ jobs:
         cd build/result/${{ matrix.build-config }}
         ./dntgenerator -s 0 -e 500
         cat dungeon.json | jq ".. | .icon?" | sort -u > icons.txt
+        cat dungeon.json | jq ".. | .decoration? | .icon?" | sort -u > icons_decoration.txt
+        cat dungeon.json | jq ".. | .item? | .icon?" | sort -u > icons_items.txt
+        cat dungeon.json | jq ".. | .monster? | .icon?" | sort -u > icons_monsters.txt
         cat dungeon.json | jq ".. | .algorithm?" | sort -u > algorithms.txt
         cat dungeon.json | jq ".. | .faction?" | sort -u > factions.txt
         cat dungeon.json | jq ".. | .name?" | sort -u > names.txt
@@ -136,6 +139,9 @@ jobs:
         name: dntgenerator
         path: |
           build/result/${{ matrix.build-config }}/icons.txt
+          build/result/${{ matrix.build-config }}/icons_decoration.txt
+          build/result/${{ matrix.build-config }}/icons_items.txt
+          build/result/${{ matrix.build-config }}/icons_monsters.txt
           build/result/${{ matrix.build-config }}/algorithms.txt
           build/result/${{ matrix.build-config }}/factions.txt
           build/result/${{ matrix.build-config }}/names.txt
