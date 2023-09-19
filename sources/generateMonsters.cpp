@@ -91,8 +91,6 @@ namespace
 		mr.faction = "horror";
 
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
-		mr.attributes[AttributeEnum::Mana] = numeric_cast<sint32>((generate.power + randomRange(30, 50)) * generate.magic);
-		mr.attributes[AttributeEnum::Stamina] = numeric_cast<sint32>((generate.power + randomRange(30, 50)) * (1 - generate.magic));
 
 		// gain attributes by simulating equipping items
 		for (SlotEnum slot : { SlotEnum::MainHand, SlotEnum::OffHand, SlotEnum::Head, SlotEnum::Body, SlotEnum::Legs, SlotEnum::Neck })
@@ -117,25 +115,28 @@ namespace
 		mr.attributes[AttributeEnum::ElectricResist] += generate.power * 0.2;
 
 		Item it(generate);
-		Skill sk(generate);
 		it.slot = SlotEnum::MainHand;
 		it.name = "Claws";
 		it.icon = "claws";
-		sk.targetType = SkillTargetEnum::Character;
-		sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
-		if (generate.level > LevelPoison && randomChance() < 0.5)
+
 		{
-			sk.name = "Bite";
-			sk.damageType = DamageTypeEnum::Poison;
+			Skill sk = skillSwordAttack(generate);
+			if (generate.level > LevelPoison && randomChance() < 0.35)
+			{
+				sk.name = "Bite";
+				sk.range.erase(AttributeEnum::Scalar);
+				sk.damageType = DamageTypeEnum::Poison;
+			}
+			else
+			{
+				sk.name = "Scratch";
+				sk.range[AttributeEnum::Scalar] = 1;
+				sk.damageType = DamageTypeEnum::Slash;
+			}
+			sk.cost.clear();
+			it.addOther(sk, 1);
+			it.skills.push_back(std::move(sk));
 		}
-		else
-		{
-			sk.name = "Scratch";
-			sk.range[AttributeEnum::Scalar] = 1;
-			sk.damageType = DamageTypeEnum::Slash;
-		}
-		it.addOther(sk, 1);
-		it.skills.push_back(std::move(sk));
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
@@ -156,6 +157,7 @@ namespace
 		{
 			Skill sk = skillBowAttack(generate);
 			sk.damageType = generate.level > LevelFire && randomChance() < 0.2 ? DamageTypeEnum ::Fire : DamageTypeEnum::Pierce;
+			sk.cost.clear();
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -179,6 +181,7 @@ namespace
 		{
 			Skill sk = skillSwordAttack(generate);
 			sk.radius[AttributeEnum::Scalar] = 2;
+			sk.cost.clear();
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -186,6 +189,7 @@ namespace
 		if (generate.level > LevelKnockback && generate.level > LevelAoe)
 		{
 			Skill sk = skillStomp(generate);
+			sk.cost.clear();
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -209,6 +213,7 @@ namespace
 		{
 			Skill sk = skillPikeAttack(generate);
 			sk.radius[AttributeEnum::Scalar] = 3;
+			sk.cost.clear();
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -262,6 +267,7 @@ namespace
 		if (generate.level > LevelMagic)
 		{
 			Skill sk = skillHeal(generate);
+			sk.cost.clear();
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -284,6 +290,7 @@ namespace
 
 		{
 			Skill sk = skillBowAttack(generate);
+			sk.cost.clear();
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -296,7 +303,6 @@ namespace
 			sk.range[AttributeEnum::Scalar] = 3;
 			sk.range[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Distant")) * 0.05;
 			sk.radius[AttributeEnum::Scalar] = 2;
-			sk.cost[AttributeEnum::Stamina] = 40;
 			sk.target.flags.stun = true;
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
@@ -359,20 +365,10 @@ namespace
 		it.name = "Claws";
 		it.icon = "claws";
 
-		{
-			Skill sk(generate);
-			sk.name = "Scratch";
-			sk.targetType = SkillTargetEnum::Character;
-			sk.range[AttributeEnum::Scalar] = 1;
-			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
-			sk.damageType = DamageTypeEnum::Slash;
-			it.addOther(sk, 1);
-			it.skills.push_back(std::move(sk));
-		}
-
 		if (generate.level > LevelFire && generate.level > LevelAoe)
 		{
 			Skill sk = skillFireball(generate);
+			sk.cost.clear();
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}

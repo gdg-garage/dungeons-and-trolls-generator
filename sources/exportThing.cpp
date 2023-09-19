@@ -153,7 +153,7 @@ namespace
 		switch (slot)
 		{
 			case SlotEnum::None:
-				return "none";
+				CAGE_THROW_ERROR(Exception, "item slot cannot be none");
 			case SlotEnum::MainHand:
 				return "mainHand";
 			case SlotEnum::OffHand:

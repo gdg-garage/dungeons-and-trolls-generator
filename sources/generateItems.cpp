@@ -726,6 +726,7 @@ Item generatePrimitiveItem(SlotEnum slot)
 			{
 				Skill sk(item.generate);
 				sk.targetType = SkillTargetEnum::Character;
+				sk.range[AttributeEnum::Scalar] = 1;
 				sk.damageAmount[AttributeEnum::Scalar] = randomRange(0.8, 1.2) * 2;
 				sk.damageType = DamageTypeEnum::Pierce;
 				sk.cost[AttributeEnum::Stamina] = randomRange(0.8, 1.2) * 4;
