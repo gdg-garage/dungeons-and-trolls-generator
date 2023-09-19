@@ -138,7 +138,6 @@ enum class SkillTargetEnum : uint8
 	None,
 	Position,
 	Character,
-	Item,
 };
 
 using AttributesValuesList = std::map<AttributeEnum, sint32>;
@@ -146,10 +145,24 @@ using AttributesEquationFactors = std::map<AttributeEnum, Real>;
 using SkillAttributes = std::map<AttributeEnum, AttributesEquationFactors>;
 using SkillFlag = StringPointer;
 
+struct SkillFlags
+{
+	bool requiresAlone = false; // requires that the caster is alone (no other creature (player or monster) are visible in 10 range)
+	bool requiresLineOfSight = true; // requires the target position be visible from the caster position
+	bool allowTargetSelf = false; // allows skills that target a character to target oneself
+	bool movement = false; // moves the caster to the target position, or the target to the caster position
+	bool knockback = false; // moves the caster/target one tile away from the other
+	bool stun = false; // prevents the caster/target from performing any actions for one tick, and grants immunity to stun for the following tick
+	bool groundEffect = false; // creates ground effect at caster/target position, which applies the effects of the skill
+	bool passive = false; // the effects of the skill are automatically applied every tick, assuming the cost can be paid; multiple passive skills are allowed
+
+	auto operator<=>(const SkillFlags &) const = default;
+};
+
 struct SkillEffects
 {
 	SkillAttributes attributes;
-	std::vector<SkillFlag> flags;
+	SkillFlags flags;
 	std::vector<Variant> summons;
 };
 
@@ -302,15 +315,6 @@ void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, con
 
 template<class... T>
 constexpr bool always_false = false;
-
-constexpr SkillFlag SkillAlone = "alone"; // requires that the caster is alone (no other creature (player or monster) are visible in 10 range)
-constexpr SkillFlag SkillNoLineOfSight = "noLineOfSight"; // does not require the target position be visible from the caster position
-constexpr SkillFlag SkillAllowSelf = "allowSelf"; // allows skills that target a character to target oneself
-constexpr SkillFlag SkillMoves = "moves"; // moves the caster to the target position, or the target to the caster position
-constexpr SkillFlag SkillKnockback = "knockback"; // moves the caster/target one tile away from the other
-constexpr SkillFlag SkillStun = "stun"; // prevents the caster/target from performing any actions for one tick, and grants immunity to stun for the following tick
-constexpr SkillFlag SkillGroundEffect = "groundEffect"; // creates ground effect at caster/target position, which applies the effects of the skill
-constexpr SkillFlag SkillPassive = "passive"; // the effects of the skill are automatically applied every tick, assuming the cost can be paid; multiple passive skills are allowed
 
 constexpr float H = 0.5;
 constexpr uint32 Nothing = 0;

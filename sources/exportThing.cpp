@@ -128,8 +128,8 @@ namespace
 				return "position";
 			case SkillTargetEnum::Character:
 				return "character";
-			case SkillTargetEnum::Item:
-				return "item";
+			//case SkillTargetEnum::Item:
+			//	return "item";
 			default:
 				CAGE_THROW_CRITICAL(Exception, "unknown skill target enum");
 		}
@@ -179,13 +179,21 @@ namespace
 		if (!effects.attributes.empty())
 			json += std::string() + "\"attributes\":" + skillAttributesJson(effects.attributes) + ",\n";
 
-		if (!effects.flags.empty())
+		if (effects.flags != SkillFlags())
 		{
-			json += "\"flags\":[\n";
-			for (const auto &flag : effects.flags)
-				json += std::string() + "\"" + (const char *)flag + "\",\n";
+			json += "\"flags\":{\n";
+#define FLAG(F) json += std::string() + "\"" + #F + "\":" + (Stringizer() + effects.flags.F).value.c_str() + ",";
+			FLAG(requiresAlone);
+			FLAG(requiresLineOfSight);
+			FLAG(allowTargetSelf);
+			FLAG(movement);
+			FLAG(knockback);
+			FLAG(stun);
+			FLAG(groundEffect);
+			FLAG(passive);
+#undef FLAG
 			removeLastComma(json);
-			json += "],\n";
+			json += "},\n";
 		}
 
 		if (!effects.summons.empty())
@@ -291,13 +299,7 @@ namespace
 
 	bool isPassive(const Skill &sk)
 	{
-		for (const auto &it : sk.caster.flags)
-			if (it == SkillPassive)
-				return true;
-		for (const auto &it : sk.target.flags)
-			if (it == SkillPassive)
-				return true;
-		return false;
+		return sk.caster.flags.passive || sk.target.flags.passive;
 	}
 
 	std::string monsterStatistics(const Monster &monster)

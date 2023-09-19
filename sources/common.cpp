@@ -114,7 +114,16 @@ void Generate::randomize()
 		if (level < minLevel)
 			return 0;
 		const Real tg = randomChance() < probability ? 1 : 0;
-		return randomRange(min(0.5, tg), max(0.5, tg));
+		Real a = 0.5;
+		Real b = tg;
+		if (b < a)
+			std::swap(a, b);
+		a = randomRange(a, b);
+		b = tg;
+		if (b < a)
+			std::swap(a, b);
+		a = randomRange(a, b);
+		return a;
 	};
 	magic = gen(15, 0.35);
 	ranged = gen(6, 0.5);

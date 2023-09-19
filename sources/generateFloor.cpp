@@ -397,7 +397,7 @@ namespace
 				sk.duration[AttributeEnum::Scalar] = 1000000;
 				sk.damageAmount[AttributeEnum::Scalar] = randomRange(5.0, 20.0);
 				sk.damageType = DamageTypeEnum::Fire;
-				sk.caster.flags.push_back(SkillGroundEffect);
+				sk.caster.flags.groundEffect = true;
 				f.extra(x, y).push_back(std::move(sk));
 			}
 			switch (randomRange(0u, 5u))
@@ -511,8 +511,8 @@ namespace
 						Skill sk({});
 						sk.name = "Moat";
 						sk.duration[AttributeEnum::Scalar] = 1000000;
-						sk.caster.flags.push_back(SkillGroundEffect);
-						sk.target.flags.push_back(SkillStun);
+						sk.caster.flags.groundEffect = true;
+						sk.target.flags.stun = true;
 						f.extra(p).push_back(std::move(sk));
 						break;
 					}
@@ -1276,7 +1276,7 @@ namespace
 			generateSingleRoomLayout(f);
 		else
 		{
-			switch (randomRange(0u, 10u))
+			switch (randomRange(0u, 12u))
 			{
 				case 0:
 					generateDungeonLayout(f);
@@ -1506,7 +1506,7 @@ namespace
 					sk.duration[AttributeEnum::Scalar] = 1000000;
 					sk.damageAmount[AttributeEnum::Scalar] = randomRange(10.0, 30.0);
 					sk.damageType = DamageTypeEnum::Pierce;
-					sk.caster.flags.push_back(SkillGroundEffect);
+					sk.caster.flags.groundEffect = true;
 					f.extras[i].push_back(std::move(sk));
 				}
 			}
@@ -1527,7 +1527,7 @@ namespace
 					sk.duration[AttributeEnum::Scalar] = 1000000;
 					sk.damageAmount[AttributeEnum::Scalar] = randomRange(3.0, 15.0);
 					sk.damageType = DamageTypeEnum::Poison;
-					sk.caster.flags.push_back(SkillGroundEffect);
+					sk.caster.flags.groundEffect = true;
 					f.extras[i].push_back(std::move(sk));
 				}
 			}
