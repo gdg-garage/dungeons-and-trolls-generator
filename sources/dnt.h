@@ -147,7 +147,7 @@ using SkillFlag = StringPointer;
 
 struct SkillFlags
 {
-	bool requiresAlone = false; // requires that the caster is alone (no other creature (player or monster) are visible in 10 range)
+	bool requiresAlone = false; // requires that the caster is alone (no other creature (player or monster) are visible in 5 range), furthermore the skill is canceled if you take any damage while using it
 	bool requiresLineOfSight = true; // requires the target position be visible from the caster position
 	bool allowTargetSelf = false; // allows skills that target a character to target oneself
 	bool movement = false; // moves the caster to the target position, or the target to the caster position

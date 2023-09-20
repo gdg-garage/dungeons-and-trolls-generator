@@ -27,18 +27,19 @@ namespace
 		std::erase_if(mr.attributes, [](const auto &it) { return it.second <= 0; });
 	}
 
-	void spendAttributesPoints(Monster &mr)
+	uint32 availablePointsToSpend(Monster &mr)
 	{
-		const uint32 available = [&]() -> uint32
-		{
-			sint32 spent = 0;
-			for (const auto &it : mr.attributes)
-				if (it.first <= AttributeEnum::Constitution)
-					spent += it.second;
-			if (mr.generate.power > spent)
-				return mr.generate.power - spent;
-			return 0;
-		}();
+		sint32 spent = 0;
+		for (const auto &it : mr.attributes)
+			if (it.first <= AttributeEnum::Constitution)
+				spent += it.second;
+		if (mr.generate.power > spent)
+			return mr.generate.power - spent;
+		return 0;
+	}
+
+	void spendAttributesPoints(Monster &mr, uint32 available)
+	{
 		if (available == 0)
 			return;
 
@@ -70,13 +71,18 @@ namespace
 		Real sum = 0;
 		for (const auto &w : weights)
 			sum += w.second;
-		if (sum < 1)
+		if (sum < 1e-4)
 			return; // the monster does not use any attributes
 
 		for (const auto &w : weights)
 			mr.attributes[w.first] += numeric_cast<uint32>(available * w.second / sum);
 
 		std::erase_if(mr.attributes, [](const auto &it) { return it.second <= 0; });
+	}
+
+	void spendAttributesPoints(Monster &mr)
+	{
+		spendAttributesPoints(mr, availablePointsToSpend(mr));
 	}
 }
 
@@ -121,6 +127,7 @@ namespace
 
 		{
 			Skill sk = skillSwordAttack(generate);
+			sk.damageAmount[AttributeEnum::Strength] *= 0.7;
 			if (generate.level > LevelPoison && randomChance() < 0.35)
 			{
 				sk.name = "Bite";
@@ -140,6 +147,8 @@ namespace
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 
@@ -164,6 +173,8 @@ namespace
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 
@@ -180,7 +191,7 @@ namespace
 
 		{
 			Skill sk = skillSwordAttack(generate);
-			sk.radius[AttributeEnum::Scalar] = 2;
+			sk.range[AttributeEnum::Scalar] = 2;
 			sk.cost.clear();
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
@@ -196,6 +207,8 @@ namespace
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 
@@ -212,7 +225,7 @@ namespace
 
 		{
 			Skill sk = skillPikeAttack(generate);
-			sk.radius[AttributeEnum::Scalar] = 3;
+			sk.range[AttributeEnum::Scalar] = 3;
 			sk.cost.clear();
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
@@ -221,7 +234,7 @@ namespace
 		{
 			Skill sk(generate);
 			sk.name = "Regenerate";
-			sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Scalar] = generate.power * 0.15 + 1;
+			sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Quick")) * 0.3;
 			sk.caster.flags.passive = true;
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
@@ -229,6 +242,8 @@ namespace
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 
@@ -248,8 +263,8 @@ namespace
 			sk.name = "Bite";
 			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Scalar] = 1;
-			sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Scalar] = generate.power * 0.1 + 1;
-			sk.target.attributes[AttributeEnum::Life][AttributeEnum::Scalar] = generate.power * -0.05 - 5; // bypasses resistances
+			sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Sucking")) * 0.3;
+			sk.target.attributes[AttributeEnum::Life][AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Deep")) * 0.7; // bypasses resistances
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -258,7 +273,8 @@ namespace
 			Skill sk(generate);
 			sk.name = "Jump";
 			sk.targetType = SkillTargetEnum::Position;
-			sk.range[AttributeEnum::Scalar] = 4;
+			sk.range[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Distant")) * 0.1;
+			sk.range[AttributeEnum::Scalar] = 3;
 			sk.caster.flags.movement = true;
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
@@ -274,6 +290,8 @@ namespace
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 
@@ -304,12 +322,15 @@ namespace
 			sk.range[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Distant")) * 0.05;
 			sk.radius[AttributeEnum::Scalar] = 2;
 			sk.target.flags.stun = true;
+			sk.addPower(1);
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 
@@ -324,33 +345,45 @@ namespace
 		it.name = "Claws";
 		it.icon = "claws";
 
+		{
+			Skill sk = skillSwordAttack(generate);
+			sk.name = "Scratch";
+			sk.range[AttributeEnum::Scalar] = 1;
+			sk.cost.clear();
+			it.addOther(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		{
+			Skill sk(generate);
+			sk.name = "Song";
+			sk.targetType = SkillTargetEnum::Character;
+			sk.range[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Luring")) * 0.1;
+			sk.range[AttributeEnum::Scalar] = 4;
+			sk.target.flags.movement = true;
+			it.addOther(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
 		if (generate.level > LevelPoison)
 		{
 			Skill sk(generate);
 			sk.name = "Kiss";
 			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Scalar] = 1;
-			sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+			sk.damageAmount[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Wet")) * 0.7;
 			sk.damageType = DamageTypeEnum::Poison;
 			if (generate.level > LevelDuration)
-				sk.duration[AttributeEnum::Scalar] = 3;
+				sk.duration[AttributeEnum::Scalar] = interpolate(1.0, 4.0, sk.addPower(0.8, "Lasting"));
 			sk.caster.flags.movement = true;
-			it.addOther(sk, 1);
-			it.skills.push_back(std::move(sk));
-		}
-
-		{
-			Skill sk(generate);
-			sk.name = "Seduce";
-			sk.targetType = SkillTargetEnum::Character;
-			sk.range[AttributeEnum::Scalar] = 7;
-			sk.target.flags.movement = true;
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 
@@ -365,6 +398,13 @@ namespace
 		it.name = "Claws";
 		it.icon = "claws";
 
+		{
+			Skill sk = skillSwordAttack(generate);
+			sk.cost.clear();
+			it.addOther(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
 		if (generate.level > LevelFire && generate.level > LevelAoe)
 		{
 			Skill sk = skillFireball(generate);
@@ -375,6 +415,8 @@ namespace
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 
@@ -393,20 +435,27 @@ namespace
 			Skill sk(generate);
 			sk.name = "Terror";
 			sk.targetType = SkillTargetEnum::Character;
-			sk.radius[AttributeEnum::Scalar] = 1;
-			if (generate.level > LevelElectric)
-			{
-				sk.damageAmount[AttributeEnum::Scalar] = generate.power * 0.1 + 5;
+			sk.range[AttributeEnum::Scalar] = 1;
+			sk.damageAmount[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Shocking")) * 0.8;
+			if (generate.level > LevelElectric && randomChance() < 0.6)
 				sk.damageType = DamageTypeEnum::Electric;
-			}
+			else if (generate.level > LevelFire)
+				sk.damageType = DamageTypeEnum::Fire;
+			else
+				sk.damageType = DamageTypeEnum::Pierce;
 			if (generate.level > LevelStun)
+			{
 				sk.target.flags.stun = true;
+				sk.addPower(1, "Stunning");
+			}
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 
@@ -437,6 +486,8 @@ namespace
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 
@@ -468,6 +519,8 @@ namespace
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 
@@ -580,7 +633,6 @@ namespace
 
 		matchAttributesRequirements(mr);
 		spendAttributesPoints(mr);
-
 		return mr;
 	}
 

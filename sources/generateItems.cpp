@@ -35,7 +35,7 @@ namespace
 	void makeBoost(Item &item)
 	{
 		Candidates<void (*)(Item &)> candidates(item.generate);
-		candidates.randomness = 0.7;
+		candidates.randomness = 1;
 
 		candidates.add(0, 0, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Strength>);
 		candidates.add(0, 1, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Dexterity>);
@@ -201,9 +201,9 @@ Skill skillBowAttack(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
-	sk.range[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Accurate")) * 0.1;
+	sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Accurate")) * 0.1;
 	sk.range[AttributeEnum::Scalar] = 4;
-	sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Piercing")) * 0.5;
+	sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Piercing")) * 0.5;
 	sk.damageType = DamageTypeEnum::Pierce;
 	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
 	sk.updateName("Attack");
