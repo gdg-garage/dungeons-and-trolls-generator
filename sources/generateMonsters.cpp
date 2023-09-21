@@ -49,19 +49,19 @@ namespace
 			for (const Skill &sk : it.skills)
 			{
 				for (const auto &a : sk.range)
-					weights[a.first] += a.second;
+					weights[a.first] += max(a.second, 0);
 				for (const auto &a : sk.radius)
-					weights[a.first] += a.second;
+					weights[a.first] += max(a.second, 0);
 				for (const auto &a : sk.duration)
-					weights[a.first] += a.second;
+					weights[a.first] += max(a.second, 0);
 				for (const auto &a : sk.damageAmount)
-					weights[a.first] += a.second;
+					weights[a.first] += max(a.second, 0);
 				for (const auto &a : sk.caster.attributes)
 					for (const auto &b : a.second)
-						weights[b.first] += b.second;
+						weights[b.first] += max(b.second, 0);
 				for (const auto &a : sk.target.attributes)
 					for (const auto &b : a.second)
-						weights[b.first] += abs(b.second);
+						weights[b.first] += max(b.second, 0);
 			}
 		}
 
@@ -475,11 +475,11 @@ namespace
 			Skill sk(generate);
 			sk.name = "Scream";
 			sk.targetType = SkillTargetEnum::Character;
-			sk.range[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(0.7, "Distant")) * 0.1;
+			sk.range[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(0.7, "Deafening")) * 0.1;
 			sk.range[AttributeEnum::Scalar] = 4;
 			if (generate.level > LevelDuration)
 				sk.duration[AttributeEnum::Scalar] = interpolate(3.0, 6.0, sk.addPower(0.8, "Lasting"));
-			sk.target.attributes[attr][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Cripling")) * -0.15;
+			sk.target.attributes[attr][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Crippling")) * -0.15;
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}

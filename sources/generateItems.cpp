@@ -35,6 +35,7 @@ namespace
 	void makeBoost(Item &item)
 	{
 		Candidates<void (*)(Item &)> candidates(item.generate);
+		candidates.slotMismatchPenalty = 0.5;
 		candidates.randomness = 1;
 
 		candidates.add(0, 0, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Strength>);
@@ -85,6 +86,8 @@ namespace
 	void makeRequirement(Item &item)
 	{
 		Candidates<void (*)(Item &)> candidates(item.generate);
+		candidates.slotMismatchPenalty = 0.5;
+		candidates.randomness = 0.7;
 
 		candidates.add(0, 0, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Strength>);
 		candidates.add(0, 1, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Dexterity>);
