@@ -57,8 +57,8 @@ namespace
 				return "mana";
 			case AttributeEnum::Stamina:
 				return "stamina";
-			case AttributeEnum::Scalar:
-				return "scalar";
+			case AttributeEnum::Constant:
+				return "constant";
 			default:
 				CAGE_THROW_CRITICAL(Exception, "unknown attribute enum");
 		}
@@ -85,7 +85,7 @@ namespace
 	{
 		Real sum = 0;
 		for (const auto &it : factors)
-			sum += it.second * (it.first == AttributeEnum::Scalar ? 1 : attr.count(it.first) ? attr.at(it.first) : 0);
+			sum += it.second * (it.first == AttributeEnum::Constant ? 1 : attr.count(it.first) ? attr.at(it.first) : 0);
 		return (Stringizer() + sum).value.c_str();
 	}
 
@@ -316,8 +316,8 @@ namespace
 			for (const auto &sk : it.skills)
 				if (isPassive(sk))
 					for (const auto &at : sk.caster.attributes)
-						if (at.second.count(AttributeEnum::Scalar))
-							totalAttributes[at.first] += numeric_cast<sint32>(at.second.at(AttributeEnum::Scalar));
+						if (at.second.count(AttributeEnum::Constant))
+							totalAttributes[at.first] += numeric_cast<sint32>(at.second.at(AttributeEnum::Constant));
 		}
 		sint32 attrsFromItems = 0, attrsFromLevels = 0;
 		for (const auto &it : totalAttributes)

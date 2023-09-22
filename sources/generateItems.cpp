@@ -24,7 +24,7 @@ namespace
 			"Arcane",
 			"Vigorous",
 		};
-		static_assert(sizeof(names) / sizeof(names[0]) == (uint32)AttributeEnum::Scalar);
+		static_assert(sizeof(names) / sizeof(names[0]) == (uint32)AttributeEnum::Constant);
 
 		const Real a = item.generate.power * 0.1 + 5;
 		const Real r = a * interpolate(0.8, 1.2, item.addPower(1, names[(uint32)Attr]));
@@ -164,7 +164,7 @@ namespace
 			Skill sk(g);
 			const Real mult = interpolate(1.2, 1.5, sk.addPower(1, "Celestial"));
 			for (const auto &it : item.attributes)
-				sk.caster.attributes[it.first][AttributeEnum::Scalar] = it.second * mult;
+				sk.caster.attributes[it.first][AttributeEnum::Constant] = it.second * mult;
 			sk.caster.flags.passive = true;
 			sk.updateName("Ether");
 			item.addOther(sk, 0.5);
@@ -179,7 +179,7 @@ Skill skillSwordAttack(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
-	sk.range[AttributeEnum::Scalar] = 1;
+	sk.range[AttributeEnum::Constant] = 1;
 	sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Strong"));
 	sk.damageType = DamageTypeEnum::Slash;
 	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
@@ -191,7 +191,7 @@ Skill skillPikeAttack(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
-	sk.range[AttributeEnum::Scalar] = 2;
+	sk.range[AttributeEnum::Constant] = 2;
 	sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Stout")) * 0.5;
 	sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Piercing")) * 0.5;
 	sk.damageType = DamageTypeEnum::Pierce;
@@ -205,7 +205,7 @@ Skill skillBowAttack(const Generate &generate)
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
 	sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Accurate")) * 0.1;
-	sk.range[AttributeEnum::Scalar] = 4;
+	sk.range[AttributeEnum::Constant] = 4;
 	sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Piercing")) * 0.5;
 	sk.damageType = DamageTypeEnum::Pierce;
 	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
@@ -256,7 +256,7 @@ namespace
 
 		{
 			Skill sk(generate);
-			sk.radius[AttributeEnum::Scalar] = interpolate(1.5, 3.0, sk.addPower(1, "Wide"));
+			sk.radius[AttributeEnum::Constant] = interpolate(1.5, 3.0, sk.addPower(1, "Wide"));
 			sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Strong")) * 0.3;
 			sk.damageType = DamageTypeEnum::Slash;
 			sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
@@ -313,7 +313,7 @@ namespace
 		{
 			Skill sk(generate);
 			sk.targetType = SkillTargetEnum::Character;
-			sk.range[AttributeEnum::Scalar] = 1;
+			sk.range[AttributeEnum::Constant] = 1;
 			sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Surprise")) * 0.5;
 			sk.damageType = DamageTypeEnum::Slash;
 			sk.cost[AttributeEnum::Stamina] = makeCost(sk, 7);
@@ -546,7 +546,7 @@ namespace
 			Skill sk(generate);
 			sk.targetType = SkillTargetEnum::Position;
 			sk.range[AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Enduring")) * 0.05;
-			sk.range[AttributeEnum::Scalar] = 2;
+			sk.range[AttributeEnum::Constant] = 2;
 			sk.cost[AttributeEnum::Stamina] = makeCost(sk, 5);
 			sk.updateName("Walk");
 			item.addOther(sk, 0.6);
@@ -558,7 +558,7 @@ namespace
 			sk.targetType = SkillTargetEnum::Position;
 			sk.range[AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Enduring")) * 0.03;
 			sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Fast")) * 0.03;
-			sk.range[AttributeEnum::Scalar] = 3;
+			sk.range[AttributeEnum::Constant] = 3;
 			sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
 			sk.updateName("Run");
 			item.addOther(sk, 0.8);
@@ -707,7 +707,7 @@ Item generatePrimitiveItem(SlotEnum slot)
 			item.attributes[randomChance() < 0.5 ? AttributeEnum::Strength : AttributeEnum::Constitution] = randomRange(3, 6);
 			{
 				Skill sk(item.generate);
-				sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Scalar] = randomRange(0.8, 1.2) * 5;
+				sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constant] = randomRange(0.8, 1.2) * 5;
 				sk.caster.flags.requiresAlone = true;
 				sk.updateName("Rest");
 				item.skills.push_back(std::move(sk));
@@ -729,8 +729,8 @@ Item generatePrimitiveItem(SlotEnum slot)
 			{
 				Skill sk(item.generate);
 				sk.targetType = SkillTargetEnum::Character;
-				sk.range[AttributeEnum::Scalar] = 1;
-				sk.damageAmount[AttributeEnum::Scalar] = randomRange(0.8, 1.2) * 2;
+				sk.range[AttributeEnum::Constant] = 1;
+				sk.damageAmount[AttributeEnum::Constant] = randomRange(0.8, 1.2) * 2;
 				sk.damageType = DamageTypeEnum::Pierce;
 				sk.cost[AttributeEnum::Stamina] = randomRange(0.8, 1.2) * 4;
 				sk.updateName("Poke");
@@ -764,8 +764,8 @@ Item generateSprayCan()
 	{
 		Skill sk(item.generate);
 		sk.targetType = SkillTargetEnum::Position;
-		sk.range[AttributeEnum::Scalar] = 1;
-		sk.duration[AttributeEnum::Scalar] = 120;
+		sk.range[AttributeEnum::Constant] = 1;
+		sk.duration[AttributeEnum::Constant] = 120;
 		sk.target.summons.push_back(Decoration{ "sprayPaint", std::string(1, c) });
 		sk.updateName("Spray");
 		item.skills.push_back(std::move(sk));

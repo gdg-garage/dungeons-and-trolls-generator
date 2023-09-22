@@ -120,7 +120,7 @@ enum class AttributeEnum : uint8
 	Mana,
 	Stamina,
 	// other
-	Scalar,
+	Constant,
 };
 
 enum class DamageTypeEnum : uint8

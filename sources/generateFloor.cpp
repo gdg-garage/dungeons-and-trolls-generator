@@ -394,8 +394,8 @@ namespace
 				f.extra(x, y).push_back(Decoration{ "lava" });
 				Skill sk({});
 				sk.name = "Lava";
-				sk.duration[AttributeEnum::Scalar] = 1000000;
-				sk.damageAmount[AttributeEnum::Scalar] = randomRange(5.0, 20.0);
+				sk.duration[AttributeEnum::Constant] = 1000000;
+				sk.damageAmount[AttributeEnum::Constant] = randomRange(5.0, 20.0);
 				sk.damageType = DamageTypeEnum::Fire;
 				sk.caster.flags.groundEffect = true;
 				f.extra(x, y).push_back(std::move(sk));
@@ -510,7 +510,7 @@ namespace
 						f.extra(p).push_back(Decoration{ "moat" });
 						Skill sk({});
 						sk.name = "Moat";
-						sk.duration[AttributeEnum::Scalar] = 1000000;
+						sk.duration[AttributeEnum::Constant] = 1000000;
 						sk.caster.flags.groundEffect = true;
 						sk.target.flags.stun = true;
 						f.extra(p).push_back(std::move(sk));
@@ -1503,8 +1503,8 @@ namespace
 					f.extras[i].push_back(Decoration{ "spikesTrap" });
 					Skill sk({});
 					sk.name = "Spikes";
-					sk.duration[AttributeEnum::Scalar] = 1000000;
-					sk.damageAmount[AttributeEnum::Scalar] = randomRange(10.0, 30.0);
+					sk.duration[AttributeEnum::Constant] = 1000000;
+					sk.damageAmount[AttributeEnum::Constant] = randomRange(10.0, 30.0);
 					sk.damageType = DamageTypeEnum::Pierce;
 					sk.caster.flags.groundEffect = true;
 					f.extras[i].push_back(std::move(sk));
@@ -1523,9 +1523,9 @@ namespace
 					f.extras[i].push_back(Decoration{ "rottenPile" });
 					Skill sk({});
 					sk.name = "Rot";
-					sk.radius[AttributeEnum::Scalar] = randomRange(1.0, 4.0);
-					sk.duration[AttributeEnum::Scalar] = 1000000;
-					sk.damageAmount[AttributeEnum::Scalar] = randomRange(3.0, 15.0);
+					sk.radius[AttributeEnum::Constant] = randomRange(1.0, 4.0);
+					sk.duration[AttributeEnum::Constant] = 1000000;
+					sk.damageAmount[AttributeEnum::Constant] = randomRange(3.0, 15.0);
 					sk.damageType = DamageTypeEnum::Poison;
 					sk.caster.flags.groundEffect = true;
 					f.extras[i].push_back(std::move(sk));
