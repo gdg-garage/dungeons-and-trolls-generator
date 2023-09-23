@@ -10,6 +10,7 @@ Skill skillPikeAttack(const Generate &generate);
 Skill skillBowAttack(const Generate &generate);
 Skill skillStomp(const Generate &generate);
 Skill skillFireball(const Generate &generate);
+Skill skillMeteor(const Generate &generate);
 Skill skillHeal(const Generate &generate);
 
 namespace
@@ -84,6 +85,13 @@ namespace
 	{
 		spendAttributesPoints(mr, availablePointsToSpend(mr));
 	}
+
+	void setupResistances(Monster &mr, Real scale)
+	{
+		for (AttributeEnum attr : { AttributeEnum::SlashResist, AttributeEnum::PierceResist, AttributeEnum::FireResist, AttributeEnum::PoisonResist, AttributeEnum::ElectricResist })
+			if (randomChance() < 0.8)
+				mr.attributes[attr] += numeric_cast<uint32>(mr.generate.power * scale * randomRange(0.8, 1.2));
+	}
 }
 
 namespace
@@ -97,6 +105,7 @@ namespace
 		mr.faction = "horror";
 
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+		setupResistances(mr, 0.1);
 
 		// gain attributes by simulating equipping items
 		for (SlotEnum slot : { SlotEnum::MainHand, SlotEnum::OffHand, SlotEnum::Head, SlotEnum::Body, SlotEnum::Legs, SlotEnum::Neck })
@@ -197,7 +206,7 @@ namespace
 			it.skills.push_back(std::move(sk));
 		}
 
-		if (generate.level > LevelKnockback && generate.level > LevelAoe)
+		if (generate.level > max(LevelKnockback, LevelAoe))
 		{
 			Skill sk = skillStomp(generate);
 			sk.cost.clear();
@@ -313,7 +322,7 @@ namespace
 			it.skills.push_back(std::move(sk));
 		}
 
-		if (generate.level > LevelStun && generate.level > LevelAoe)
+		if (generate.level > max(LevelStun, LevelAoe))
 		{
 			Skill sk(generate);
 			sk.name = "Petrify";
@@ -405,9 +414,17 @@ namespace
 			it.skills.push_back(std::move(sk));
 		}
 
-		if (generate.level > LevelFire && generate.level > LevelAoe)
+		if (generate.level > LevelFire)
 		{
 			Skill sk = skillFireball(generate);
+			sk.cost.clear();
+			it.addOther(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		if (generate.level > max(LevelFire, max(LevelAoe, LevelDuration)))
+		{
+			Skill sk = skillMeteor(generate);
 			sk.cost.clear();
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
@@ -613,6 +630,7 @@ namespace
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
 		mr.attributes[AttributeEnum::Mana] = numeric_cast<sint32>((generate.power + randomRange(30, 50)) * generate.magic);
 		mr.attributes[AttributeEnum::Stamina] = numeric_cast<sint32>((generate.power + randomRange(30, 50)) * (1 - generate.magic));
+		setupResistances(mr, 0.2);
 
 		const auto &equip = [&](SlotEnum slot, Real weight = 1)
 		{
@@ -992,7 +1010,7 @@ Monster generateWitch(uint32 level)
 	g.defensive = 0;
 	g.support = randomChance();
 
-	Monster mr = generateMonsterImpl(g, g.support < 0.5 ? &generateWarlock : &generateOccultist);
+	Monster mr = generateMonsterImpl(g, &generateOutlaw);
 	mr.updateName("Witch");
 	mr.icon = "witch";
 	mr.algorithm = "witch";
@@ -1027,13 +1045,8 @@ namespace
 {
 	Monster generateZerglingImpl(const Generate &generate)
 	{
-		Monster mr(generate);
-		mr.updateName("Zergling");
-		mr.icon = "zergling";
-		mr.algorithm = "zergling";
+		Monster mr = generateHorrorBase(generate, "Zergling");
 		mr.faction = "monster";
-
-		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
 
 		Item it(generate);
 		it.slot = SlotEnum::MainHand;
@@ -1041,12 +1054,10 @@ namespace
 		it.icon = "claws";
 
 		{
-			Skill sk(generate);
+			Skill sk = skillSwordAttack(generate);
 			sk.name = "Scratch";
-			sk.targetType = SkillTargetEnum::Character;
 			sk.range[AttributeEnum::Constant] = 1;
-			sk.damageAmount[AttributeEnum::Constant] = generate.power * 0.1 + 5;
-			sk.damageType = DamageTypeEnum::Slash;
+			sk.cost.clear();
 			sk.caster.flags.movement = true;
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
@@ -1054,9 +1065,9 @@ namespace
 
 		{
 			Skill sk(generate);
-			sk.name = "Jump";
-			sk.targetType = SkillTargetEnum::Position;
-			sk.range[AttributeEnum::Constant] = 2;
+			sk.name = "Charge";
+			sk.targetType = SkillTargetEnum::Character;
+			sk.range[AttributeEnum::Constant] = 4;
 			sk.caster.flags.movement = true;
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
@@ -1064,6 +1075,8 @@ namespace
 
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 }
@@ -1096,8 +1109,9 @@ Monster generateHealingTotem(uint32 level)
 	{
 		Skill sk(mr.generate);
 		sk.name = "Blessed Healing";
-		sk.range[AttributeEnum::Constant] = randomRange(2.0, 4.0);
-		sk.target.attributes[AttributeEnum::Life][AttributeEnum::Constant] = level / 2;
+		sk.radius[AttributeEnum::Constant] = randomRange(2.0, 4.0);
+		sk.duration[AttributeEnum::Constant] = randomRange(1.0, 2.0);
+		sk.target.attributes[AttributeEnum::Life][AttributeEnum::Constant] = level / 4;
 		sk.caster.flags.passive = true;
 		sk.caster.flags.groundEffect = true;
 		it.addOther(sk, 1);
@@ -1113,13 +1127,8 @@ namespace
 {
 	Monster generateHydraImpl(const Generate &generate, uint32 nested)
 	{
-		Monster mr(generate);
-		mr.updateName("Hydra");
-		mr.icon = "hydra";
-		mr.algorithm = "hydra";
+		Monster mr = generateHorrorBase(generate, "Hydra");
 		mr.faction = "monster";
-
-		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
 
 		Item it(generate);
 		it.slot = SlotEnum::MainHand;
@@ -1133,14 +1142,14 @@ namespace
 			{
 				sk.name = "Smash";
 				sk.range[AttributeEnum::Constant] = 3;
-				sk.damageAmount[AttributeEnum::Constant] = generate.power * 0.10 + 5;
+				sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Accurate"));
 				sk.damageType = DamageTypeEnum::Slash;
 			}
 			else
 			{
 				sk.name = "Bite";
 				sk.range[AttributeEnum::Constant] = 1;
-				sk.damageAmount[AttributeEnum::Constant] = generate.power * 0.15 + 5;
+				sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Strong"));
 				sk.damageType = DamageTypeEnum::Pierce;
 			}
 			it.addOther(sk, 1);
@@ -1151,7 +1160,7 @@ namespace
 			Skill sk(generate);
 			sk.name = "Jump";
 			sk.targetType = SkillTargetEnum::Position;
-			sk.range[AttributeEnum::Constant] = 3;
+			sk.range[AttributeEnum::Constant] = 3 + nested;
 			sk.caster.flags.movement = true;
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
@@ -1169,6 +1178,7 @@ namespace
 			mr.onDeath.push_back(generateHydraImpl(g, nested + 1));
 		}
 
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 
@@ -1229,10 +1239,7 @@ namespace
 {
 	Monster generateElementalImpl(const Generate &generate)
 	{
-		Monster mr(generate);
-		mr.updateName("Elemental");
-		mr.icon = "elemental";
-		mr.algorithm = "elemental";
+		Monster mr = generateHorrorBase(generate, "Elemental");
 		mr.faction = "monster";
 
 		const auto icon = [&]()
@@ -1248,13 +1255,28 @@ namespace
 			return cns[randomRange(std::size_t(), cns.size())];
 		}();
 
-		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
-		mr.attributes[icon.second] = 1000000;
+		mr.attributes[icon.second] += 1000000;
 
 		Item it(generate);
 		it.slot = SlotEnum::MainHand;
 		it.name = "Glow";
 		it.icon = "glow";
+
+		{
+			Skill sk(generate);
+			sk.name = "Shedding";
+			sk.radius[AttributeEnum::Constant] = 2;
+			sk.damageAmount[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Damaging")) * 0.5;
+			sk.damageType = icon.first;
+			if (generate.level > LevelDuration)
+				sk.duration[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Lasting")) * 0.1;
+			if (generate.level > LevelGroundEffect)
+				sk.caster.flags.groundEffect = true;
+			sk.caster.flags.passive = true;
+			sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constant] = generate.power * 0.1;
+			it.addOther(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
 
 		{
 			Skill sk(generate);
@@ -1266,24 +1288,10 @@ namespace
 			it.skills.push_back(std::move(sk));
 		}
 
-		{
-			Skill sk(generate);
-			sk.name = "Shedding";
-			sk.radius[AttributeEnum::Constant] = 2;
-			sk.damageAmount[AttributeEnum::Constant] = generate.power * 0.1 + 5;
-			sk.damageType = icon.first;
-			if (generate.level > LevelDuration)
-				sk.duration[AttributeEnum::Constant] = generate.power * 0.1 + 1;
-			if (generate.level > LevelGroundEffect)
-				sk.caster.flags.groundEffect = true;
-			sk.caster.flags.passive = true;
-			sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constant] = 10;
-			it.addOther(sk, 1);
-			it.skills.push_back(std::move(sk));
-		}
-
 		mr.addOther(it, 1);
 		mr.equippedItems.push_back(std::move(it));
+
+		spendAttributesPoints(mr, generate.power);
 		return mr;
 	}
 }
@@ -1292,15 +1300,15 @@ Monster generateElemental(uint32 level)
 {
 	Generate g = Generate(level, 0);
 	g.magic = 1;
-	g.ranged = 0.5;
+	g.ranged = 0;
 	g.defensive = 0;
 	g.support = 0;
 	return generateMonsterImpl(g, &generateElementalImpl);
 }
 
-Monster generateVandal()
+Monster generateVandal(uint32 level)
 {
-	Generate generate = Generate(1, 0);
+	Generate generate = Generate(level, 0);
 	generate.magic = 0;
 	generate.ranged = 0;
 	generate.defensive = 0;
@@ -1312,7 +1320,7 @@ Monster generateVandal()
 	mr.algorithm = "random";
 	mr.faction = "neutral";
 
-	mr.attributes[AttributeEnum::Life] = randomRange(30, 50);
+	mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
 	mr.equippedItems.push_back(generateSprayCan());
 	return mr;
 }

@@ -306,7 +306,7 @@ Monster generateHealingTotem(uint32 level);
 Monster generateHydra(uint32 level);
 Monster generateSatyr(uint32 level);
 Monster generateElemental(uint32 level);
-Monster generateVandal();
+Monster generateVandal(uint32 level);
 Floor generateFloor(uint32 level, uint32 maxLevel);
 
 std::string exportVariant(const Variant &variant);

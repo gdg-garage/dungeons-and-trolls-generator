@@ -222,6 +222,18 @@ namespace
 		sk.updateName("Liquor");
 		return sk;
 	}
+
+	Skill generateCharge(const Generate &generate)
+	{
+		Skill sk(generate);
+		sk.targetType = SkillTargetEnum::Character;
+		sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Long")) * 0.15;
+		sk.range[AttributeEnum::Constant] = 3;
+		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 7);
+		sk.caster.flags.movement = true;
+		sk.updateName("Charge");
+		return sk;
+	}
 }
 
 Skill skillFireball(const Generate &generate)
@@ -234,6 +246,23 @@ Skill skillFireball(const Generate &generate)
 	sk.damageType = DamageTypeEnum::Fire;
 	sk.cost[AttributeEnum::Mana] = makeCost(sk, 15);
 	sk.updateName("Fireball");
+	return sk;
+}
+
+Skill skillMeteor(const Generate &generate)
+{
+	Skill sk(generate);
+	sk.targetType = SkillTargetEnum::Position;
+	sk.range[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(0.6, "Distant")) * 0.1;
+	sk.range[AttributeEnum::Constant] = 2;
+	sk.radius[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(0.8, "Shower", AffixEnum::Suffix)) * 0.05;
+	sk.radius[AttributeEnum::Constant] = 3;
+	sk.duration[AttributeEnum::Constant] = interpolate(2.0, 5.0, sk.addPower(1, "Cosmic"));
+	sk.damageAmount[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Vigorous")) * 0.15;
+	sk.damageType = DamageTypeEnum::Fire;
+	sk.cost[AttributeEnum::Mana] = makeCost(sk, 30);
+	sk.target.flags.groundEffect = true;
+	sk.updateName("Meteor");
 	return sk;
 }
 
@@ -297,19 +326,7 @@ namespace
 
 	Skill generateMeteor(const Generate &generate)
 	{
-		Skill sk(generate);
-		sk.targetType = SkillTargetEnum::Position;
-		sk.range[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(0.6, "Distant")) * 0.1;
-		sk.range[AttributeEnum::Constant] = 2;
-		sk.radius[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(0.8, "Shower", AffixEnum::Suffix)) * 0.05;
-		sk.radius[AttributeEnum::Constant] = 3;
-		sk.duration[AttributeEnum::Constant] = interpolate(2.0, 5.0, sk.addPower(1, "Cosmic"));
-		sk.damageAmount[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Vigorous")) * 0.15;
-		sk.damageType = DamageTypeEnum::Fire;
-		sk.cost[AttributeEnum::Mana] = makeCost(sk, 30);
-		sk.target.flags.groundEffect = true;
-		sk.updateName("Meteor");
-		return sk;
+		return skillMeteor(generate);
 	}
 
 	Skill generateManaDrain(const Generate &generate)
@@ -550,6 +567,7 @@ Skill generateSkill(const Generate &generate)
 	candidates.add(0, 0, 0, 1, SlotEnum::Head, { Nothing }, generateBerserk);
 	candidates.add(0, 0, 0, 1, SlotEnum::Head, { LevelDuration }, generateIntimidate);
 	candidates.add(0, 0, H, 1, SlotEnum::OffHand, { LevelDuration, LevelStun }, generateLiquor);
+	candidates.add(0, 1, 0, 0, SlotEnum::Legs, { Nothing }, generateCharge);
 
 	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { LevelFire }, generateScorch);
 	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { LevelElectric, LevelAoe }, generateShockNova);

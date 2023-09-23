@@ -1338,7 +1338,7 @@ namespace
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
-			f.extra(p).push_back(generateVandal());
+			f.extra(p).push_back(generateVandal(f.level));
 		}
 
 		// the butcher
