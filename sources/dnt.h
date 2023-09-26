@@ -297,6 +297,7 @@ constexpr bool always_false = false;
 constexpr float H = 0.5;
 constexpr uint32 Nothing = 0;
 constexpr uint32 LevelSlash = 0;
+constexpr uint32 LevelDefensive = 0;
 constexpr uint32 LevelPierce = 7;
 constexpr uint32 LevelRanged = 7;
 constexpr uint32 LevelAoe = 11;
@@ -330,15 +331,17 @@ struct Candidates : private Immovable
 	void add(Real magic, Real ranged, Real defensive, Real support, SlotEnum preferredSlot, const std::initializer_list<uint32> &requiredLevels, T value)
 	{
 		uint32 minLevel = std::max(requiredLevels);
-		if (generate.ranged > 0.5 || ranged > 0.5)
-			minLevel = max(minLevel, LevelRanged);
 		if (generate.magic > 0.5 || magic > 0.5)
 			minLevel = max(minLevel, LevelMagic);
+		if (generate.ranged > 0.5 || ranged > 0.5)
+			minLevel = max(minLevel, LevelRanged);
+		if (generate.defensive > 0.5 || defensive > 0.5)
+			minLevel = max(minLevel, LevelDefensive);
 		if (generate.support > 0.5 || support > 0.5)
 			minLevel = max(minLevel, LevelSupport);
 		const Real a = abs(generate.magic - magic) + abs(generate.ranged - ranged) + abs(generate.defensive - defensive) + abs(generate.support - support);
 		const Real s = generate.slot == preferredSlot ? 0 : slotMismatchPenalty;
-		const Real l = generate.level > minLevel ? 0 : 10;
+		const Real l = generate.level >= minLevel ? 0 : 10;
 		const Real p = a + s + l + randomChance() * randomness;
 		if (p < bestPenalty)
 		{

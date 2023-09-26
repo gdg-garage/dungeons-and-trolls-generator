@@ -647,7 +647,7 @@ namespace
 	Monster generateOutlawBase(const Generate &generate, const char *name)
 	{
 		Monster mr(generate);
-		mr.addAffix(0.5, name, AffixEnum::Infix);
+		mr.updateName(name, 0.4);
 		mr.icon = toLower(String(name));
 		mr.algorithm = toLower(String(name));
 		mr.faction = "outlaw";

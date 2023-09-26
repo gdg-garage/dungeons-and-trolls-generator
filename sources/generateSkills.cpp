@@ -208,7 +208,7 @@ Skill skillCharge(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
-	sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Long")) * 0.15;
+	sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Dashing")) * 0.15;
 	sk.range[AttributeEnum::Constant] = 3;
 	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 7);
 	sk.caster.flags.movement = true;

@@ -136,10 +136,10 @@ void Generate::randomize()
 		a = randomRange(a, b);
 		return a;
 	};
-	magic = gen(15, 0.35);
-	ranged = gen(6, 0.5);
-	defensive = gen(21, 0.25);
-	support = gen(28, 0.15);
+	magic = gen(LevelMagic, 0.35);
+	ranged = gen(LevelRanged, 0.5);
+	defensive = gen(LevelDefensive, 0.25);
+	support = gen(LevelSupport, 0.15);
 }
 
 bool Generate::valid() const

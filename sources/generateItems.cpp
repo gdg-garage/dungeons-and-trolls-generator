@@ -728,16 +728,16 @@ Item itemGeneric(const Generate &generate)
 	candidates.add(1, 1, 0, H, SlotEnum::OffHand, { Nothing }, itemWand);
 	candidates.add(1, 0, H, 0, SlotEnum::OffHand, { Nothing }, itemScroll);
 	candidates.add(1, H, 1, 1, SlotEnum::OffHand, { Nothing }, itemTalisman);
-	candidates.add(0, H, 0, 0, SlotEnum::Body, { Nothing }, itemLeatherArmor);
-	candidates.add(0, H, H, 0, SlotEnum::Body, { Nothing }, itemRingMail);
-	candidates.add(0, H, 1, 0, SlotEnum::Body, { Nothing }, itemPlatedMail);
-	candidates.add(1, H, 1, 0, SlotEnum::Body, { Nothing }, itemCape);
-	candidates.add(1, H, 1, 0, SlotEnum::Body, { Nothing }, itemProtectiveTattoos);
-	candidates.add(0, H, 1, 0, SlotEnum::Head, { Nothing }, itemHelmet);
-	candidates.add(1, H, 0, H, SlotEnum::Head, { Nothing }, itemCirclet);
-	candidates.add(1, H, 0, 1, SlotEnum::Head, { Nothing }, itemRestoringTattoos);
-	candidates.add(H, H, 1, 0, SlotEnum::Legs, { Nothing }, itemBoots);
-	candidates.add(1, H, 1, H, SlotEnum::Neck, { Nothing }, itemAmulet);
+	candidates.add(0, 0, 0, 0, SlotEnum::Body, { Nothing }, itemLeatherArmor);
+	candidates.add(0, 0, H, 0, SlotEnum::Body, { Nothing }, itemRingMail);
+	candidates.add(0, 0, 1, 0, SlotEnum::Body, { Nothing }, itemPlatedMail);
+	candidates.add(1, 0, 1, 0, SlotEnum::Body, { Nothing }, itemCape);
+	candidates.add(1, 0, 1, 0, SlotEnum::Body, { Nothing }, itemProtectiveTattoos);
+	candidates.add(0, 0, 1, 0, SlotEnum::Head, { Nothing }, itemHelmet);
+	candidates.add(1, 0, 0, 0, SlotEnum::Head, { Nothing }, itemCirclet);
+	candidates.add(1, 0, 0, 1, SlotEnum::Head, { Nothing }, itemRestoringTattoos);
+	candidates.add(0, 0, 0, 0, SlotEnum::Legs, { Nothing }, itemBoots);
+	candidates.add(0, 0, 0, 0, SlotEnum::Neck, { Nothing }, itemAmulet);
 
 	candidates.fallback(itemTrinket);
 	return candidates.pick()(generate);
