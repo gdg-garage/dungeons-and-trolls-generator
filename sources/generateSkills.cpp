@@ -223,7 +223,7 @@ Skill skillWaterSplash(const Generate &generate)
 	sk.range[AttributeEnum::Constant] = 4;
 	sk.radius[AttributeEnum::Constant] = interpolate(1.0, 4.0, sk.addPower(0.9, "Wide"));
 	sk.duration[AttributeEnum::Constant] = interpolate(5.0, 10.0, sk.addPower(0.8, "Deep"));
-	sk.target.attributes[AttributeEnum::FireResist][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Wet")) * 0.3;
+	sk.target.attributes[AttributeEnum::FireResist][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Wet")) * 0.2;
 	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 15);
 	sk.target.flags.groundEffect = true;
 	sk.updateName("Water Spray");
@@ -233,7 +233,6 @@ Skill skillWaterSplash(const Generate &generate)
 Skill skillLandMine(const Generate &generate)
 {
 	Skill sk(generate);
-	sk.duration[AttributeEnum::Constant] = 20;
 	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 45);
 	{
 		Generate g = generate;
@@ -246,6 +245,31 @@ Skill skillLandMine(const Generate &generate)
 		sk.target.summons.push_back(std::move(mr));
 	}
 	sk.name = "Land Mine";
+	return sk;
+}
+
+Skill skillSandCastle(const Generate &generate)
+{
+	Skill sk(generate);
+	sk.duration[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(0.9, "Reinforced")) * 0.1;
+	sk.duration[AttributeEnum::Constant] = 3;
+	sk.caster.attributes[AttributeEnum::SlashResist][AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Slashproof")) * 0.2;
+	sk.caster.attributes[AttributeEnum::PierceResist][AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Pierceproof")) * 0.2;
+	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 20);
+	sk.caster.flags.groundEffect = true;
+	sk.updateName("Sand Castle");
+	return sk;
+}
+
+Skill skillTraining(const Generate &generate)
+{
+	Skill sk(generate);
+	sk.duration[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(0.9, "Endurance")) * 0.1;
+	sk.duration[AttributeEnum::Constant] = 3;
+	sk.caster.attributes[AttributeEnum::Strength][AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Strength")) * 0.35;
+	sk.caster.attributes[AttributeEnum::Dexterity][AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Balance")) * 0.35;
+	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 25);
+	sk.updateName("Training");
 	return sk;
 }
 
@@ -533,6 +557,18 @@ Skill skillSoulCrucible(const Generate &generate)
 	return sk;
 }
 
+Skill skillDischarge(const Generate &generate)
+{
+	Skill sk(generate);
+	sk.targetType = SkillTargetEnum::Character;
+	sk.range[AttributeEnum::Constant] = 2;
+	sk.damageAmount[AttributeEnum::ElectricResist] = makeAttrFactor(generate.power, sk.addPower(1, "Lightning")) * 1.5;
+	sk.damageType = DamageTypeEnum::Electric;
+	sk.cost[AttributeEnum::Mana] = makeCost(sk, 25);
+	sk.updateName("Discharge");
+	return sk;
+}
+
 // section other
 namespace
 {}
@@ -569,7 +605,9 @@ Skill skillGeneric(const Generate &generate)
 	candidates.add(0, 0, H, 1, SlotEnum::OffHand, { LevelDuration, LevelStun }, skillLiquor);
 	candidates.add(0, 1, 0, 0, SlotEnum::Legs, { Nothing }, skillCharge);
 	candidates.add(0, 0, 1, 1, SlotEnum::OffHand, { LevelAoe, LevelDuration, LevelGroundEffect }, skillWaterSplash);
-	candidates.add(0, 0, 0, 1, SlotEnum::Body, { LevelFire, LevelAoe, LevelDuration, LevelSummoning }, skillLandMine);
+	candidates.add(0, 0, 0, 0, SlotEnum::Body, { LevelFire, LevelAoe, LevelDuration, LevelSummoning }, skillLandMine);
+	candidates.add(0, 0, 1, 1, SlotEnum::MainHand, { LevelSlash, LevelPierce, LevelDuration, LevelGroundEffect }, skillSandCastle);
+	candidates.add(0, 0, 0, 1, SlotEnum::Legs, { LevelDuration }, skillTraining);
 
 	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { LevelFire }, skillScorch);
 	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { LevelElectric, LevelAoe }, skillShockNova);
@@ -590,6 +628,7 @@ Skill skillGeneric(const Generate &generate)
 	candidates.add(1, H, 0, 0, SlotEnum::OffHand, { LevelSupport }, skillDeathCoil);
 	candidates.add(1, 0, 0, 0, SlotEnum::Head, { LevelFire }, skillManaBurn);
 	candidates.add(1, 0, 0, 1, SlotEnum::Body, { LevelDuration }, skillSoulCrucible);
+	candidates.add(1, 0, 0, 0, SlotEnum::Legs, { LevelElectric }, skillDischarge);
 
 	candidates.fallback(skillLaugh);
 	return candidates.pick()(generate);

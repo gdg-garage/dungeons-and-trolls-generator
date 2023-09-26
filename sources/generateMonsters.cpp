@@ -12,6 +12,7 @@ Skill skillStomp(const Generate &generate);
 Skill skillFireball(const Generate &generate);
 Skill skillMeteor(const Generate &generate);
 Skill skillHeal(const Generate &generate);
+Skill skillGeneric(const Generate &generate);
 
 Monster::Monster(const Generate &generate) : Thing(generate){};
 
@@ -541,10 +542,36 @@ Monster monsterLich(const Generate &generate)
 	return mr;
 }
 
+Monster monsterPhantom(const Generate &generate)
+{
+	Monster mr = generateHorrorBase(generate, "Phantom");
+
+	Item it(generate);
+	it.slot = SlotEnum::MainHand;
+	it.name = "Staff";
+	it.icon = "staff";
+
+	for (uint32 i = 0; i < 5; i++)
+	{
+		Skill sk = skillGeneric(generate);
+		sk.cost.clear();
+		it.addOther(sk, 1);
+		it.skills.push_back(std::move(sk));
+	}
+
+	mr.addOther(it, 1);
+	mr.equippedItems.push_back(std::move(it));
+
+	spendAttributesPoints(mr, generate.power);
+	return mr;
+}
+
 namespace
 {
 	Monster selectHorrorMonster(const Generate &generate)
 	{
+		if (generate.level > LevelSummoning && randomChance() < 0.01)
+			return monsterPhantom(generate);
 		if (generate.magic < 0.5)
 		{ // mundane
 			if (generate.support < 0.5)
@@ -839,7 +866,7 @@ Monster monsterLandMine(const Generate &generate)
 	it.icon = "wire";
 	{
 		Skill sk(generate);
-		sk.name = "Detonate";
+		sk.name = "Ticking";
 		sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constant] = mr.attributes[AttributeEnum::Life] * -0.1; // duration 10 ticks
 		sk.caster.flags.passive = true;
 		it.addOther(sk, 1);
