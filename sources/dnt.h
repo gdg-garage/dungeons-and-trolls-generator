@@ -98,6 +98,7 @@ struct Thing : private Noncopyable
 	Real addPower(Real roll, Real weight, const std::string &affixName, AffixEnum affixPos = AffixEnum::Prefix);
 	void addOther(const Thing &other, Real weight);
 	void addAffix(Real relevance, const std::string &affixName, AffixEnum affixPos = AffixEnum::Prefix);
+	void updateName();
 	void updateName(const std::string &basicName, Real relevance = 0.5);
 };
 

@@ -80,13 +80,10 @@ void Thing::addAffix(Real relevance, const std::string &affixName, AffixEnum aff
 	}
 }
 
-void Thing::updateName(const std::string &basicName, Real relevance)
+void Thing::updateName()
 {
-	Thing t({});
-	t.affixes = affixes;
-	t.addAffix(relevance, basicName, AffixEnum::Infix);
 	std::string r;
-	for (const Affix &a : t.affixes)
+	for (const Affix &a : affixes)
 	{
 		if (a.name.empty())
 			continue;
@@ -97,8 +94,14 @@ void Thing::updateName(const std::string &basicName, Real relevance)
 		r += a.name;
 	}
 	if (r.empty())
-		r = t.affixes[(uint32)AffixEnum::Infix].name;
-	this->name = r;
+		r = affixes[(uint32)AffixEnum::Infix].name;
+	name = r;
+}
+
+void Thing::updateName(const std::string &basicName, Real relevance)
+{
+	addAffix(relevance, basicName, AffixEnum::Infix);
+	updateName();
 }
 
 Generate::Generate(sint32 level, sint32 powerOffset, SlotEnum slot) : level(level), power(level + powerOffset), slot(slot)

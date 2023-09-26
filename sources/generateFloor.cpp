@@ -869,6 +869,9 @@ namespace
 			"That’s how you’re gonna beat ’em. They keep underestimating you.",
 			"And when you gone, you stay gone or you be gone.",
 			"Sometimes I have sex with my parent on the stairs. I know its wrong on multiple levels.",
+			"You call it an elevator. I call it a lift. We were raised differently.",
+			"Where is the IT guy? He probably ransomware.",
+			"Have you ever tried blind-folded archery? You dont know what you are missing.",
 		};
 		return Decoration{ "sign", texts[randomRange({}, sizeof(texts) / sizeof(texts[0]))] };
 	}

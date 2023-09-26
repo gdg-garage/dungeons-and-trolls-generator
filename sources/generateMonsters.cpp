@@ -99,7 +99,7 @@ namespace
 	Monster generateHorrorBase(const Generate &generate, const char *name)
 	{
 		Monster mr(generate);
-		mr.updateName(name);
+		mr.updateName(name, 0.4);
 		mr.icon = toLower(String(name));
 		mr.algorithm = toLower(String(name));
 		mr.faction = "horror";
@@ -132,7 +132,6 @@ Monster monsterZombie(const Generate &generate)
 
 	Item it(generate);
 	it.slot = SlotEnum::MainHand;
-	it.name = "Claws";
 	it.icon = "claws";
 
 	{
@@ -155,6 +154,7 @@ Monster monsterZombie(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
+	it.updateName("Claws");
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
@@ -170,7 +170,6 @@ Monster monsterSkeleton(const Generate &generate)
 
 	Item it(generate);
 	it.slot = SlotEnum::MainHand;
-	it.name = "Bow";
 	it.icon = "bow";
 
 	{
@@ -181,6 +180,7 @@ Monster monsterSkeleton(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
+	it.updateName("Bow");
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
@@ -196,7 +196,6 @@ Monster monsterOgre(const Generate &generate)
 
 	Item it(generate);
 	it.slot = SlotEnum::MainHand;
-	it.name = "Mace";
 	it.icon = "mace";
 
 	{
@@ -215,6 +214,7 @@ Monster monsterOgre(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
+	it.updateName("Mace");
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
@@ -230,7 +230,6 @@ Monster monsterTroll(const Generate &generate)
 
 	Item it(generate);
 	it.slot = SlotEnum::MainHand;
-	it.name = "Spear";
 	it.icon = "spear";
 
 	{
@@ -250,6 +249,7 @@ Monster monsterTroll(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
+	it.updateName("Spear");
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
@@ -265,7 +265,6 @@ Monster monsterVampire(const Generate &generate)
 
 	Item it(generate);
 	it.slot = SlotEnum::MainHand;
-	it.name = "Claws";
 	it.icon = "claws";
 
 	{
@@ -298,6 +297,7 @@ Monster monsterVampire(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
+	it.updateName("Claws");
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
@@ -313,7 +313,6 @@ Monster monsterMedusa(const Generate &generate)
 
 	Item it(generate);
 	it.slot = SlotEnum::MainHand;
-	it.name = "Bow";
 	it.icon = "bow";
 
 	{
@@ -337,6 +336,7 @@ Monster monsterMedusa(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
+	it.updateName("Bow");
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
@@ -352,7 +352,6 @@ Monster monsterSuccubus(const Generate &generate)
 
 	Item it(generate);
 	it.slot = SlotEnum::MainHand;
-	it.name = "Claws";
 	it.icon = "claws";
 
 	{
@@ -390,6 +389,7 @@ Monster monsterSuccubus(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
+	it.updateName("Claws");
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
@@ -405,7 +405,6 @@ Monster monsterImp(const Generate &generate)
 
 	Item it(generate);
 	it.slot = SlotEnum::MainHand;
-	it.name = "Claws";
 	it.icon = "claws";
 
 	{
@@ -431,6 +430,7 @@ Monster monsterImp(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
+	it.updateName("Claws");
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
@@ -446,7 +446,6 @@ Monster monsterGhost(const Generate &generate)
 
 	Item it(generate);
 	it.slot = SlotEnum::MainHand;
-	it.name = "Glow";
 	it.icon = "glow";
 
 	{
@@ -470,6 +469,7 @@ Monster monsterGhost(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
+	it.updateName("Glow");
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
@@ -485,7 +485,6 @@ Monster monsterBanshee(const Generate &generate)
 
 	Item it(generate);
 	it.slot = SlotEnum::MainHand;
-	it.name = "Claws";
 	it.icon = "claws";
 
 	for (AttributeEnum attr : { AttributeEnum::Strength, AttributeEnum::Dexterity, AttributeEnum::Intelligence, AttributeEnum::SlashResist, AttributeEnum::PierceResist })
@@ -502,6 +501,7 @@ Monster monsterBanshee(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
+	it.updateName("Claws");
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
@@ -517,7 +517,6 @@ Monster monsterLich(const Generate &generate)
 
 	Item it(generate);
 	it.slot = SlotEnum::MainHand;
-	it.name = "Staff";
 	it.icon = "staff";
 
 	for (AttributeEnum attr : { AttributeEnum::SlashResist, AttributeEnum::PierceResist, AttributeEnum::FireResist, AttributeEnum::PoisonResist, AttributeEnum::ElectricResist })
@@ -535,6 +534,7 @@ Monster monsterLich(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
+	it.updateName("Staff");
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
@@ -548,7 +548,6 @@ Monster monsterPhantom(const Generate &generate)
 
 	Item it(generate);
 	it.slot = SlotEnum::MainHand;
-	it.name = "Staff";
 	it.icon = "staff";
 
 	for (uint32 i = 0; i < 5; i++)
@@ -559,6 +558,7 @@ Monster monsterPhantom(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
+	it.updateName("Staff");
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
@@ -648,7 +648,7 @@ namespace
 	Monster generateOutlawBase(const Generate &generate, const char *name)
 	{
 		Monster mr(generate);
-		mr.updateName(name);
+		mr.addAffix(0.5, name, AffixEnum::Infix);
 		mr.icon = toLower(String(name));
 		mr.algorithm = toLower(String(name));
 		mr.faction = "outlaw";
@@ -677,6 +677,7 @@ namespace
 
 		matchAttributesRequirements(mr);
 		spendAttributesPoints(mr);
+		mr.updateName();
 		return mr;
 	}
 }
@@ -848,8 +849,8 @@ Monster monsterBallista(const Generate &generate)
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
-	mr.updateName("Ballista");
 	spendAttributesPoints(mr, generate.power);
+	mr.updateName("Ballista");
 	return mr;
 }
 
@@ -884,8 +885,8 @@ Monster monsterLandMine(const Generate &generate)
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
 
-	mr.updateName("Land Mine");
 	spendAttributesPoints(mr, generate.power);
+	mr.updateName("Land Mine");
 	return mr;
 }
 
@@ -966,11 +967,11 @@ Monster monsterFloorBoss(uint32 level)
 	g.support = levelSwitch(LevelSupport);
 
 	Monster mr = generateMonsterImpl(g, &selectOutlawMonster);
-	mr.updateName(floorBossName(level));
 	mr.icon = "guardian";
 	mr.algorithm = "guardian";
 	mr.faction = "monster";
 
+	mr.updateName(floorBossName(level));
 	addDeadBody(mr);
 	return mr;
 }
@@ -1079,13 +1080,13 @@ Monster monsterButcher(uint32 level)
 	g.support = 0;
 
 	Monster mr = generateMonsterImpl(g, &monsterBarbarian);
-	mr.updateName("Butcher");
 	mr.icon = "butcher";
 	mr.algorithm = "butcher";
 	mr.faction = "monster";
 
 	// todo add some skills
 
+	mr.updateName("Butcher");
 	addDeadBody(mr);
 	return mr;
 }
@@ -1099,13 +1100,13 @@ Monster monsterWitch(uint32 level)
 	g.support = randomChance();
 
 	Monster mr = generateMonsterImpl(g, &selectOutlawMonster);
-	mr.updateName("Witch");
 	mr.icon = "witch";
 	mr.algorithm = "witch";
 	mr.faction = "monster";
 
 	// todo add broomstick skill
 
+	mr.updateName("Witch");
 	addDeadBody(mr);
 	return mr;
 }
@@ -1119,12 +1120,12 @@ Monster monsterTemplar(uint32 level)
 	g.support = randomChance();
 
 	Monster mr = generateMonsterImpl(g, &selectOutlawMonster);
-	mr.updateName("Templar Knight");
 	mr.icon = "templar";
 	mr.algorithm = "templar";
 	mr.faction = "templar";
 	mr.score = 0;
 
+	mr.updateName("Templar Knight");
 	addDeadBody(mr);
 	return mr;
 }
@@ -1165,6 +1166,7 @@ namespace
 		mr.equippedItems.push_back(std::move(it));
 
 		spendAttributesPoints(mr, generate.power);
+		mr.updateName();
 		return mr;
 	}
 }
@@ -1182,7 +1184,6 @@ Monster monsterZergling(uint32 level)
 Monster monsterHealingTotem(uint32 level)
 {
 	Monster mr = Monster(Generate(level, 0));
-	mr.updateName("Healing Totem");
 	mr.icon = "totem";
 	mr.algorithm = "none";
 	mr.faction = "neutral";
@@ -1208,6 +1209,8 @@ Monster monsterHealingTotem(uint32 level)
 
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
+
+	mr.updateName("Healing Totem");
 	return mr;
 }
 
@@ -1267,6 +1270,7 @@ namespace
 		}
 
 		spendAttributesPoints(mr, generate.power);
+		mr.updateName();
 		return mr;
 	}
 
@@ -1295,7 +1299,6 @@ Monster monsterSatyr(uint32 level)
 	generate.support = 1;
 
 	Monster mr(generate);
-	mr.updateName("Satyr");
 	mr.icon = "satyr";
 	mr.algorithm = "random";
 	mr.faction = "neutral";
@@ -1320,6 +1323,8 @@ Monster monsterSatyr(uint32 level)
 
 	mr.addOther(it, 1);
 	mr.equippedItems.push_back(std::move(it));
+
+	mr.updateName("Satyr");
 	return mr;
 }
 
@@ -1380,6 +1385,7 @@ namespace
 		mr.equippedItems.push_back(std::move(it));
 
 		spendAttributesPoints(mr, generate.power);
+		mr.updateName();
 		return mr;
 	}
 }
@@ -1403,12 +1409,13 @@ Monster monsterVandal(uint32 level)
 	generate.support = 1;
 
 	Monster mr(generate);
-	mr.updateName("Vandal");
 	mr.icon = "vandal";
 	mr.algorithm = "random";
 	mr.faction = "neutral";
 
 	mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
 	mr.equippedItems.push_back(itemSprayCan());
+
+	mr.updateName("Vandal");
 	return mr;
 }

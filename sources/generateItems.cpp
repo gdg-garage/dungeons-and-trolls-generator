@@ -38,7 +38,7 @@ namespace
 	{
 		Candidates<void (*)(Item &)> candidates(item.generate);
 		candidates.slotMismatchPenalty = 0.5;
-		candidates.randomness = 1;
+		candidates.randomness = 1.5;
 
 		candidates.add(0, 0, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Strength>);
 		candidates.add(0, 1, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Dexterity>);
@@ -89,7 +89,7 @@ namespace
 	{
 		Candidates<void (*)(Item &)> candidates(item.generate);
 		candidates.slotMismatchPenalty = 0.5;
-		candidates.randomness = 0.7;
+		candidates.randomness = 1.5;
 
 		candidates.add(0, 0, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Strength>);
 		candidates.add(0, 1, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Dexterity>);
@@ -216,6 +216,15 @@ Skill skillBowAttack(const Generate &generate)
 	sk.damageType = DamageTypeEnum::Pierce;
 	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
 	sk.updateName("Attack");
+	return sk;
+}
+
+Skill skillRest(const Generate &generate, Real factor)
+{
+	Skill sk(generate);
+	sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Refreshing")) * factor;
+	sk.caster.flags.requiresAlone = true;
+	sk.updateName("Rest");
 	return sk;
 }
 
@@ -413,7 +422,30 @@ Item itemTalisman(const Generate &generate)
 	return item;
 }
 
-Item itemBodyArmor(const Generate &generate)
+Item itemLeatherArmor(const Generate &generate)
+{
+	CAGE_ASSERT(generate.slot == SlotEnum::Body);
+	Item item = generateBasicItem(generate);
+
+	{
+		Skill sk = skillGeneric(generate);
+		item.addOther(sk, 1);
+		item.skills.push_back(std::move(sk));
+	}
+
+	{
+		Skill sk = skillRest(generate, 1);
+		item.addOther(sk, 0.7);
+		item.skills.push_back(std::move(sk));
+	}
+
+	finalizeBasicItem(item);
+	item.updateName("Leather Armor");
+	item.icon = "leatherArmor";
+	return item;
+}
+
+Item itemRingMail(const Generate &generate)
 {
 	CAGE_ASSERT(generate.slot == SlotEnum::Body);
 	Item item = generateBasicItem(generate);
@@ -421,28 +453,34 @@ Item itemBodyArmor(const Generate &generate)
 	makeBoost(item);
 
 	{
-		Skill sk(generate);
-		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Refreshing"));
-		sk.caster.flags.requiresAlone = true;
-		sk.updateName("Rest");
+		Skill sk = skillRest(generate, 0.7);
 		item.addOther(sk, 0.7);
 		item.skills.push_back(std::move(sk));
 	}
 
 	finalizeBasicItem(item);
-	switch (randomRange(0, 2))
+	item.updateName("Ring Mail");
+	item.icon = "ringMail";
+	return item;
+}
+
+Item itemPlatedMail(const Generate &generate)
+{
+	CAGE_ASSERT(generate.slot == SlotEnum::Body);
+	Item item = generateBasicItem(generate);
+
+	makeBoost(item);
+	makeBoost(item);
+
 	{
-		case 0:
-			item.updateName("Leather Mail");
-			item.icon = "leatherMail";
-			break;
-		case 1:
-			item.updateName("Plated Mail");
-			item.icon = "platedMail";
-			break;
-		default:
-			CAGE_THROW_CRITICAL(Exception, "random out of range");
+		Skill sk = skillRest(generate, 0.4);
+		item.addOther(sk, 0.7);
+		item.skills.push_back(std::move(sk));
 	}
+
+	finalizeBasicItem(item);
+	item.updateName("Plated Mail");
+	item.icon = "platedMail";
 	return item;
 }
 
@@ -688,7 +726,9 @@ Item itemGeneric(const Generate &generate)
 	candidates.add(1, 1, 0, H, SlotEnum::OffHand, { Nothing }, itemWand);
 	candidates.add(1, 0, H, 0, SlotEnum::OffHand, { Nothing }, itemScroll);
 	candidates.add(1, H, 1, 1, SlotEnum::OffHand, { Nothing }, itemTalisman);
-	candidates.add(0, H, 1, 0, SlotEnum::Body, { Nothing }, itemBodyArmor);
+	candidates.add(0, H, 0, 0, SlotEnum::Body, { Nothing }, itemLeatherArmor);
+	candidates.add(0, H, H, 0, SlotEnum::Body, { Nothing }, itemRingMail);
+	candidates.add(0, H, 1, 0, SlotEnum::Body, { Nothing }, itemPlatedMail);
 	candidates.add(1, H, 1, 0, SlotEnum::Body, { Nothing }, itemCape);
 	candidates.add(1, H, 1, 0, SlotEnum::Body, { Nothing }, itemProtectiveTattoos);
 	candidates.add(0, H, 1, 0, SlotEnum::Head, { Nothing }, itemHelmet);

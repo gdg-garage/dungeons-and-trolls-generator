@@ -562,9 +562,9 @@ Skill skillDischarge(const Generate &generate)
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
 	sk.range[AttributeEnum::Constant] = 2;
-	sk.damageAmount[AttributeEnum::ElectricResist] = makeAttrFactor(generate.power, sk.addPower(1, "Lightning")) * 1.5;
+	sk.damageAmount[AttributeEnum::ElectricResist] = makeAttrFactor(generate.power, sk.addPower(1, "Lightning"));
 	sk.damageType = DamageTypeEnum::Electric;
-	sk.cost[AttributeEnum::Mana] = makeCost(sk, 25);
+	sk.cost[AttributeEnum::Mana] = makeCost(sk, 20);
 	sk.updateName("Discharge");
 	return sk;
 }
@@ -586,8 +586,8 @@ Skill skillGeneric(const Generate &generate)
 	// may or may not have a slot
 
 	Candidates<Skill (*)(const Generate &generate)> candidates(generate);
-	candidates.slotMismatchPenalty = 0.3;
-	candidates.randomness = 0.8;
+	candidates.slotMismatchPenalty = 0.5;
+	candidates.randomness = 2;
 
 	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelPierce }, skillPunch);
 	candidates.add(0, 0, 0, 0, SlotEnum::Legs, { LevelSlash }, skillKick);
@@ -605,7 +605,7 @@ Skill skillGeneric(const Generate &generate)
 	candidates.add(0, 0, H, 1, SlotEnum::OffHand, { LevelDuration, LevelStun }, skillLiquor);
 	candidates.add(0, 1, 0, 0, SlotEnum::Legs, { Nothing }, skillCharge);
 	candidates.add(0, 0, 1, 1, SlotEnum::OffHand, { LevelAoe, LevelDuration, LevelGroundEffect }, skillWaterSplash);
-	candidates.add(0, 0, 0, 0, SlotEnum::Body, { LevelFire, LevelAoe, LevelDuration, LevelSummoning }, skillLandMine);
+	candidates.add(0, 0, 0, 1, SlotEnum::Body, { LevelFire, LevelAoe, LevelDuration, LevelSummoning }, skillLandMine);
 	candidates.add(0, 0, 1, 1, SlotEnum::MainHand, { LevelSlash, LevelPierce, LevelDuration, LevelGroundEffect }, skillSandCastle);
 	candidates.add(0, 0, 0, 1, SlotEnum::Legs, { LevelDuration }, skillTraining);
 
