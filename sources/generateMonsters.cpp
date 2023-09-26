@@ -803,6 +803,66 @@ Monster generateMonster(const Generate &generate)
 	return generateMonsterImpl(generate, isHorrorFloor(generate.level) > 0.5 ? &generateHorror : &generateOutlaw);
 }
 
+Monster monsterBallista(const Generate &generate)
+{
+	Monster mr = generateHorrorBase(generate, "Ballista");
+	mr.icon = "totem";
+	mr.faction = "inherited";
+
+	Item it(generate);
+	it.slot = SlotEnum::MainHand;
+	it.name = "Bow";
+	it.icon = "bow";
+	{
+		Skill sk = skillBowAttack(generate);
+		sk.cost.clear();
+		it.addOther(sk, 1);
+		it.skills.push_back(std::move(sk));
+	}
+	mr.addOther(it, 1);
+	mr.equippedItems.push_back(std::move(it));
+
+	mr.updateName("Ballista");
+	spendAttributesPoints(mr, generate.power);
+	return mr;
+}
+
+Monster monsterLandMine(const Generate &generate)
+{
+	Monster mr = generateHorrorBase(generate, "Land Mine");
+	mr.icon = "landMine";
+	mr.algorithm = "none";
+	mr.faction = "neutral";
+
+	Item it(generate);
+	it.slot = SlotEnum::MainHand;
+	it.name = "Trigger";
+	it.icon = "wire";
+	{
+		Skill sk(generate);
+		sk.name = "Detonate";
+		sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constant] = mr.attributes[AttributeEnum::Life] * -0.1; // duration 10 ticks
+		sk.caster.flags.passive = true;
+		it.addOther(sk, 1);
+		it.skills.push_back(std::move(sk));
+	}
+	{
+		Skill sk(generate);
+		sk.name = "Explosion";
+		sk.radius[AttributeEnum::Constant] = interpolate(4.0, 8.0, sk.addPower(1, "Vast"));
+		sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Destructive")) * 0.2;
+		sk.damageType = DamageTypeEnum::Fire;
+		mr.addOther(sk, 1);
+		mr.onDeath.push_back(std::move(sk));
+	}
+	mr.addOther(it, 1);
+	mr.equippedItems.push_back(std::move(it));
+
+	mr.updateName("Land Mine");
+	spendAttributesPoints(mr, generate.power);
+	return mr;
+}
+
 Monster generateMinion(const Generate &generate_)
 {
 	CAGE_ASSERT(generate_.valid());
@@ -842,6 +902,8 @@ Monster generateChest(const Generate &generate)
 	if (randomChance() < 0.05)
 		mr.onDeath.push_back(generateMonster(Generate(generate.level, generate.powerOffset()))); // empowered monster
 
+	mr.onDeath.push_back(Decoration{ "openChest" });
+
 	return mr;
 }
 
@@ -855,7 +917,7 @@ namespace
 
 std::string floorBossName(uint32 level)
 {
-	return (Stringizer() + "Guardian of " + level + "th floor").value.c_str();
+	return (Stringizer() + "Guardian Of " + level + "th Floor").value.c_str();
 }
 
 Monster generateFloorBoss(uint32 level)

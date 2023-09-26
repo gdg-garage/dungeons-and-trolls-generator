@@ -1,5 +1,8 @@
 #include "dnt.h"
 
+Monster monsterBallista(const Generate &generate);
+Monster monsterLandMine(const Generate &generate);
+
 Skill::Skill(const Generate &generate) : Thing(generate){};
 
 Skill skillStomp(const Generate &generate)
@@ -120,27 +123,7 @@ namespace
 			g.ranged = 1;
 			g.defensive = 0;
 			g.support = 0;
-			Monster mr(g);
-			mr.icon = "totem";
-			mr.algorithm = "ballista";
-			mr.faction = "inherited";
-			Item it(g);
-			it.slot = SlotEnum::MainHand;
-			it.name = "Bow";
-			it.icon = "bow";
-			{
-				Skill sk(g);
-				sk.name = "Attack";
-				sk.targetType = SkillTargetEnum::Character;
-				sk.range[AttributeEnum::Constant] = randomRange(4, 8);
-				sk.damageAmount[AttributeEnum::Constant] = generate.power * 0.1 + 5;
-				sk.damageType = DamageTypeEnum::Pierce;
-				it.addOther(sk, 1);
-				it.skills.push_back(std::move(sk));
-			}
-			mr.addOther(it, 1);
-			mr.equippedItems.push_back(std::move(it));
-			mr.updateName("Ballista");
+			Monster mr = monsterBallista(g);
 			sk.addOther(mr, 1);
 			sk.target.summons.push_back(std::move(mr));
 		}
@@ -232,6 +215,39 @@ namespace
 		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 7);
 		sk.caster.flags.movement = true;
 		sk.updateName("Charge");
+		return sk;
+	}
+
+	Skill generateWaterSplash(const Generate &generate)
+	{
+		Skill sk(generate);
+		sk.targetType = SkillTargetEnum::Position;
+		sk.range[AttributeEnum::Constant] = 4;
+		sk.radius[AttributeEnum::Constant] = interpolate(1.0, 4.0, sk.addPower(0.9, "Wide"));
+		sk.duration[AttributeEnum::Constant] = interpolate(5.0, 10.0, sk.addPower(0.8, "Deep"));
+		sk.target.attributes[AttributeEnum::FireResist][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Wet")) * 0.3;
+		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 15);
+		sk.target.flags.groundEffect = true;
+		sk.updateName("Water Spray");
+		return sk;
+	}
+
+	Skill generateLandMine(const Generate &generate)
+	{
+		Skill sk(generate);
+		sk.duration[AttributeEnum::Constant] = 20;
+		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 45);
+		{
+			Generate g = generate;
+			g.magic = 0;
+			g.ranged = 0;
+			g.defensive = 0;
+			g.support = 0;
+			Monster mr = monsterLandMine(g);
+			sk.addOther(mr, 1);
+			sk.target.summons.push_back(std::move(mr));
+		}
+		sk.name = "Land Mine";
 		return sk;
 	}
 }
@@ -568,6 +584,8 @@ Skill generateSkill(const Generate &generate)
 	candidates.add(0, 0, 0, 1, SlotEnum::Head, { LevelDuration }, generateIntimidate);
 	candidates.add(0, 0, H, 1, SlotEnum::OffHand, { LevelDuration, LevelStun }, generateLiquor);
 	candidates.add(0, 1, 0, 0, SlotEnum::Legs, { Nothing }, generateCharge);
+	candidates.add(0, 0, 1, 1, SlotEnum::OffHand, { LevelAoe, LevelDuration, LevelGroundEffect }, generateWaterSplash);
+	candidates.add(0, 0, 0, 1, SlotEnum::Body, { LevelFire, LevelAoe, LevelDuration, LevelSummoning }, generateLandMine);
 
 	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { LevelFire }, generateScorch);
 	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { LevelElectric, LevelAoe }, generateShockNova);

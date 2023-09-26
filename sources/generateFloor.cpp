@@ -648,19 +648,19 @@ namespace
 
 		f.tile(4, 2) = TileEnum::Decoration;
 		f.extra(4, 2).push_back(Decoration{ "rack" });
-		for (uint32 i = 0; i < 5; i++)
+		for (uint32 i = 0; i < 3; i++)
 			f.extra(4, 2).push_back(generatePrimitiveItem(SlotEnum::Body));
 		f.tile(6, 2) = TileEnum::Decoration;
 		f.extra(6, 2).push_back(Decoration{ "rack" });
-		for (uint32 i = 0; i < 5; i++)
+		for (uint32 i = 0; i < 3; i++)
 			f.extra(6, 2).push_back(generatePrimitiveItem(SlotEnum::Head));
 		f.tile(4, 6) = TileEnum::Decoration;
 		f.extra(4, 6).push_back(Decoration{ "rack" });
-		for (uint32 i = 0; i < 5; i++)
+		for (uint32 i = 0; i < 3; i++)
 			f.extra(4, 6).push_back(generatePrimitiveItem(SlotEnum::MainHand));
 		f.tile(6, 6) = TileEnum::Decoration;
 		f.extra(6, 6).push_back(Decoration{ "rack" });
-		for (uint32 i = 0; i < 5; i++)
+		for (uint32 i = 0; i < 3; i++)
 			f.extra(6, 6).push_back(generatePrimitiveItem(SlotEnum::Legs));
 
 		f.tile(4, h / 2) = TileEnum::Spawn;
@@ -774,16 +774,16 @@ namespace
 	Decoration makeRandomSign()
 	{
 		static constexpr const char *texts[] = {
-			"The path of the righteous man is beset on all sides",
-			"By the inequities of the selfish and the tyranny of evil men",
-			"Blessed is he who, in the name of charity and good will",
-			"Shepherds the weak through the valley of darkness",
-			"For he is truly his brother's keeper and the finder of lost children",
-			"And I will strike down upon thee",
-			"With great vengeance and furious anger",
-			"Those who attempt to poison and destroy my brothers",
-			"And you will know my name is the Lord",
-			"When I lay my vengeance upon thee",
+			"(1/10) The path of the righteous man is beset on all sides",
+			"(2/10) By the inequities of the selfish and the tyranny of evil men",
+			"(3/10) Blessed is he who, in the name of charity and good will",
+			"(4/10) Shepherds the weak through the valley of darkness",
+			"(5/10) For he is truly his brother's keeper and the finder of lost children",
+			"(6/10) And I will strike down upon thee",
+			"(7/10) With great vengeance and furious anger",
+			"(8/10) Those who attempt to poison and destroy my brothers",
+			"(9/10) And you will know my name is the Lord",
+			"(10/10) When I lay my vengeance upon thee",
 			"Go left",
 			"Go right",
 			"Stay away",
@@ -850,6 +850,7 @@ namespace
 			"Json, motherfucker, do you speak it?",
 			"That’s how you’re gonna beat ’em. They keep underestimating you.",
 			"And when you gone, you stay gone or you be gone.",
+			"Sometimes I have sex with my parent on the stairs. I know its wrong on multiple levels.",
 		};
 		return Decoration{ "sign", texts[randomRange({}, sizeof(texts) / sizeof(texts[0]))] };
 	}
