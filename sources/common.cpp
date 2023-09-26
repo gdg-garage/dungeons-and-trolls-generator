@@ -2,14 +2,21 @@
 
 Thing::Thing(const Generate &generate) : generate(generate)
 {
-	goldCost = 10 + generate.power / 2 + randomRange(0, generate.power / 3);
+	goldCost = 10 + generate.power * 2 + randomRange(0, generate.power);
 }
 
 Real Thing::weightedRoll() const
 {
 	if (totalWeight > 1e-3)
 		return totalRolls / totalWeight;
-	return 0;
+	return 0.5;
+}
+
+Real Thing::averageWeight() const
+{
+	if (totalRolls > 1e-3)
+		return totalWeight / totalRolls;
+	return 0.5;
 }
 
 Real Thing::addPower(Real weight)
@@ -24,7 +31,7 @@ Real Thing::addPower(Real roll, Real weight)
 	CAGE_ASSERT(weight >= 0);
 	totalRolls += roll * weight;
 	totalWeight += weight;
-	goldCost *= 1 + interpolate(0.1, 3.0, sqr(roll)) * weight;
+	goldCost *= 1 + interpolate(0.1, 0.5, sqr(roll)) * weight;
 	return roll;
 }
 
@@ -35,7 +42,7 @@ Real Thing::subtractPower(Real weight, const std::string &affixName, AffixEnum a
 	const Real roll = randomChance();
 	totalRolls += roll * weight;
 	totalWeight += weight;
-	goldCost /= 1 + interpolate(0.2, 2.0, sqr(roll)) * weight;
+	goldCost /= 1 + interpolate(0.1, 0.5, sqr(roll)) * weight;
 	addAffix(roll * weight, affixName, affixPos);
 	return roll;
 }
@@ -65,7 +72,8 @@ void Thing::addOther(const Thing &other, Real weight)
 		}
 		addAffix(r * weight, "With " + s, AffixEnum::Suffix);
 	}
-	goldCost += other.goldCost * weight;
+	else
+		goldCost += other.goldCost * weight;
 }
 
 void Thing::addAffix(Real relevance, const std::string &affixName, AffixEnum affixPos)
@@ -197,8 +205,8 @@ uint32 bossIndexToLevel(uint32 index)
 Real isHorrorFloor(uint32 level)
 {
 	// https://www.wolframalpha.com/input?i=plot+sin%28floor%28x%2B89%29+*+2+*+pi+*+0.029%29+-+sin%28floor%28x%2B69%29+*+2+*+pi+*+0.017%29+%3B+x+%3D+0+..+20
-	const Real horrorish = cage::sin((level + 89) * Rads::Full() * 0.029) - cage::sin((level + 69) * Rads::Full() * 0.017) + (randomChance() - 0.5) * 0.2;
-	return horrorish * 0.5 + 0.5;
+	const Real horrorish = cage::sin((level + 89) * Rads::Full() * 0.029) - cage::sin((level + 69) * Rads::Full() * 0.017);
+	return saturate(horrorish * 0.25 + 0.5 + (randomChance() - 0.5) * 0.05);
 }
 
 Real makeAttrFactor(uint32 power, Real roll)

@@ -188,6 +188,59 @@ namespace
 		return r;
 	}
 
+	// returns total and average score
+	std::pair<Real, Real> totalScore(const Floor &f)
+	{
+		Real s = 0;
+		uint32 c = 0;
+		for (const TileExtra &t : f.extras)
+		{
+			for (const auto &v : t)
+			{
+				std::visit(
+					[&](const auto &arg)
+					{
+						using T = std::decay_t<decltype(arg)>;
+						if constexpr (std::is_same_v<T, Monster>)
+						{
+							s += arg.score;
+							c++;
+						}
+					},
+					v);
+			}
+		}
+		return { s, s / c };
+	}
+
+	// returns total and average cost
+	std::pair<Real, Real> totalItemCost(const Floor &f)
+	{
+		Real s = 0;
+		uint32 c = 0;
+		for (const TileExtra &t : f.extras)
+		{
+			for (const auto &v : t)
+			{
+				std::visit(
+					[&](const auto &arg)
+					{
+						using T = std::decay_t<decltype(arg)>;
+						if constexpr (std::is_same_v<T, Monster>)
+						{
+							for (const Item &i : arg.equippedItems)
+							{
+								s += i.goldCost;
+								c++;
+							}
+						}
+					},
+					v);
+			}
+		}
+		return { s, s / c };
+	}
+
 	void flush(Holder<File> &f, const String &p)
 	{
 		if (p.empty())
@@ -272,7 +325,10 @@ void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, con
 		html->write(e.html);
 		if (isLevelBoss(f.level))
 			html->writeLine(Stringizer() + "boss level: " + levelToBossIndex(f.level) + "<br>");
-		html->writeLine(Stringizer() + "monsters: " + countTiles(f, TileEnum::Monster) + "<br>");
+		html->writeLine(Stringizer() + "horror: " + isHorrorFloor(f.level) + "<br>");
+		const auto score = totalScore(f);
+		const auto itemsCost = totalItemCost(f);
+		html->writeLine(Stringizer() + "monsters: " + countTiles(f, TileEnum::Monster) + ", total score: " + score.first + ", average score: " + score.second + ", average equipped item value: " + itemsCost.second + "<br>");
 		html->writeLine("<hr>");
 
 		if (firstlevel)

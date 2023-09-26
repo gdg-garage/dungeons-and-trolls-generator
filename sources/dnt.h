@@ -89,6 +89,7 @@ struct Thing : private Noncopyable
 	Real totalRolls; // sum of weighted rolls
 	Real totalWeight; // sum of weights
 	Real weightedRoll() const;
+	Real averageWeight() const;
 	Real goldCost = 0;
 
 	Real addPower(Real weight);

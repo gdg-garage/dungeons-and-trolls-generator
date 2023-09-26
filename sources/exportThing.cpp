@@ -286,7 +286,8 @@ namespace
 			json += "],\n";
 		}
 
-		json += (Stringizer() + "\"price\":" + item.buyPrice + ",").value.c_str();
+		if (item.buyPrice > 1e-7)
+			json += (Stringizer() + "\"price\":" + item.buyPrice + ",").value.c_str();
 
 #ifdef CAGE_DEBUG
 		json += "\"_debug\":" + thingJson<false>(item) + ",\n";

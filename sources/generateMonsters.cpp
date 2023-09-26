@@ -114,10 +114,9 @@ namespace
 			g.slot = slot;
 			Item item = itemGeneric(g);
 			for (const auto &it : item.attributes)
-			{
-				mr.attributes[it.first] += it.second;
-				mr.addPower(1);
-			}
+				if (it.second > 0)
+					mr.attributes[it.first] += it.second;
+			mr.addOther(item, 0.7);
 		}
 
 		return mr;
@@ -817,7 +816,7 @@ namespace
 		}
 
 		// loot
-		if (randomChance() < 0.4)
+		if (randomChance() < 0.15)
 			mr.onDeath.push_back(itemGeneric(Generate(generate_.level, generate_.powerOffset()))); // use the original power
 		mr.score = mr.goldCost / empower;
 

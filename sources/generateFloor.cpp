@@ -5,6 +5,7 @@
 #include <cage-core/noiseFunction.h>
 
 Item itemGeneric(const Generate &generate);
+Item itemShop(uint32 maxLevel);
 Item itemPrimitive(SlotEnum slot);
 Item itemSprayCan();
 Monster monsterGeneric(const Generate &generate);
@@ -569,41 +570,10 @@ namespace
 	{
 		for (uint32 i = 0; i < 10; i++)
 		{
-			Generate gen;
-			switch (randomRange(0u, 4u))
-			{
-				case 0:
-					gen = Generate(randomRange(1u, maxLevel), 0); // default
-					break;
-				case 1:
-					gen = Generate(randomRange(max(maxLevel * 3 / 4, 1u), maxLevel), 0); // stronger than default
-					break;
-				case 2:
-					gen = Generate(maxLevel, -randomRange(0u, maxLevel / 4)); // any features, but possibly slightly weak
-					break;
-				case 3:
-					gen = Generate(maxLevel, -randomRange(0u, maxLevel)); // any features, but possibly very weak
-					break;
-			}
-			CAGE_ASSERT(gen.level > 0);
-			CAGE_ASSERT(gen.power > 0);
-			bool unidentified = false;
-			Real costMult = 1;
-			const Real uniChance = clamp((Real(maxLevel) - 50) * 0.01, 0, 0.5);
-			if (gen.power > 10 && randomChance() < uniChance)
-			{
-				unidentified = true;
-				costMult = pow(randomChance() + 0.9, 5);
-				Real powMult = pow(randomChance() + 0.4, 2);
-				gen.power = numeric_cast<sint32>(gen.power * powMult);
-				CAGE_ASSERT(gen.power > 0);
-			}
-			Item item = itemGeneric(gen);
-			item.unidentified = unidentified;
-			item.buyPrice = numeric_cast<uint32>(item.goldCost * costMult);
+			Item item = itemShop(maxLevel);
 			extra.push_back(std::move(item));
 		}
-		if (maxLevel > LevelSummoning && maxLevel > LevelDuration && randomChance() < 0.02)
+		if (maxLevel > LevelSummoning && maxLevel > LevelDuration && randomChance() < 0.01)
 		{
 			Item item = itemSprayCan();
 			item.buyPrice = randomRange(10000, 100000);
