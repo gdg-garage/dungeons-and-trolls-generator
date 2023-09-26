@@ -4,6 +4,24 @@
 
 #include <cage-core/noiseFunction.h>
 
+Item itemGeneric(const Generate &generate);
+Item itemPrimitive(SlotEnum slot);
+Item itemSprayCan();
+Monster monsterGeneric(const Generate &generate);
+std::string floorBossName(uint32 level);
+Monster monsterChest(const Generate &generate);
+Monster monsterFloorBoss(uint32 level);
+Holder<PointerRange<Monster>> generateAntiHeroes();
+Monster monsterButcher(uint32 level);
+Monster monsterWitch(uint32 level);
+Monster monsterTemplar(uint32 level);
+Monster monsterZergling(uint32 level);
+Monster monsterHealingTotem(uint32 level);
+Monster monsterHydra(uint32 level);
+Monster monsterSatyr(uint32 level);
+Monster monsterElemental(uint32 level);
+Monster monsterVandal(uint32 level);
+
 namespace std
 {
 	template<>
@@ -332,7 +350,7 @@ namespace
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
-			f.extra(p).push_back(generateMonster(Generate(f.level, powerOffset)));
+			f.extra(p).push_back(monsterGeneric(Generate(f.level, powerOffset)));
 		}
 	}
 
@@ -467,7 +485,7 @@ namespace
 			};
 			Vec2i p = ps[i];
 			f.tile(p) = TileEnum::Monster;
-			f.extra(p).push_back(generateWitch(f.level));
+			f.extra(p).push_back(monsterWitch(f.level));
 		}
 	}
 
@@ -580,15 +598,15 @@ namespace
 				gen.power = numeric_cast<sint32>(gen.power * powMult);
 				CAGE_ASSERT(gen.power > 0);
 			}
-			Item item = generateItem(gen);
+			Item item = itemGeneric(gen);
 			item.unidentified = unidentified;
 			item.buyPrice = numeric_cast<uint32>(item.goldCost * costMult);
 			extra.push_back(std::move(item));
 		}
 		if (maxLevel > LevelSummoning && maxLevel > LevelDuration && randomChance() < 0.02)
 		{
-			Item item = generateSprayCan();
-			item.buyPrice = randomRange(100, 1000);
+			Item item = itemSprayCan();
+			item.buyPrice = randomRange(10000, 100000);
 			extra.push_back(std::move(item));
 		}
 	}
@@ -649,19 +667,19 @@ namespace
 		f.tile(4, 2) = TileEnum::Decoration;
 		f.extra(4, 2).push_back(Decoration{ "rack" });
 		for (uint32 i = 0; i < 3; i++)
-			f.extra(4, 2).push_back(generatePrimitiveItem(SlotEnum::Body));
+			f.extra(4, 2).push_back(itemPrimitive(SlotEnum::Body));
 		f.tile(6, 2) = TileEnum::Decoration;
 		f.extra(6, 2).push_back(Decoration{ "rack" });
 		for (uint32 i = 0; i < 3; i++)
-			f.extra(6, 2).push_back(generatePrimitiveItem(SlotEnum::Head));
+			f.extra(6, 2).push_back(itemPrimitive(SlotEnum::Head));
 		f.tile(4, 6) = TileEnum::Decoration;
 		f.extra(4, 6).push_back(Decoration{ "rack" });
 		for (uint32 i = 0; i < 3; i++)
-			f.extra(4, 6).push_back(generatePrimitiveItem(SlotEnum::MainHand));
+			f.extra(4, 6).push_back(itemPrimitive(SlotEnum::MainHand));
 		f.tile(6, 6) = TileEnum::Decoration;
 		f.extra(6, 6).push_back(Decoration{ "rack" });
 		for (uint32 i = 0; i < 3; i++)
-			f.extra(6, 6).push_back(generatePrimitiveItem(SlotEnum::Legs));
+			f.extra(6, 6).push_back(itemPrimitive(SlotEnum::Legs));
 
 		f.tile(4, h / 2) = TileEnum::Spawn;
 		f.tile(6, h / 2) = TileEnum::Stairs;
@@ -873,11 +891,11 @@ namespace
 
 		f.tile(3, h / 2) = TileEnum::Door;
 		f.tile(2, h / 2) = TileEnum::Chest;
-		f.extra(2, h / 2).push_back(generateChest(Generate(f.level, f.level / 10)));
+		f.extra(2, h / 2).push_back(monsterChest(Generate(f.level, f.level / 10)));
 
 		f.tile(w - 4, h / 2) = TileEnum::Door;
 		f.tile(w - 3, h / 2) = TileEnum::Chest;
-		f.extra(w - 3, h / 2).push_back(generateChest(Generate(f.level, f.level / 10)));
+		f.extra(w - 3, h / 2).push_back(monsterChest(Generate(f.level, f.level / 10)));
 
 		findOutlineWalls(f);
 
@@ -887,7 +905,7 @@ namespace
 
 		const auto &generateBossMonster = [&]()
 		{
-			Monster mr = generateFloorBoss(f.level);
+			Monster mr = monsterFloorBoss(f.level);
 			mr.onDeath.push_back(Key{ findDoors(f) });
 			return mr;
 		};
@@ -1339,7 +1357,7 @@ namespace
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
-			f.extra(p).push_back(generateVandal(f.level));
+			f.extra(p).push_back(monsterVandal(f.level));
 		}
 
 		// the butcher
@@ -1347,7 +1365,7 @@ namespace
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
-			f.extra(p).push_back(generateButcher(maxLevel)); // maxLevel -> the butcher does not scale down
+			f.extra(p).push_back(monsterButcher(maxLevel)); // maxLevel -> the butcher does not scale down
 			surroundWithDecorations(f, p, "bones");
 		}
 
@@ -1356,7 +1374,7 @@ namespace
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
-			f.extra(p).push_back(generateSatyr(f.level));
+			f.extra(p).push_back(monsterSatyr(f.level));
 			surroundWithDecorations(f, p, "garland");
 		}
 
@@ -1365,7 +1383,7 @@ namespace
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
-			f.extra(p).push_back(generateElemental(f.level));
+			f.extra(p).push_back(monsterElemental(f.level));
 			surroundWithDecorations(f, p, "rune");
 		}
 
@@ -1374,7 +1392,7 @@ namespace
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
-			f.extra(p).push_back(generateHydra(f.level));
+			f.extra(p).push_back(monsterHydra(f.level));
 			surroundWithDecorations(f, p, "bones");
 		}
 
@@ -1394,7 +1412,7 @@ namespace
 				}
 
 				f.tile(p) = TileEnum::Monster;
-				f.extra(p).push_back(generateTemplar(f.level));
+				f.extra(p).push_back(monsterTemplar(f.level));
 
 				Vec2i ps[4] = {
 					p + Vec2i(-1, +0),
@@ -1421,7 +1439,7 @@ namespace
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Chest;
-			f.extra(p).push_back(generateChest(Generate(f.level, f.level / 20)));
+			f.extra(p).push_back(monsterChest(Generate(f.level, f.level / 20)));
 		}
 
 		// place waypoint
@@ -1486,7 +1504,7 @@ namespace
 				if (f.tiles[i] == TileEnum::Empty && randomChance() < 0.2)
 				{
 					f.tiles[i] = TileEnum::Monster;
-					f.extras[i].push_back(generateZergling(f.level));
+					f.extras[i].push_back(monsterZergling(f.level));
 				}
 			}
 		}
@@ -1542,7 +1560,7 @@ namespace
 				if (f.tiles[i] == TileEnum::Empty && randomChance() < 0.05)
 				{
 					f.tiles[i] = TileEnum::Decoration;
-					f.extras[i].push_back(generateHealingTotem(f.level));
+					f.extras[i].push_back(monsterHealingTotem(f.level));
 				}
 			}
 		}

@@ -4,6 +4,10 @@
 #include <cage-core/logger.h>
 #include <cage-core/string.h>
 
+Floor generateFloor(uint32 level, uint32 maxLevel);
+//FloorExport exportFloor(const Floor &floor);
+void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, const String &htmlPath);
+
 int main(int argc, const char *args[])
 {
 	Holder<Logger> log1 = newLogger();

@@ -287,31 +287,7 @@ uint32 bossIndexToLevel(uint32 index);
 Real isHorrorFloor(uint32 level);
 Real makeAttrFactor(uint32 power, Real roll);
 uint32 makeCost(Thing &sk, Real default_);
-
-Skill generateSkill(const Generate &generate);
-Item generateItem(const Generate &generate);
-Item generatePrimitiveItem(SlotEnum slot);
-Item generateSprayCan();
-Monster generateMonster(const Generate &generate);
-Monster generateMinion(const Generate &generate);
-std::string floorBossName(uint32 level);
-Monster generateChest(const Generate &generate);
-Monster generateFloorBoss(uint32 level);
-Holder<PointerRange<Monster>> generateAntiHeroes();
-Monster generateButcher(uint32 level);
-Monster generateWitch(uint32 level);
-Monster generateTemplar(uint32 level);
-Monster generateZergling(uint32 level);
-Monster generateHealingTotem(uint32 level);
-Monster generateHydra(uint32 level);
-Monster generateSatyr(uint32 level);
-Monster generateElemental(uint32 level);
-Monster generateVandal(uint32 level);
-Floor generateFloor(uint32 level, uint32 maxLevel);
-
 std::string exportVariant(const Variant &variant);
-FloorExport exportFloor(const Floor &floor);
-void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, const String &htmlPath);
 
 template<class... T>
 constexpr bool always_false = false;
