@@ -594,6 +594,7 @@ Item itemBoots(const Generate &generate)
 		sk.range[AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Enduring")) * 0.05;
 		sk.range[AttributeEnum::Constant] = 2;
 		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 5);
+		sk.caster.flags.movement = true;
 		sk.updateName("Walk");
 		item.addOther(sk, 0.6);
 		item.skills.push_back(std::move(sk));
@@ -606,6 +607,7 @@ Item itemBoots(const Generate &generate)
 		sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Fast")) * 0.03;
 		sk.range[AttributeEnum::Constant] = 3;
 		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
+		sk.caster.flags.movement = true;
 		sk.updateName("Run");
 		item.addOther(sk, 0.8);
 		item.skills.push_back(std::move(sk));

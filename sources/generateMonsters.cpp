@@ -654,7 +654,7 @@ namespace
 
 		mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
 		mr.attributes[AttributeEnum::Mana] = numeric_cast<sint32>((generate.power + randomRange(30, 50)) * generate.magic);
-		mr.attributes[AttributeEnum::Stamina] = numeric_cast<sint32>((generate.power + randomRange(30, 50)) * (1 - generate.magic));
+		mr.attributes[AttributeEnum::Stamina] = numeric_cast<sint32>((generate.power + randomRange(30, 50)) * (1 - generate.magic * 0.5));
 		setupResistances(mr, 0.2);
 
 		const auto &equip = [&](SlotEnum slot, Real weight = 1)
