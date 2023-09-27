@@ -125,16 +125,7 @@ void Generate::randomize()
 		if (level < minLevel)
 			return 0;
 		const Real tg = randomChance() < probability ? 1 : 0;
-		Real a = 0.5;
-		Real b = tg;
-		if (b < a)
-			std::swap(a, b);
-		a = randomRange(a, b);
-		b = tg;
-		if (b < a)
-			std::swap(a, b);
-		a = randomRange(a, b);
-		return a;
+		return Generate::randomTowardsTarget(tg);
 	};
 	magic = gen(LevelMagic, 0.35);
 	ranged = gen(LevelRanged, 0.5);
@@ -150,6 +141,20 @@ bool Generate::valid() const
 sint32 Generate::powerOffset() const
 {
 	return power - level;
+}
+
+Real Generate::randomTowardsTarget(Real tg)
+{
+	Real a = 0.5;
+	Real b = tg;
+	if (b < a)
+		std::swap(a, b);
+	a = randomRange(a, b);
+	b = tg;
+	if (b < a)
+		std::swap(a, b);
+	a = randomRange(a, b);
+	return a;
 }
 
 void removeLastComma(std::string &json)

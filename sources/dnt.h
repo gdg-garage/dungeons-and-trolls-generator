@@ -62,6 +62,7 @@ struct Generate
 	void randomize();
 	bool valid() const;
 	sint32 powerOffset() const;
+	static Real randomTowardsTarget(Real tg);
 };
 
 enum class AffixEnum : uint8
