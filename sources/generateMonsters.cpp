@@ -243,7 +243,7 @@ Monster monsterTroll(const Generate &generate)
 		Skill sk(generate);
 		sk.name = "Regenerate";
 		sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Quick")) * 0.3;
-		sk.caster.flags.passive = true;
+		sk.flags.passive = true;
 		it.addOther(sk, 1);
 		it.skills.push_back(std::move(sk));
 	}
@@ -528,7 +528,7 @@ Monster monsterLich(const Generate &generate)
 		if (generate.level > LevelDuration)
 			sk.duration[AttributeEnum::Constant] = interpolate(3.0, 8.0, sk.addPower(0.9, "Lasting"));
 		sk.target.attributes[attr][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Thorough")) * 0.4;
-		sk.caster.flags.allowTargetSelf = true;
+		sk.flags.allowTargetSelf = true;
 		it.addOther(sk, 1);
 		it.skills.push_back(std::move(sk));
 	}
@@ -868,7 +868,7 @@ Monster monsterLandMine(const Generate &generate)
 		Skill sk(generate);
 		sk.name = "Ticking";
 		sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constant] = mr.attributes[AttributeEnum::Life] * -0.1; // duration 10 ticks
-		sk.caster.flags.passive = true;
+		sk.flags.passive = true;
 		it.addOther(sk, 1);
 		it.skills.push_back(std::move(sk));
 	}
@@ -1207,8 +1207,8 @@ Monster monsterHealingTotem(uint32 level)
 		sk.radius[AttributeEnum::Constant] = randomRange(2.0, 4.0);
 		sk.duration[AttributeEnum::Constant] = randomRange(1.0, 2.0);
 		sk.target.attributes[AttributeEnum::Life][AttributeEnum::Constant] = level / 4;
-		sk.caster.flags.passive = true;
 		sk.caster.flags.groundEffect = true;
+		sk.flags.passive = true;
 		it.addOther(sk, 1);
 		it.skills.push_back(std::move(sk));
 	}
@@ -1371,8 +1371,8 @@ namespace
 				sk.duration[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Lasting")) * 0.1;
 			if (generate.level > LevelGroundEffect)
 				sk.caster.flags.groundEffect = true;
-			sk.caster.flags.passive = true;
 			sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constant] = generate.power * 0.1;
+			sk.flags.passive = true;
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}

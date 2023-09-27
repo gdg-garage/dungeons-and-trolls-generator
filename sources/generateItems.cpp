@@ -167,7 +167,7 @@ namespace
 			const Real mult = interpolate(1.2, 1.5, sk.addPower(1, "Celestial"));
 			for (const auto &it : item.attributes)
 				sk.caster.attributes[it.first][AttributeEnum::Constant] = it.second * mult;
-			sk.caster.flags.passive = true;
+			sk.flags.passive = true;
 			sk.updateName("Ether");
 			item.addOther(sk, 0.5);
 			item.addAffix(0.8, "Ethereal");
@@ -224,7 +224,7 @@ Skill skillRest(const Generate &generate, Real factor)
 	Skill sk(generate);
 	sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Refreshing")) * factor;
 	sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constant] = interpolate(5.0, 15.0, sk.addPower(1, "Energizing")) * factor;
-	sk.caster.flags.requiresAlone = true;
+	sk.flags.requiresAlone = true;
 	sk.updateName("Rest");
 	return sk;
 }
@@ -500,7 +500,7 @@ Item itemCape(const Generate &generate)
 		Skill sk(generate);
 		sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Energizing")) * 0.8;
 		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(0.7, "Refreshing")) * 0.2;
-		sk.caster.flags.requiresAlone = true;
+		sk.flags.requiresAlone = true;
 		sk.updateName("Meditation");
 		item.addOther(sk, 0.7);
 		item.skills.push_back(std::move(sk));
@@ -570,7 +570,7 @@ Item itemRestoringTattoos(const Generate &generate)
 			sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Refreshing")) * 0.2;
 		else
 			sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Energizing")) * 0.2;
-		sk.caster.flags.passive = true;
+		sk.flags.passive = true;
 		sk.updateName("Glow");
 		item.addOther(sk, 1);
 		item.skills.push_back(std::move(sk));
@@ -799,7 +799,7 @@ Item itemPrimitive(SlotEnum slot)
 			{
 				Skill sk(item.generate);
 				sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constant] = randomRange(0.8, 1.2) * 5;
-				sk.caster.flags.requiresAlone = true;
+				sk.flags.requiresAlone = true;
 				sk.updateName("Rest");
 				item.skills.push_back(std::move(sk));
 			}

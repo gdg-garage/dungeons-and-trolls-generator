@@ -179,18 +179,13 @@ namespace
 		if (!effects.attributes.empty())
 			json += std::string() + "\"attributes\":" + skillAttributesJson(effects.attributes) + ",\n";
 
-		if (effects.flags != SkillFlags())
 		{
 			json += "\"flags\":{\n";
 #define FLAG(F) json += std::string() + "\"" + #F + "\":" + (Stringizer() + effects.flags.F).value.c_str() + ",";
-			FLAG(requiresAlone);
-			FLAG(requiresLineOfSight);
-			FLAG(allowTargetSelf);
 			FLAG(movement);
 			FLAG(knockback);
 			FLAG(stun);
 			FLAG(groundEffect);
-			FLAG(passive);
 #undef FLAG
 			removeLastComma(json);
 			json += "},\n";
@@ -233,6 +228,18 @@ namespace
 			json += std::string() + "\"casterEffects\":" + j + ",\n";
 		if (std::string j = exportSkillEffects(skill.target); j.length() > 3)
 			json += std::string() + "\"targetEffects\":" + j + ",\n";
+
+		{
+			json += "\"flags\":{\n";
+#define FLAG(F) json += std::string() + "\"" + #F + "\":" + (Stringizer() + skill.flags.F).value.c_str() + ",";
+			FLAG(requiresAlone);
+			FLAG(requiresLineOfSight);
+			FLAG(allowTargetSelf);
+			FLAG(passive);
+#undef FLAG
+			removeLastComma(json);
+			json += "},\n";
+		}
 
 #ifdef CAGE_DEBUG
 		json += "\"_debug\":" + thingJson<false>(skill) + ",\n";
@@ -298,11 +305,6 @@ namespace
 		return json;
 	}
 
-	bool isPassive(const Skill &sk)
-	{
-		return sk.caster.flags.passive || sk.target.flags.passive;
-	}
-
 	std::string monsterStatistics(const Monster &monster)
 	{
 		std::string json;
@@ -315,7 +317,7 @@ namespace
 				totalAttributes[at.first] += at.second;
 			// count ethereal attributes
 			for (const auto &sk : it.skills)
-				if (isPassive(sk))
+				if (sk.flags.passive)
 					for (const auto &at : sk.caster.attributes)
 						if (at.second.count(AttributeEnum::Constant))
 							totalAttributes[at.first] += numeric_cast<sint32>(at.second.at(AttributeEnum::Constant));

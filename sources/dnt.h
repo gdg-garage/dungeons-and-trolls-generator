@@ -148,24 +148,26 @@ using AttributesEquationFactors = std::map<AttributeEnum, Real>;
 using SkillAttributes = std::map<AttributeEnum, AttributesEquationFactors>;
 using SkillFlag = StringPointer;
 
-struct SkillFlags
+struct SkillSpecificFlags
 {
-	bool requiresAlone = false; // requires that the caster is alone (no other creature (player or monster) are visible in 5 range), furthermore the skill is canceled if you take any damage while using it
-	bool requiresLineOfSight = true; // requires the target position be visible from the caster position
-	bool allowTargetSelf = false; // allows skills that target a character to target oneself
 	bool movement = false; // moves the caster to the target position, or the target to the caster position
 	bool knockback = false; // moves the caster/target one tile away from the other
 	bool stun = false; // prevents the caster/target from performing any actions for one tick, and grants immunity to stun for the following tick
 	bool groundEffect = false; // creates ground effect at caster/target position, which applies the effects of the skill
-	bool passive = false; // the effects of the skill are automatically applied every tick, assuming the cost can be paid; multiple passive skills are allowed
+};
 
-	auto operator<=>(const SkillFlags &) const = default;
+struct SkillGenericFlags
+{
+	bool requiresAlone = false; // requires that the caster is alone (no other creature (player or monster) are visible in 5 range), furthermore the skill is canceled if you take any damage while using it
+	bool requiresLineOfSight = true; // requires the target position be visible from the caster position
+	bool allowTargetSelf = false; // allows skills that target a character to target oneself
+	bool passive = false; // the effects of the skill are automatically applied every tick, assuming the cost can be paid; multiple passive skills are allowed
 };
 
 struct SkillEffects
 {
 	SkillAttributes attributes;
-	SkillFlags flags;
+	SkillSpecificFlags flags;
 	std::vector<Variant> summons;
 };
 
@@ -178,6 +180,7 @@ struct Skill : public Thing
 	AttributesEquationFactors range, radius, duration, damageAmount;
 	DamageTypeEnum damageType = DamageTypeEnum::None;
 	SkillEffects caster, target;
+	SkillGenericFlags flags;
 };
 
 struct Item : public Thing
