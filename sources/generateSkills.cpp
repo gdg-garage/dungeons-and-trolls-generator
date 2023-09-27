@@ -160,7 +160,6 @@ Skill skillPatchWounds(const Generate &generate)
 	sk.target.attributes[AttributeEnum::Life][AttributeEnum::Constant] = 5;
 	sk.target.attributes[AttributeEnum::Life][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Doctorly")) * 0.2;
 	sk.target.attributes[AttributeEnum::Life][AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Carefully")) * 0.2;
-	sk.flags.allowTargetSelf = true;
 	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 15);
 	sk.updateName("Patch Wounds");
 	return sk;
@@ -392,7 +391,6 @@ Skill skillHeal(const Generate &generate)
 	sk.range[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Distant")) * 0.1;
 	sk.range[AttributeEnum::Constant] = 4;
 	sk.target.attributes[AttributeEnum::Life][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Concentrated")) * 0.5;
-	sk.flags.allowTargetSelf = true;
 	sk.cost[AttributeEnum::Mana] = makeCost(sk, 20);
 	sk.updateName("Heal");
 	return sk;
@@ -446,7 +444,6 @@ Skill skillIceShield(const Generate &generate)
 	sk.duration[AttributeEnum::Constant] = interpolate(4.0, 8.0, sk.addPower(0.9, "Lasting"));
 	sk.target.attributes[AttributeEnum::PierceResist][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Impenetrable")) * 0.2;
 	sk.target.attributes[AttributeEnum::FireResist][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Fireproof")) * 0.2;
-	sk.flags.allowTargetSelf = true;
 	sk.cost[AttributeEnum::Mana] = makeCost(sk, 20);
 	sk.updateName("Ice Shield");
 	return sk;
@@ -461,7 +458,6 @@ Skill skillFleshOfSteel(const Generate &generate)
 	sk.duration[AttributeEnum::Constant] = interpolate(4.0, 8.0, sk.addPower(0.9, "Lasting"));
 	sk.target.attributes[AttributeEnum::SlashResist][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Slipping")) * 0.2;
 	sk.target.attributes[AttributeEnum::PoisonResist][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Resilient")) * 0.2;
-	sk.flags.allowTargetSelf = true;
 	sk.cost[AttributeEnum::Mana] = makeCost(sk, 20);
 	sk.updateName("Flesh Of Steel");
 	return sk;
@@ -475,7 +471,6 @@ Skill skillFaradayCage(const Generate &generate)
 	sk.range[AttributeEnum::Constant] = 3;
 	sk.duration[AttributeEnum::Constant] = interpolate(4.0, 8.0, sk.addPower(0.9, "Lasting"));
 	sk.target.attributes[AttributeEnum::ElectricResist][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Grounded")) * 0.2;
-	sk.flags.allowTargetSelf = true;
 	sk.cost[AttributeEnum::Mana] = makeCost(sk, 15);
 	sk.updateName("Faraday Cage");
 	return sk;

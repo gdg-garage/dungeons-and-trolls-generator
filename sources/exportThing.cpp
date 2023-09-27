@@ -234,7 +234,6 @@ namespace
 #define FLAG(F) json += std::string() + "\"" + #F + "\":" + (Stringizer() + skill.flags.F).value.c_str() + ",";
 			FLAG(requiresAlone);
 			FLAG(requiresLineOfSight);
-			FLAG(allowTargetSelf);
 			FLAG(passive);
 #undef FLAG
 			removeLastComma(json);

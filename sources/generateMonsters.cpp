@@ -528,7 +528,6 @@ Monster monsterLich(const Generate &generate)
 		if (generate.level > LevelDuration)
 			sk.duration[AttributeEnum::Constant] = interpolate(3.0, 8.0, sk.addPower(0.9, "Lasting"));
 		sk.target.attributes[attr][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Thorough")) * 0.4;
-		sk.flags.allowTargetSelf = true;
 		it.addOther(sk, 1);
 		it.skills.push_back(std::move(sk));
 	}
