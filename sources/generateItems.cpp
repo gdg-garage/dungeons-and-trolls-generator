@@ -210,9 +210,9 @@ Skill skillBowAttack(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
-	sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Accurate")) * 0.1;
+	sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Accurate")) * 0.15;
 	sk.range[AttributeEnum::Constant] = 4;
-	sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Piercing")) * 0.5;
+	sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Piercing")) * 0.85;
 	sk.damageType = DamageTypeEnum::Pierce;
 	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
 	sk.updateName("Attack");
@@ -274,8 +274,8 @@ Item itemScythe(const Generate &generate)
 
 	{
 		Skill sk(generate);
-		sk.radius[AttributeEnum::Constant] = interpolate(1.5, 3.0, sk.addPower(1, "Wide"));
-		sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Strong")) * 0.3;
+		sk.radius[AttributeEnum::Constant] = interpolate(1.5, 3.0, sk.addPower(0.9, "Wide"));
+		sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Strong")) * 0.5;
 		sk.damageType = DamageTypeEnum::Slash;
 		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
 		sk.updateName("Attack");
@@ -332,7 +332,7 @@ Item itemDagger(const Generate &generate)
 		Skill sk(generate);
 		sk.targetType = SkillTargetEnum::Character;
 		sk.range[AttributeEnum::Constant] = 1;
-		sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Surprise")) * 0.5;
+		sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Surprise")) * 0.8;
 		sk.damageType = DamageTypeEnum::Slash;
 		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 7);
 		sk.updateName("Attack");
@@ -491,15 +491,11 @@ Item itemCape(const Generate &generate)
 	Item item = generateBasicItem(generate);
 
 	{
-		Skill sk = skillGeneric(generate);
-		item.addOther(sk, 1);
-		item.skills.push_back(std::move(sk));
-	}
-
-	{
 		Skill sk(generate);
-		sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Energizing")) * 0.8;
-		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(0.7, "Refreshing")) * 0.2;
+		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(0.7, "Refreshing")) * 0.5;
+		sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Energizing"));
+		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constant] = interpolate(1.0, 3.0, sk.addPower(0.5));
+		sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Constant] = interpolate(1.0, 3.0, sk.addPower(0.5));
 		sk.flags.requiresOutOfCombat = true;
 		sk.updateName("Meditation");
 		item.addOther(sk, 0.7);
@@ -544,7 +540,7 @@ Item itemCirclet(const Generate &generate)
 
 Item itemProtectiveTattoos(const Generate &generate)
 {
-	CAGE_ASSERT(generate.slot == SlotEnum::Body);
+	CAGE_ASSERT(generate.slot == SlotEnum::Head);
 	Item item(generate); // no generateBasicItem -> no stats
 
 	if (generate.level > LevelFire)
@@ -561,15 +557,15 @@ Item itemProtectiveTattoos(const Generate &generate)
 
 Item itemRestoringTattoos(const Generate &generate)
 {
-	CAGE_ASSERT(generate.slot == SlotEnum::Head);
+	CAGE_ASSERT(generate.slot == SlotEnum::Body);
 	Item item(generate); // no generateBasicItem -> no stats
 
 	{
 		Skill sk(generate);
-		if (randomChance() < 0.5)
-			sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Refreshing")) * 0.2;
-		else
-			sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Energizing")) * 0.2;
+		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Refreshing")) * 0.15;
+		sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Energizing")) * 0.15;
+		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constant] = interpolate(1.0, 2.0, sk.addPower(0.5));
+		sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Constant] = interpolate(1.0, 2.0, sk.addPower(0.5));
 		sk.flags.passive = true;
 		sk.updateName("Glow");
 		item.addOther(sk, 1);
@@ -732,11 +728,11 @@ Item itemGeneric(const Generate &generate)
 	candidates.add(0, H, 0, 0, SlotEnum::Body, { Nothing }, itemLeatherArmor);
 	candidates.add(0, H, H, 0, SlotEnum::Body, { Nothing }, itemRingMail);
 	candidates.add(0, H, 1, 0, SlotEnum::Body, { Nothing }, itemPlatedMail);
-	candidates.add(1, H, 1, 0, SlotEnum::Body, { Nothing }, itemCape);
-	candidates.add(1, H, 1, 0, SlotEnum::Body, { Nothing }, itemProtectiveTattoos);
+	candidates.add(1, H, 0, 0, SlotEnum::Body, { Nothing }, itemCape);
+	candidates.add(1, 0, 0, 0, SlotEnum::Body, { Nothing }, itemRestoringTattoos);
 	candidates.add(0, H, 1, 0, SlotEnum::Head, { Nothing }, itemHelmet);
 	candidates.add(1, H, 0, H, SlotEnum::Head, { Nothing }, itemCirclet);
-	candidates.add(1, H, 0, 1, SlotEnum::Head, { Nothing }, itemRestoringTattoos);
+	candidates.add(1, H, 1, 0, SlotEnum::Head, { Nothing }, itemProtectiveTattoos);
 	candidates.add(H, H, 0, 0, SlotEnum::Legs, { Nothing }, itemBoots);
 	candidates.add(0, H, 0, H, SlotEnum::Neck, { Nothing }, itemAmulet);
 

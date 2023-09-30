@@ -226,6 +226,31 @@ uint32 makeCost(Thing &sk, Real default_)
 	return numeric_cast<uint32>(max(p, 1));
 }
 
+AttributesValuesList monsterTotalAttributes(const Monster &monster)
+{
+	AttributesValuesList totalAttributes = monster.attributes;
+	for (const Item &it : monster.equippedItems)
+	{
+		for (const auto &at : it.attributes)
+			totalAttributes[at.first] += at.second;
+		// count ethereal attributes
+		for (const auto &sk : it.skills)
+			if (sk.flags.passive)
+				for (const auto &at : sk.caster.attributes)
+					if (at.second.count(AttributeEnum::Constant))
+						totalAttributes[at.first] += numeric_cast<sint32>(at.second.at(AttributeEnum::Constant));
+	}
+	return totalAttributes;
+}
+
+Real attributesSum(const AttributesValuesList &cost)
+{
+	sint32 sum = 0;
+	for (const auto &it : cost)
+		sum += it.second;
+	return sum;
+}
+
 namespace
 {
 	struct BossLevelTest

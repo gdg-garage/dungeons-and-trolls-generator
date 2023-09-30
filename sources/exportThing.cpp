@@ -79,24 +79,6 @@ namespace
 		return "{" + r + "}";
 	}
 
-	template<class AttributesValueMapping>
-	requires(std::is_same_v<AttributesValueMapping, AttributesValuesList> || std::is_same_v<AttributesValueMapping, AttributesEquationFactors>)
-	std::string attributesSum(const AttributesValueMapping &factors, const AttributesValuesList &attr)
-	{
-		Real sum = 0;
-		for (const auto &it : factors)
-			sum += it.second * (it.first == AttributeEnum::Constant ? 1 : attr.count(it.first) ? attr.at(it.first) : 0);
-		return (Stringizer() + sum).value.c_str();
-	}
-
-	std::string costSum(const AttributesValuesList &cost)
-	{
-		sint32 sum = 0;
-		for (const auto &it : cost)
-			sum += it.second;
-		return (Stringizer() + sum).value.c_str();
-	}
-
 	const char *damageTypeName(DamageTypeEnum damageType)
 	{
 		switch (damageType)
@@ -255,15 +237,15 @@ namespace
 		json += "{\n";
 		json += std::string() + "\"name\":\"" + skill.name + "\",\n";
 		if (!skill.cost.empty())
-			json += std::string() + "\"cost\":" + costSum(skill.cost) + ",\n";
+			json += (Stringizer() + "\"cost\":" + attributesSum(skill.cost) + ",\n").value.c_str();
 		if (!skill.range.empty())
-			json += std::string() + "\"range\":" + attributesSum(skill.range, attr) + ",\n";
+			json += (Stringizer() + "\"range\":" + attributesSum(skill.range, attr) + ",\n").value.c_str();
 		if (!skill.radius.empty())
-			json += std::string() + "\"radius\":" + attributesSum(skill.radius, attr) + ",\n";
+			json += (Stringizer() + "\"radius\":" + attributesSum(skill.radius, attr) + ",\n").value.c_str();
 		if (!skill.duration.empty())
-			json += std::string() + "\"duration\":" + attributesSum(skill.duration, attr) + ",\n";
+			json += (Stringizer() + "\"duration\":" + attributesSum(skill.duration, attr) + ",\n").value.c_str();
 		if (!skill.damageAmount.empty())
-			json += std::string() + "\"damageAmount\":" + attributesSum(skill.damageAmount, attr) + ",\n";
+			json += (Stringizer() + "\"damageAmount\":" + attributesSum(skill.damageAmount, attr) + ",\n").value.c_str();
 		removeLastComma(json);
 		json += "}"; // /root
 		return json;
@@ -309,29 +291,7 @@ namespace
 		std::string json;
 		json += "{\n";
 
-		AttributesValuesList totalAttributes;
-		for (const Item &it : monster.equippedItems)
-		{
-			for (const auto &at : it.attributes)
-				totalAttributes[at.first] += at.second;
-			// count ethereal attributes
-			for (const auto &sk : it.skills)
-				if (sk.flags.passive)
-					for (const auto &at : sk.caster.attributes)
-						if (at.second.count(AttributeEnum::Constant))
-							totalAttributes[at.first] += numeric_cast<sint32>(at.second.at(AttributeEnum::Constant));
-		}
-		sint32 attrsFromItems = 0, attrsFromLevels = 0;
-		for (const auto &it : totalAttributes)
-			attrsFromItems += it.second;
-		for (const auto &it : monster.attributes)
-		{
-			if (it.first < AttributeEnum::Life)
-				attrsFromLevels += it.second;
-			totalAttributes[it.first] += it.second;
-		}
-		json += std::string() + "\"attributesFromLevels\":" + (Stringizer() + attrsFromLevels).value.c_str() + ",\n";
-		json += std::string() + "\"attributesFromItems\":" + (Stringizer() + attrsFromItems).value.c_str() + ",\n";
+		const AttributesValuesList totalAttributes = monsterTotalAttributes(monster);
 		json += "\"totalAttributes\":" + attributesValueMappingJson(totalAttributes) + ",\n";
 
 		json += "\"attacks\":[\n";

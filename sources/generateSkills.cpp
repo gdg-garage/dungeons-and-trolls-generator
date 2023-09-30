@@ -14,9 +14,9 @@ Skill skillPunch(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
-	sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "High")) * 0.7;
+	sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "High"));
 	sk.damageType = DamageTypeEnum::Pierce;
-	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 6);
+	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 8);
 	sk.updateName("Punch");
 	return sk;
 }
@@ -25,7 +25,7 @@ Skill skillKick(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
-	sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Low")) * 0.8;
+	sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Low"));
 	sk.damageType = DamageTypeEnum::Slash;
 	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 8);
 	sk.updateName("Kick");
@@ -281,7 +281,7 @@ Skill skillScorch(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
-	sk.damageAmount[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Burning")) * 0.6;
+	sk.damageAmount[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Burning")) * 0.8;
 	sk.damageType = DamageTypeEnum::Fire;
 	sk.cost[AttributeEnum::Mana] = makeCost(sk, 7);
 	sk.updateName("Scorch");
@@ -622,7 +622,7 @@ Skill skillGeneric(const Generate &generate)
 	candidates.slotMismatchPenalty = 0.5;
 	candidates.randomness = 2;
 
-	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelPierce }, skillPunch);
+	candidates.add(0, 1, 0, 0, SlotEnum::OffHand, { LevelPierce }, skillPunch);
 	candidates.add(0, 0, 0, 0, SlotEnum::Legs, { LevelSlash }, skillKick);
 	candidates.add(0, 1, 0, 0, SlotEnum::MainHand, { LevelPierce, LevelStun }, skillChainHook);
 	candidates.add(0, 0, 1, 0, SlotEnum::Legs, { LevelSlash, LevelAoe, LevelKnockback }, skillStomp);

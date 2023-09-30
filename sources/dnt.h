@@ -292,7 +292,19 @@ uint32 bossIndexToLevel(uint32 index);
 Real isHorrorFloor(uint32 level);
 Real makeAttrFactor(uint32 power, Real roll);
 uint32 makeCost(Thing &sk, Real default_);
+AttributesValuesList monsterTotalAttributes(const Monster &mr);
+Real attributesSum(const AttributesValuesList &cost);
 std::string exportVariant(const Variant &variant);
+
+template<class AttributesValueMapping>
+requires(std::is_same_v<AttributesValueMapping, AttributesValuesList> || std::is_same_v<AttributesValueMapping, AttributesEquationFactors>)
+Real attributesSum(const AttributesValueMapping &factors, const AttributesValuesList &attr)
+{
+	Real sum = 0;
+	for (const auto &it : factors)
+		sum += it.second * (it.first == AttributeEnum::Constant ? 1 : attr.count(it.first) ? attr.at(it.first) : 0);
+	return sum;
+}
 
 template<class... T>
 constexpr bool always_false = false;

@@ -59,7 +59,7 @@ namespace
 				for (const auto &a : sk.duration)
 					weights[a.first] += max(a.second, 0);
 				for (const auto &a : sk.damageAmount)
-					weights[a.first] += max(a.second, 0);
+					weights[a.first] += max(a.second, 0) * 1.5;
 				for (const auto &a : sk.caster.attributes)
 					for (const auto &b : a.second)
 						weights[b.first] += max(b.second, 0);
@@ -86,7 +86,7 @@ namespace
 
 	void spendAttributesPoints(Monster &mr)
 	{
-		spendAttributesPoints(mr, availablePointsToSpend(mr));
+		spendAttributesPoints(mr, max(availablePointsToSpend(mr), 10u));
 	}
 
 	void setupResistances(Monster &mr, Real scale)

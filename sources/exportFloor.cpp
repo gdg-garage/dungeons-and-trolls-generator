@@ -15,57 +15,6 @@ namespace
 		return r;
 	}
 
-	String connectedWall(const Floor &f, uint32 x, uint32 y)
-	{
-		uint32 neighbors = 0;
-		if (x == 0 || f.tile(x - 1, y) == TileEnum::Wall || f.tile(x - 1, y) == TileEnum::Outside)
-			neighbors += 1; // left
-		if (y == 0 || f.tile(x, y - 1) == TileEnum::Wall || f.tile(x, y - 1) == TileEnum::Outside)
-			neighbors += 2; // top
-		if (x + 1 == f.width || f.tile(x + 1, y) == TileEnum::Wall || f.tile(x + 1, y) == TileEnum::Outside)
-			neighbors += 4; // right
-		if (y + 1 == f.height || f.tile(x, y + 1) == TileEnum::Wall || f.tile(x, y + 1) == TileEnum::Outside)
-			neighbors += 8; // bottom
-
-		switch (neighbors)
-		{
-			case 0:
-				return "X";
-			case 1:
-				return uni(u8"\u2500");
-			case 2:
-				return uni(u8"\u2502");
-			case 3:
-				return uni(u8"\u2518");
-			case 4:
-				return uni(u8"\u2500");
-			case 5:
-				return uni(u8"\u2500");
-			case 6:
-				return uni(u8"\u2514");
-			case 7:
-				return uni(u8"\u2534");
-			case 8:
-				return uni(u8"\u2502");
-			case 9:
-				return uni(u8"\u2510");
-			case 10:
-				return uni(u8"\u2502");
-			case 11:
-				return uni(u8"\u2524");
-			case 12:
-				return uni(u8"\u250C");
-			case 13:
-				return uni(u8"\u252C");
-			case 14:
-				return uni(u8"\u251C");
-			case 15:
-				return uni(u8"\u253C");
-			default:
-				CAGE_THROW_CRITICAL(Exception, "invalid neighbors count for connecting walls");
-		}
-	}
-
 	String tileAscii(const Floor &f, uint32 x, uint32 y)
 	{
 		switch (f.tile(x, y))
@@ -88,7 +37,6 @@ namespace
 				return "@";
 			case TileEnum::Wall:
 				return uni(u8"\u2592");
-				return connectedWall(f, x, y);
 			case TileEnum::Outside:
 				return "~";
 				return uni(u8"\u2593");
@@ -241,6 +189,44 @@ namespace
 		return { s, s / c };
 	}
 
+	uint32 countUselessMonsters(const Floor &f)
+	{
+		uint32 uselessMonsters = 0;
+		for (const TileExtra &t : f.extras)
+		{
+			for (const auto &v : t)
+			{
+				std::visit(
+					[&](const auto &arg)
+					{
+						using T = std::decay_t<decltype(arg)>;
+						if constexpr (std::is_same_v<T, Monster>)
+						{
+							uint32 totalAttacks = 0;
+							uint32 uselessAttacks = 0;
+							const AttributesValuesList totalAttributes = monsterTotalAttributes(arg);
+							for (const Item &it : arg.equippedItems)
+							{
+								for (const Skill &sk : it.skills)
+								{
+									if (sk.damageType != DamageTypeEnum::None)
+									{
+										totalAttacks++;
+										if (attributesSum(sk.damageAmount, totalAttributes) < 1.0)
+											uselessAttacks++;
+									}
+								}
+							}
+							if (totalAttacks > 0 && uselessAttacks == totalAttacks)
+								uselessMonsters++;
+						}
+					},
+					v);
+			}
+		}
+		return uselessMonsters;
+	}
+
 	void flush(Holder<File> &f, const String &p)
 	{
 		if (p.empty())
@@ -329,6 +315,9 @@ void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, con
 		const auto score = totalScore(f);
 		const auto itemsCost = totalItemCost(f);
 		html->writeLine(Stringizer() + "monsters: " + countTiles(f, TileEnum::Monster) + ", total score: " + score.first + ", average score: " + score.second + ", average equipped item value: " + itemsCost.second + "<br>");
+#ifdef CAGE_DEBUG
+		html->writeLine(Stringizer() + "useless monsters: " + countUselessMonsters(f) + "<br>");
+#endif // CAGE_DEBUG
 		html->writeLine("<hr>");
 
 		if (firstlevel)
