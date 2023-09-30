@@ -158,7 +158,7 @@ struct SkillSpecificFlags
 
 struct SkillGenericFlags
 {
-	bool requiresAlone = false; // requires that the caster is alone (no other creature (player or monster) are visible in 5 range), furthermore the skill is canceled if you take any damage while using it
+	bool requiresOutOfCombat = false; // requires that the caster has not taken any damage in last 2 ticks
 	bool requiresLineOfSight = true; // requires the target position be visible from the caster position
 	bool passive = false; // the effects of the skill are automatically applied every tick, assuming the cost can be paid; multiple passive skills are allowed
 };

@@ -224,7 +224,7 @@ Skill skillRest(const Generate &generate, Real factor)
 	Skill sk(generate);
 	sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Refreshing")) * factor;
 	sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constant] = interpolate(5.0, 15.0, sk.addPower(1, "Energizing")) * factor;
-	sk.flags.requiresAlone = true;
+	sk.flags.requiresOutOfCombat = true;
 	sk.updateName("Rest");
 	return sk;
 }
@@ -500,7 +500,7 @@ Item itemCape(const Generate &generate)
 		Skill sk(generate);
 		sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Energizing")) * 0.8;
 		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(0.7, "Refreshing")) * 0.2;
-		sk.flags.requiresAlone = true;
+		sk.flags.requiresOutOfCombat = true;
 		sk.updateName("Meditation");
 		item.addOther(sk, 0.7);
 		item.skills.push_back(std::move(sk));
@@ -799,7 +799,7 @@ Item itemPrimitive(SlotEnum slot)
 			{
 				Skill sk(item.generate);
 				sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constant] = randomRange(0.8, 1.2) * 5;
-				sk.flags.requiresAlone = true;
+				sk.flags.requiresOutOfCombat = true;
 				sk.updateName("Rest");
 				item.skills.push_back(std::move(sk));
 			}
@@ -857,7 +857,7 @@ Item itemSprayCan()
 		Skill sk(item.generate);
 		sk.targetType = SkillTargetEnum::Position;
 		sk.range[AttributeEnum::Constant] = 1;
-		sk.duration[AttributeEnum::Constant] = 120;
+		sk.duration[AttributeEnum::Constant] = 90;
 		sk.target.summons.push_back(Decoration{ "sprayPaint", std::string(1, c) });
 		sk.updateName("Spray");
 		item.skills.push_back(std::move(sk));

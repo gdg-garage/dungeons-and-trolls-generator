@@ -232,7 +232,7 @@ namespace
 		{
 			json += "\"flags\":{\n";
 #define FLAG(F) json += std::string() + "\"" + #F + "\":" + (Stringizer() + skill.flags.F).value.c_str() + ",";
-			FLAG(requiresAlone);
+			FLAG(requiresOutOfCombat);
 			FLAG(requiresLineOfSight);
 			FLAG(passive);
 #undef FLAG

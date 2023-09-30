@@ -232,6 +232,7 @@ Skill skillWaterSplash(const Generate &generate)
 Skill skillLandMine(const Generate &generate)
 {
 	Skill sk(generate);
+	sk.duration[AttributeEnum::Constant] = 60;
 	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 45);
 	{
 		Generate g = generate;
@@ -410,7 +411,7 @@ Skill skillSummonMinion(const Generate &generate)
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Position;
 	sk.range[AttributeEnum::Constant] = 2;
-	sk.duration[AttributeEnum::Constant] = interpolate(10.0, 15.0, sk.addPower(1, "Lasting"));
+	sk.duration[AttributeEnum::Constant] = interpolate(7.0, 12.0, sk.addPower(1, "Lasting"));
 	sk.cost[AttributeEnum::Mana] = makeCost(sk, 65);
 	{
 		Monster mr = monsterMinion(Generate(generate.level, generate.powerOffset()));
@@ -564,6 +565,43 @@ Skill skillDischarge(const Generate &generate)
 	return sk;
 }
 
+Skill skillLavaWalk(const Generate &generate)
+{
+	Skill sk(generate);
+	sk.radius[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(0.7, "Wast")) * 0.1;
+	sk.radius[AttributeEnum::Constant] = 2;
+	sk.duration[AttributeEnum::Constant] = interpolate(4.0, 8.0, sk.addPower(0.9, "Lasting"));
+	sk.damageAmount[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Burning"));
+	sk.damageType = DamageTypeEnum::Fire;
+	sk.caster.attributes[AttributeEnum::FireResist][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(0.9, "Soothing")) * 0.2;
+	sk.target.flags.groundEffect = true;
+	sk.cost[AttributeEnum::Mana] = makeCost(sk, 20);
+	sk.updateName("Lava Walk");
+	return sk;
+}
+
+Skill skillManaChannel(const Generate &generate)
+{
+	Skill sk(generate);
+	sk.targetType = SkillTargetEnum::Character;
+	sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Mana] = -1;
+	sk.target.attributes[AttributeEnum::Mana][AttributeEnum::Mana] = interpolate(0.7, 1.0, sk.addPower(1, "Manatight"));
+	sk.cost[AttributeEnum::Mana] = makeCost(sk, 10);
+	sk.updateName("Mana Channel");
+	return sk;
+}
+
+Skill skillStaminaChannel(const Generate &generate)
+{
+	Skill sk(generate);
+	sk.targetType = SkillTargetEnum::Character;
+	sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Stamina] = -1;
+	sk.target.attributes[AttributeEnum::Stamina][AttributeEnum::Stamina] = interpolate(0.7, 1.0, sk.addPower(1, "Sweattight"));
+	sk.cost[AttributeEnum::Mana] = makeCost(sk, 10);
+	sk.updateName("Stamina Channel");
+	return sk;
+}
+
 // section other
 namespace
 {}
@@ -623,7 +661,10 @@ Skill skillGeneric(const Generate &generate)
 	candidates.add(1, H, 0, 0, SlotEnum::OffHand, { LevelSupport }, skillDeathCoil);
 	candidates.add(1, 0, 0, 0, SlotEnum::Head, { LevelFire }, skillManaBurn);
 	candidates.add(1, 0, 0, 1, SlotEnum::Body, { LevelDuration }, skillSoulCrucible);
-	candidates.add(1, 0, 0, 0, SlotEnum::Legs, { LevelElectric }, skillDischarge);
+	candidates.add(1, 0, 0, 0, SlotEnum::OffHand, { LevelElectric }, skillDischarge);
+	candidates.add(1, 0, 0, 0, SlotEnum::Legs, { LevelFire, LevelDuration, LevelGroundEffect }, skillLavaWalk);
+	candidates.add(1, 0, 0, 1, SlotEnum::Head, { Nothing }, skillManaChannel);
+	candidates.add(1, 0, 0, 1, SlotEnum::Head, { Nothing }, skillStaminaChannel);
 
 	candidates.fallback(skillLaugh);
 	return candidates.pick()(generate);
