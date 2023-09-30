@@ -216,7 +216,7 @@ Real isHorrorFloor(uint32 level)
 
 Real makeAttrFactor(uint32 power, Real roll)
 {
-	return (power * 0.002 + 0.2) * interpolate(0.8, 1.2, roll);
+	return (power * 0.004 + 0.4) * interpolate(0.8, 1.2, roll);
 }
 
 uint32 makeCost(Thing &sk, Real default_)

@@ -1424,3 +1424,31 @@ Monster monsterVandal(uint32 level)
 	mr.updateName("Vandal");
 	return mr;
 }
+
+Monster monsterNuclearBomb(uint32 level)
+{
+	Generate generate = Generate(level, 0);
+	generate.magic = 0;
+	generate.ranged = 1;
+	generate.defensive = 0;
+	generate.support = 0;
+
+	Monster mr(generate);
+	mr.icon = "nuclearBomb";
+	mr.algorithm = "none";
+	mr.faction = "monster";
+
+	mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+
+	{
+		Skill sk(generate);
+		sk.name = "Explode";
+		sk.radius[AttributeEnum::Constant] = 1000;
+		sk.damageAmount[AttributeEnum::Constant] = generate.level * 10 + 100;
+		sk.damageType = DamageTypeEnum::Poison;
+		mr.onDeath.push_back(std::move(sk));
+	}
+
+	mr.updateName("Nuclear Bomb");
+	return mr;
+}

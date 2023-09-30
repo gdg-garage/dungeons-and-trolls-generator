@@ -22,6 +22,7 @@ Monster monsterHydra(uint32 level);
 Monster monsterSatyr(uint32 level);
 Monster monsterElemental(uint32 level);
 Monster monsterVandal(uint32 level);
+Monster monsterNuclearBomb(uint32 level);
 
 namespace std
 {
@@ -544,6 +545,12 @@ namespace
 		f.tile(c + Vec2i(0, +2)) = TileEnum::Empty;
 		f.tile(c + Vec2i(-4, 0)) = TileEnum::Empty;
 		f.tile(c + Vec2i(+4, 0)) = TileEnum::Empty;
+
+		// statues
+		f.tile(c + Vec2i(-1)) = TileEnum::Decoration;
+		f.extra(c + Vec2i(-1)).push_back(Decoration{ "statue", "Leo 'The Boar' Ironclad" });
+		f.tile(c + Vec2i(1)) = TileEnum::Decoration;
+		f.extra(c + Vec2i(1)).push_back(Decoration{ "statue", "Mia 'The Bear' Ironclad" });
 	}
 
 	void placeCorridors(Floor &f)
@@ -1071,7 +1078,7 @@ namespace
 
 	void generateBoobsLayout(Floor &f)
 	{
-		if (f.level <= 25)
+		if (f.level <= 20)
 			return generateDungeonLayout(f);
 
 		const uint32 w = f.width;
@@ -1102,7 +1109,7 @@ namespace
 
 	void generateHollowRoomLayout(Floor &f)
 	{
-		if (f.level <= 25)
+		if (f.level <= 20)
 			return generateDungeonLayout(f);
 
 		const uint32 w = f.width;
@@ -1120,7 +1127,7 @@ namespace
 
 	void generateSingleRoomLayout(Floor &f)
 	{
-		if (f.level >= 4 && f.level <= 30)
+		if (f.level >= 4 && f.level <= 20)
 			return generateDungeonLayout(f);
 
 		const uint32 w = f.width;
@@ -1172,7 +1179,7 @@ namespace
 
 	void generateTunnelsLayout(Floor &f)
 	{
-		if (f.level <= 35)
+		if (f.level <= 20)
 			return generateDungeonLayout(f);
 
 		const uint32 w = f.width;
@@ -1187,7 +1194,7 @@ namespace
 
 	void generateMazeLayout(Floor &f)
 	{
-		if (f.level <= 40)
+		if (f.level <= 20)
 			return generateDungeonLayout(f);
 
 		const uint32 w = f.width;
@@ -1240,7 +1247,7 @@ namespace
 
 	void generateStripesLayout(Floor &f)
 	{
-		if (f.level <= 50)
+		if (f.level <= 20)
 			return generateDungeonLayout(f);
 
 		uint32 x = 1;
@@ -1257,6 +1264,90 @@ namespace
 		}
 	}
 
+	void generateCirclesLayout(Floor &f)
+	{
+		if (f.level <= 20)
+			return generateDungeonLayout(f);
+
+		NoiseFunctionCreateConfig cfg;
+		cfg.seed = randomRange((uint32)0, (uint32)m);
+		cfg.frequency = randomRange(0.8, 0.9);
+		Holder<NoiseFunction> noise = newNoiseFunction(cfg);
+
+		for (uint32 y = 1; y < f.height - 1; y++)
+		{
+			for (uint32 x = 1; x < f.width - 1; x++)
+			{
+				const Real d = distance(Vec2(x, y), Vec2(f.width, f.height) / 2) + noise->evaluate(Vec2(x, y));
+				if (sin(Rads(d)) < 0.2)
+					f.tile(x, y) = TileEnum::Empty;
+			}
+		}
+
+		// corridors
+		placeCorridors(f);
+
+		// castle
+		if (f.level > 70 && randomChance() < 0.07)
+			placeCastle(f);
+	}
+
+	void generateNoiseLayout(Floor &f)
+	{
+		if (f.level <= 20)
+			return generateDungeonLayout(f);
+
+		NoiseFunctionCreateConfig cfg;
+		cfg.seed = randomRange((uint32)0, (uint32)m);
+		cfg.frequency = randomRange(0.8, 0.9);
+		Holder<NoiseFunction> noise = newNoiseFunction(cfg);
+
+		for (uint32 y = 1; y < f.height - 1; y++)
+		{
+			for (uint32 x = 1; x < f.width - 1; x++)
+			{
+				if (noise->evaluate(Vec2(x, y)) > 0)
+					f.tile(x, y) = TileEnum::Empty;
+			}
+		}
+
+		// witches
+		if (f.level > 50 && randomChance() < 0.07)
+			placeWitchCoven(f);
+
+		// corridors
+		placeCorridors(f);
+	}
+
+	void generateCheckerboardLayout(Floor &f)
+	{
+		if (f.level <= 20)
+			return generateDungeonLayout(f);
+
+		NoiseFunctionCreateConfig cfg;
+		cfg.seed = randomRange((uint32)0, (uint32)m);
+		cfg.frequency = randomRange(0.01, 0.02);
+		Holder<NoiseFunction> noise = newNoiseFunction(cfg);
+
+		for (uint32 y = 1; y < f.height - 1; y++)
+		{
+			for (uint32 x = 1; x < f.width - 1; x++)
+			{
+				const uint32 i = x / 2 + (sint32)(noise->evaluate(Vec2(x + 500, y)).value * 2);
+				const uint32 j = y / 2 + (sint32)(noise->evaluate(Vec2(x + 100, y)).value * 2);
+				if ((i % 2) == 0 || (j % 2) == 0)
+					f.tile(x, y) = TileEnum::Empty;
+			}
+		}
+
+		// witches
+		if (f.level > 50 && randomChance() < 0.07)
+			placeWitchCoven(f);
+
+		// corridors
+		placeCorridors(f);
+	}
+
 	void generateGenericFloor(Floor &f, uint32 maxLevel)
 	{
 		{
@@ -1268,7 +1359,7 @@ namespace
 			generateSingleRoomLayout(f);
 		else
 		{
-			switch (randomRange(0u, 12u))
+			switch (randomRange(0u, 14u))
 			{
 				case 0:
 					generateDungeonLayout(f);
@@ -1293,6 +1384,15 @@ namespace
 					break;
 				case 7:
 					generateStripesLayout(f);
+					break;
+				case 8:
+					generateCirclesLayout(f);
+					break;
+				case 9:
+					generateNoiseLayout(f);
+					break;
+				case 10:
+					generateCheckerboardLayout(f);
 					break;
 				default:
 					generateNaturalCavesLayout(f);
@@ -1349,6 +1449,15 @@ namespace
 			f.tile(p) = TileEnum::Monster;
 			f.extra(p).push_back(monsterSatyr(f.level));
 			surroundWithDecorations(f, p, "garland");
+		}
+
+		// the nuclear bomb
+		if (f.level > 50 && randomChance() < 0.05)
+		{
+			const Vec2i p = findAny(f, TileEnum::Empty);
+			f.tile(p) = TileEnum::Monster;
+			f.extra(p).push_back(monsterNuclearBomb(f.level));
+			surroundWithDecorations(f, p, "uranium");
 		}
 
 		// the elemental
