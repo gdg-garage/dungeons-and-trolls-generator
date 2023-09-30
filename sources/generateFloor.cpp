@@ -1017,7 +1017,7 @@ namespace
 
 	void generateShiftedGridLayout(Floor &f)
 	{
-		if (f.level <= 20)
+		if (f.level <= 10)
 			return generateDungeonLayout(f);
 
 		std::vector<Vec2i> open;
@@ -1078,7 +1078,7 @@ namespace
 
 	void generateBoobsLayout(Floor &f)
 	{
-		if (f.level <= 20)
+		if (f.level <= 10)
 			return generateDungeonLayout(f);
 
 		const uint32 w = f.width;
@@ -1109,7 +1109,7 @@ namespace
 
 	void generateHollowRoomLayout(Floor &f)
 	{
-		if (f.level <= 20)
+		if (f.level <= 10)
 			return generateDungeonLayout(f);
 
 		const uint32 w = f.width;
@@ -1127,7 +1127,7 @@ namespace
 
 	void generateSingleRoomLayout(Floor &f)
 	{
-		if (f.level >= 4 && f.level <= 20)
+		if (f.level >= 4 && f.level <= 10)
 			return generateDungeonLayout(f);
 
 		const uint32 w = f.width;
@@ -1179,7 +1179,7 @@ namespace
 
 	void generateTunnelsLayout(Floor &f)
 	{
-		if (f.level <= 20)
+		if (f.level <= 10)
 			return generateDungeonLayout(f);
 
 		const uint32 w = f.width;
@@ -1194,7 +1194,7 @@ namespace
 
 	void generateMazeLayout(Floor &f)
 	{
-		if (f.level <= 20)
+		if (f.level <= 10)
 			return generateDungeonLayout(f);
 
 		const uint32 w = f.width;
@@ -1247,7 +1247,7 @@ namespace
 
 	void generateStripesLayout(Floor &f)
 	{
-		if (f.level <= 20)
+		if (f.level <= 10)
 			return generateDungeonLayout(f);
 
 		uint32 x = 1;
@@ -1266,7 +1266,7 @@ namespace
 
 	void generateCirclesLayout(Floor &f)
 	{
-		if (f.level <= 20)
+		if (f.level <= 10)
 			return generateDungeonLayout(f);
 
 		NoiseFunctionCreateConfig cfg;
@@ -1294,7 +1294,7 @@ namespace
 
 	void generateNoiseLayout(Floor &f)
 	{
-		if (f.level <= 20)
+		if (f.level <= 10)
 			return generateDungeonLayout(f);
 
 		NoiseFunctionCreateConfig cfg;
@@ -1321,7 +1321,7 @@ namespace
 
 	void generateCheckerboardLayout(Floor &f)
 	{
-		if (f.level <= 20)
+		if (f.level <= 10)
 			return generateDungeonLayout(f);
 
 		NoiseFunctionCreateConfig cfg;

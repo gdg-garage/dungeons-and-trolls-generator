@@ -3,9 +3,9 @@
 #include <cage-core/ini.h>
 #include <cage-core/logger.h>
 #include <cage-core/string.h>
+#include <cage-core/tasks.h>
 
 Floor generateFloor(uint32 level, uint32 maxLevel);
-//FloorExport exportFloor(const Floor &floor);
 void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, const String &htmlPath);
 
 int main(int argc, const char *args[])
@@ -34,8 +34,25 @@ int main(int argc, const char *args[])
 
 		std::vector<Floor> floors;
 		floors.reserve(m);
-		for (uint32 l = s; l <= e; l++)
-			floors.push_back(generateFloor(l, m));
+		if (e - s + 1 > 2)
+		{
+			floors.resize(e - s + 1);
+			struct Ctx
+			{
+				Floor *first = nullptr;
+				uint32 s = 0;
+				uint32 m = 0;
+			} ctxVal, *ctx = &ctxVal;
+			ctx->first = floors.data();
+			ctx->s = s;
+			ctx->m = m;
+			tasksRunBlocking<Floor>("generate floors", Delegate<void(Floor &)>([ctx](Floor &f) -> void { f = generateFloor(ctx->s + (&f - ctx->first), ctx->m); }), floors);
+		}
+		else
+		{
+			for (uint32 l = s; l <= e; l++)
+				floors.push_back(generateFloor(l, m));
+		}
 		exportDungeon(floors, j, h);
 		return 0;
 	}
