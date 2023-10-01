@@ -189,9 +189,15 @@ namespace
 		return { s, s / c };
 	}
 
-	uint32 countUselessMonsters(const Floor &f)
+	struct Useless
 	{
-		uint32 uselessMonsters = 0;
+		uint32 attacks = 0;
+		uint32 expensive = 0;
+	};
+
+	Useless countUselessMonsters(const Floor &f)
+	{
+		Useless res;
 		for (const TileExtra &t : f.extras)
 		{
 			for (const auto &v : t)
@@ -204,6 +210,7 @@ namespace
 						{
 							uint32 totalAttacks = 0;
 							uint32 uselessAttacks = 0;
+							uint32 expensiveAttacks = 0;
 							const AttributesValuesList totalAttributes = monsterTotalAttributes(arg);
 							for (const Item &it : arg.equippedItems)
 							{
@@ -214,17 +221,21 @@ namespace
 										totalAttacks++;
 										if (attributesSum(sk.damageAmount, totalAttributes) < 1.0)
 											uselessAttacks++;
+										if (!attributesCompare(sk.cost, totalAttributes))
+											expensiveAttacks++;
 									}
 								}
 							}
 							if (totalAttacks > 0 && uselessAttacks == totalAttacks)
-								uselessMonsters++;
+								res.attacks++;
+							if (totalAttacks > 0 && expensiveAttacks == totalAttacks)
+								res.expensive++;
 						}
 					},
 					v);
 			}
 		}
-		return uselessMonsters;
+		return res;
 	}
 
 	void flush(Holder<File> &f, const String &p)
@@ -316,7 +327,8 @@ void exportDungeon(PointerRange<const Floor> floors, const String &jsonPath, con
 		const auto itemsCost = totalItemCost(f);
 		html->writeLine(Stringizer() + "monsters: " + countTiles(f, TileEnum::Monster) + ", total score: " + score.first + ", average score: " + score.second + ", average equipped item value: " + itemsCost.second + "<br>");
 #ifdef CAGE_DEBUG
-		html->writeLine(Stringizer() + "useless monsters: " + countUselessMonsters(f) + "<br>");
+		const auto useless = countUselessMonsters(f);
+		html->writeLine(Stringizer() + "useless attacks: " + useless.attacks + ", expensive attacks: " + useless.expensive + "<br>");
 #endif // CAGE_DEBUG
 		html->writeLine("<hr>");
 

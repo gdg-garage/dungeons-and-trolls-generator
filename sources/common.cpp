@@ -243,12 +243,20 @@ AttributesValuesList monsterTotalAttributes(const Monster &monster)
 	return totalAttributes;
 }
 
-Real attributesSum(const AttributesValuesList &cost)
+Real attributesSum(const AttributesValuesList &attr)
 {
 	sint32 sum = 0;
-	for (const auto &it : cost)
+	for (const auto &it : attr)
 		sum += it.second;
 	return sum;
+}
+
+bool attributesCompare(const AttributesValuesList &cost, const AttributesValuesList &attr)
+{
+	for (const auto &it : cost)
+		if (!attr.count(it.first) || it.second > attr.at(it.first))
+			return false;
+	return true;
 }
 
 namespace

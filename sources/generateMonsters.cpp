@@ -6,6 +6,7 @@
 Item itemGeneric(const Generate &generate);
 Item itemSprayCan();
 Skill skillSwordAttack(const Generate &generate);
+Skill skillSaberAttack(const Generate &generate);
 Skill skillPikeAttack(const Generate &generate);
 Skill skillBowAttack(const Generate &generate);
 Skill skillStomp(const Generate &generate);
@@ -173,7 +174,8 @@ Monster monsterSkeleton(const Generate &generate)
 
 	{
 		Skill sk = skillBowAttack(generate);
-		sk.damageType = generate.level > LevelFire && randomChance() < 0.2 ? DamageTypeEnum ::Fire : DamageTypeEnum::Pierce;
+		if (generate.level > LevelFire && randomChance() < 0.2)
+			sk.damageType = DamageTypeEnum ::Fire;
 		sk.cost.clear();
 		it.addOther(sk, 1);
 		it.skills.push_back(std::move(sk));
@@ -1148,21 +1150,10 @@ namespace
 		it.icon = "claws";
 
 		{
-			Skill sk = skillSwordAttack(generate);
+			Skill sk = skillSaberAttack(generate);
 			sk.name = "Scratch";
-			sk.range[AttributeEnum::Constant] = 1;
+			sk.range[AttributeEnum::Constant] = 3;
 			sk.cost.clear();
-			sk.caster.flags.movement = true;
-			it.addOther(sk, 1);
-			it.skills.push_back(std::move(sk));
-		}
-
-		{
-			Skill sk(generate);
-			sk.name = "Charge";
-			sk.targetType = SkillTargetEnum::Character;
-			sk.range[AttributeEnum::Constant] = 4;
-			sk.caster.flags.movement = true;
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
 		}
@@ -1256,7 +1247,7 @@ namespace
 			Skill sk(generate);
 			sk.name = "Jump";
 			sk.targetType = SkillTargetEnum::Position;
-			sk.range[AttributeEnum::Constant] = 3 + nested;
+			sk.range[AttributeEnum::Constant] = 3 + nested / 2;
 			sk.caster.flags.movement = true;
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));

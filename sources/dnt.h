@@ -294,6 +294,7 @@ Real makeAttrFactor(uint32 power, Real roll);
 uint32 makeCost(Thing &sk, Real default_);
 AttributesValuesList monsterTotalAttributes(const Monster &mr);
 Real attributesSum(const AttributesValuesList &cost);
+bool attributesCompare(const AttributesValuesList &cost, const AttributesValuesList &attr);
 std::string exportVariant(const Variant &variant);
 
 template<class AttributesValueMapping>
