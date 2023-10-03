@@ -141,21 +141,26 @@ namespace
 	{
 		Real s = 0;
 		uint32 c = 0;
-		for (const TileExtra &t : f.extras)
+		for (uint32 y = 0; y < f.height; y++)
 		{
-			for (const auto &v : t)
+			for (uint32 x = 0; x < f.width; x++)
 			{
-				std::visit(
-					[&](const auto &arg)
-					{
-						using T = std::decay_t<decltype(arg)>;
-						if constexpr (std::is_same_v<T, Monster>)
+				if (f.tile(x, y) != TileEnum::Monster)
+					continue;
+				for (const auto &v : f.extra(x, y))
+				{
+					std::visit(
+						[&](const auto &arg)
 						{
-							s += arg.score;
-							c++;
-						}
-					},
-					v);
+							using T = std::decay_t<decltype(arg)>;
+							if constexpr (std::is_same_v<T, Monster>)
+							{
+								s += arg.score;
+								c++;
+							}
+						},
+						v);
+				}
 			}
 		}
 		return { s, s / c };
