@@ -229,10 +229,9 @@ namespace
 
 	std::pair<uint32, uint32> defaultFloorSize(uint32 level)
 	{
-		const uint32 s = min(level * 2, 50u) + 10;
-		const uint32 v = min(level / 3, 30u) + 2;
-		const uint32 w = (s + randomRange(0u, v));
-		const uint32 h = (s + randomRange(0u, v)) / 2;
+		const uint32 s = min(level * 2, 30u) + 10;
+		const uint32 w = (s + randomRange(0, 2));
+		const uint32 h = (s + randomRange(0, 2)) / 2;
 		return { w, h };
 	}
 
@@ -446,7 +445,7 @@ namespace
 	{
 		const uint32 w = f.width;
 		const uint32 h = f.height;
-		const uint32 r = randomRange(6u, 10u);
+		const uint32 r = randomRange(5u, 7u);
 		CAGE_ASSERT(r * 2 + 6 < w && r * 2 + 6 < h);
 		const Vec2i c = Vec2i(randomRange(r + 3, w - r - 4), randomRange(r + 3, h - r - 4));
 		const Vec2i a = Vec2i(c - r - 2);
@@ -666,26 +665,20 @@ namespace
 			f.tile(x, h / 2) = TileEnum::Waypoint;
 			f.extra(x, h / 2).push_back(Waypoint{ bossIndexToLevel(i) + 1 });
 			f.tile(x, 2) = TileEnum::Decoration;
-			f.extra(x, 2).push_back(Decoration{ "pedestal" });
 			f.extra(x, 2).push_back(Decoration{ "trophy", floorBossName(bossIndexToLevel(i)) });
 			f.tile(x, 6) = TileEnum::Decoration;
-			f.extra(x, 6).push_back(Decoration{ "pedestal" });
 			f.extra(x, 6).push_back(floorBossPedestalDecoration(i));
 		}
 
 		if (maxLevel > 100)
 		{
 			f.tile(1, 2) = TileEnum::Decoration;
-			f.extra(1, 2).push_back(Decoration{ "pedestal" });
 			f.extra(1, 2).push_back(Decoration{ "barbarian", "Vít" });
 			f.tile(1, 6) = TileEnum::Decoration;
-			f.extra(1, 6).push_back(Decoration{ "pedestal" });
 			f.extra(1, 6).push_back(Decoration{ "sorcerer", "Eva" });
 			f.tile(w - 2, 2) = TileEnum::Decoration;
-			f.extra(w - 2, 2).push_back(Decoration{ "pedestal" });
 			f.extra(w - 2, 2).push_back(Decoration{ "druid", "Šimon" });
 			f.tile(w - 2, 6) = TileEnum::Decoration;
-			f.extra(w - 2, 6).push_back(Decoration{ "pedestal" });
 			f.extra(w - 2, 6).push_back(Decoration{ "necromancer", "Tomáš" });
 		}
 		else
@@ -717,7 +710,7 @@ namespace
 		}
 
 		// random pillars
-		const uint32 cnt = min(levelToBossIndex(f.level) + 1, 10u);
+		const uint32 cnt = min(levelToBossIndex(f.level), 10u);
 		for (uint32 i = 0; i < cnt; i++)
 		{
 			while (true)
@@ -727,7 +720,7 @@ namespace
 				const Vec2i p = Vec2i(x, y);
 				{
 					const Real d = dist(p);
-					if (d + 6 > r || d < 4)
+					if (d + 5 > r || d < 3)
 						continue;
 				}
 				const Vec2i ps[9] = {
@@ -754,6 +747,8 @@ namespace
 				break;
 			}
 		}
+
+		placeCorridors(f);
 	}
 
 	std::vector<Vec2i> findDoors(const Floor &f)
@@ -856,7 +851,7 @@ namespace
 	void generateBossFloor(Floor &f)
 	{
 		CAGE_ASSERT(isLevelBoss(f.level));
-		const uint32 r = (min(f.level * 2, 50u) + 10 + randomRange(0u, min(f.level / 3, 30u) + 2)) / 2;
+		const uint32 r = min(f.level * 2, 30u) / 2 + 5;
 		uint32 w = r * 2 + 7;
 		uint32 h = r + 6;
 		resizeFloor(f, Vec2i(w, h));
@@ -898,7 +893,7 @@ namespace
 	void generateAntiHeroesFloor(Floor &f)
 	{
 		CAGE_ASSERT(f.level == 100);
-		const uint32 r = 30;
+		const uint32 r = 18;
 		uint32 w = r * 2 + 11;
 		uint32 h = r + 7;
 		resizeFloor(f, Vec2i(w, h));
