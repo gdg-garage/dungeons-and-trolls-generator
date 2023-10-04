@@ -297,6 +297,14 @@ Real attributesSum(const AttributesValuesList &cost);
 bool attributesCompare(const AttributesValuesList &cost, const AttributesValuesList &attr);
 std::string exportVariant(const Variant &variant);
 
+void fixup(Skill &sk);
+void fixup(Item &item);
+void fixup(Monster &mr);
+void fixup(Decoration &decoration);
+void fixup(Waypoint &waypoint);
+void fixup(Key &key);
+void fixup(Variant &variant);
+
 template<class AttributesValueMapping>
 requires(std::is_same_v<AttributesValueMapping, AttributesValuesList> || std::is_same_v<AttributesValueMapping, AttributesEquationFactors>)
 Real attributesSum(const AttributesValueMapping &factors, const AttributesValuesList &attr)

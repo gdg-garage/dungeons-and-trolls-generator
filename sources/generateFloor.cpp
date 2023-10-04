@@ -1642,6 +1642,13 @@ namespace
 			}
 		}
 	}
+
+	void finalFixes(Floor &f)
+	{
+		for (TileExtra &extra : f.extras)
+			for (Variant &variant : extra)
+				fixup(variant);
+	}
 }
 
 Floor generateFloor(uint32 level, uint32 maxLevel)
@@ -1661,5 +1668,6 @@ Floor generateFloor(uint32 level, uint32 maxLevel)
 	CAGE_ASSERT(countCells(f, TileEnum::Spawn) == 1);
 	CAGE_ASSERT(countCells(f, TileEnum::Stairs) == 1);
 	CAGE_ASSERT(isConnected(f));
+	finalFixes(f);
 	return f;
 }
