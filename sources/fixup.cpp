@@ -4,6 +4,7 @@ void fixup(Skill &sk)
 {
 	if (sk.targetType == SkillTargetEnum::None)
 		sk.flags.requiresLineOfSight = false;
+	sk.duration[AttributeEnum::Constant] = max(sk.duration[AttributeEnum::Constant], 1);
 }
 
 void fixup(Item &item)
