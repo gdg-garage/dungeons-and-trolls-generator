@@ -669,23 +669,42 @@ Item itemAmulet(const Generate &generate)
 	}
 
 	finalizeBasicItem(item);
-	switch (randomRange(0, 3))
+	item.updateName("Amulet");
+	item.icon = "amulet";
+	return item;
+}
+
+Item itemPendant(const Generate &generate)
+{
+	CAGE_ASSERT(generate.slot == SlotEnum::Neck);
+	Item item = generateBasicItem(generate);
+
+	makeBoost(item);
+
+	finalizeBasicItem(item);
+	item.updateName("Pendant");
+	item.icon = "pendant";
+	return item;
+}
+
+Item itemNecklace(const Generate &generate)
+{
+	CAGE_ASSERT(generate.slot == SlotEnum::Neck);
+	Item item = generateBasicItem(generate);
+
 	{
-		case 0:
-			item.updateName("Amulet");
-			item.icon = "amulet";
-			break;
-		case 1:
-			item.updateName("Pendant");
-			item.icon = "pendant";
-			break;
-		case 2:
-			item.updateName("Necklace");
-			item.icon = "necklace";
-			break;
-		default:
-			CAGE_THROW_CRITICAL(Exception, "random out of range");
+		Skill sk(generate);
+		sk.radius[AttributeEnum::Constant] = interpolate(3.0, 7.0, sk.addPower(0.8, "Wide"));
+		sk.target.attributes[(AttributeEnum)randomRange(0u, (uint32)AttributeEnum::Life)][AttributeEnum::Constant] = interpolate(1.0, generate.power * 0.1, sk.addPower(1, "Shiny"));
+		sk.flags.passive = true;
+		sk.updateName("Aura");
+		item.addOther(sk, 1);
+		item.skills.push_back(std::move(sk));
 	}
+
+	finalizeBasicItem(item);
+	item.updateName("Necklace");
+	item.icon = "necklace";
 	return item;
 }
 
@@ -771,6 +790,8 @@ Item itemGeneric(const Generate &generate)
 	candidates.add(0, 0, 0, 0, SlotEnum::Legs, { Nothing }, itemBoots);
 
 	candidates.add(0, 0, 0, 0, SlotEnum::Neck, { Nothing }, itemAmulet);
+	candidates.add(0, 0, 1, 0, SlotEnum::Neck, { Nothing }, itemPendant);
+	candidates.add(0, 0, 0, 1, SlotEnum::Neck, { LevelAoe }, itemNecklace);
 
 	candidates.fallback(itemTrinket);
 	return candidates.pick()(generate);
