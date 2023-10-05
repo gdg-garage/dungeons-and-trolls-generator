@@ -270,6 +270,7 @@ FloorExport exportFloor(const Floor &floor)
 	result.json += (Stringizer() + "\"level\":" + floor.level + ",\n").value.c_str();
 	result.json += (Stringizer() + "\"width\":" + floor.width + ",\n").value.c_str();
 	result.json += (Stringizer() + "\"height\":" + floor.height + ",\n").value.c_str();
+	result.json += (Stringizer() + "\"horror\":" + isHorrorFloor(floor.level) + ",\n").value.c_str();
 	result.json += "\"tiles\":[\n";
 	for (uint32 y = 0; y < floor.height; y++)
 	{
