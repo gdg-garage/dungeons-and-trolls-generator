@@ -206,6 +206,18 @@ Skill skillSaberAttack(const Generate &generate)
 	return sk;
 }
 
+Skill skillMaceAttack(const Generate &generate)
+{
+	Skill sk(generate);
+	sk.targetType = SkillTargetEnum::Position;
+	sk.range[AttributeEnum::Constant] = 1;
+	sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Strong")) * 1.1;
+	sk.damageType = DamageTypeEnum::Slash;
+	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 15);
+	sk.updateName("Smash");
+	return sk;
+}
+
 Skill skillPikeAttack(const Generate &generate)
 {
 	Skill sk(generate);
@@ -280,6 +292,23 @@ Item itemSaber(const Generate &generate)
 	return item;
 }
 
+Item itemMace(const Generate &generate)
+{
+	CAGE_ASSERT(generate.slot == SlotEnum::MainHand);
+	Item item = generateBasicItem(generate);
+
+	{
+		Skill sk = skillMaceAttack(generate);
+		item.addOther(sk, 1);
+		item.skills.push_back(std::move(sk));
+	}
+
+	finalizeBasicItem(item);
+	item.updateName("Mace");
+	item.icon = "mace";
+	return item;
+}
+
 Item itemPike(const Generate &generate)
 {
 	CAGE_ASSERT(generate.slot == SlotEnum::MainHand);
@@ -305,10 +334,10 @@ Item itemScythe(const Generate &generate)
 	{
 		Skill sk(generate);
 		sk.radius[AttributeEnum::Constant] = interpolate(1.5, 3.0, sk.addPower(0.9, "Wide"));
-		sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Strong")) * 0.5;
+		sk.damageAmount[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Strong")) * 0.7;
 		sk.damageType = DamageTypeEnum::Slash;
-		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 10);
-		sk.updateName("Attack");
+		sk.cost[AttributeEnum::Stamina] = makeCost(sk, 12);
+		sk.updateName("Reap");
 		item.addOther(sk, 1);
 		item.skills.push_back(std::move(sk));
 	}
@@ -389,16 +418,33 @@ Item itemShield(const Generate &generate)
 	return item;
 }
 
-Item itemCrystalBall(const Generate &generate)
+Item itemTalisman(const Generate &generate)
 {
 	CAGE_ASSERT(generate.slot == SlotEnum::OffHand);
 	Item item = generateBasicItem(generate);
 
-	addBoost<AttributeEnum::Mana>(item);
+	{
+		Skill sk = skillGeneric(generate);
+		item.addOther(sk, 1);
+		item.skills.push_back(std::move(sk));
+	}
 
 	finalizeBasicItem(item);
-	item.updateName("CrystalBall");
-	item.icon = "crystalBall";
+	item.updateName("Talisman");
+	item.icon = "talisman";
+	return item;
+}
+
+Item itemEnergyDrink(const Generate &generate)
+{
+	CAGE_ASSERT(generate.slot == SlotEnum::OffHand);
+	Item item = generateBasicItem(generate);
+
+	addBoost<AttributeEnum::Stamina>(item);
+
+	finalizeBasicItem(item);
+	item.updateName("Energy Drink");
+	item.icon = "energyDrink";
 	return item;
 }
 
@@ -436,20 +482,16 @@ Item itemScroll(const Generate &generate)
 	return item;
 }
 
-Item itemTalisman(const Generate &generate)
+Item itemCrystalBall(const Generate &generate)
 {
 	CAGE_ASSERT(generate.slot == SlotEnum::OffHand);
 	Item item = generateBasicItem(generate);
 
-	{
-		Skill sk = skillGeneric(generate);
-		item.addOther(sk, 1);
-		item.skills.push_back(std::move(sk));
-	}
+	addBoost<AttributeEnum::Mana>(item);
 
 	finalizeBasicItem(item);
-	item.updateName("Talisman");
-	item.icon = "talisman";
+	item.updateName("Crystal Ball");
+	item.icon = "crystalBall";
 	return item;
 }
 
@@ -538,6 +580,28 @@ Item itemCape(const Generate &generate)
 	return item;
 }
 
+Item itemRestoringTattoos(const Generate &generate)
+{
+	CAGE_ASSERT(generate.slot == SlotEnum::Body);
+	Item item(generate); // no generateBasicItem -> no stats
+
+	{
+		Skill sk(generate);
+		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Refreshing")) * 0.15;
+		sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Energizing")) * 0.15;
+		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constant] = interpolate(1.0, 2.0, sk.addPower(0.5));
+		sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Constant] = interpolate(1.0, 2.0, sk.addPower(0.5));
+		sk.flags.passive = true;
+		sk.updateName("Glow");
+		item.addOther(sk, 1);
+		item.skills.push_back(std::move(sk));
+	}
+
+	item.updateName("Tattoos");
+	item.icon = "tattoos";
+	return item;
+}
+
 Item itemHelmet(const Generate &generate)
 {
 	CAGE_ASSERT(generate.slot == SlotEnum::Head);
@@ -585,36 +649,11 @@ Item itemProtectiveTattoos(const Generate &generate)
 	return item;
 }
 
-Item itemRestoringTattoos(const Generate &generate)
-{
-	CAGE_ASSERT(generate.slot == SlotEnum::Body);
-	Item item(generate); // no generateBasicItem -> no stats
-
-	{
-		Skill sk(generate);
-		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Refreshing")) * 0.15;
-		sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Energizing")) * 0.15;
-		sk.caster.attributes[AttributeEnum::Stamina][AttributeEnum::Constant] = interpolate(1.0, 2.0, sk.addPower(0.5));
-		sk.caster.attributes[AttributeEnum::Mana][AttributeEnum::Constant] = interpolate(1.0, 2.0, sk.addPower(0.5));
-		sk.flags.passive = true;
-		sk.updateName("Glow");
-		item.addOther(sk, 1);
-		item.skills.push_back(std::move(sk));
-	}
-
-	item.updateName("Tattoos");
-	item.icon = "tattoos";
-	return item;
-}
-
-Item itemBoots(const Generate &generate)
+Item itemSandals(const Generate &generate)
 {
 	CAGE_ASSERT(generate.slot == SlotEnum::Legs);
 	Item item = generateBasicItem(generate);
 
-	makeBoost(item);
-
-	if (randomChance() < 0.7)
 	{
 		Skill sk(generate);
 		sk.targetType = SkillTargetEnum::Position;
@@ -626,7 +665,18 @@ Item itemBoots(const Generate &generate)
 		item.addOther(sk, 0.6);
 		item.skills.push_back(std::move(sk));
 	}
-	else
+
+	finalizeBasicItem(item);
+	item.updateName("Sandals");
+	item.icon = "sandals";
+	return item;
+}
+
+Item itemShoes(const Generate &generate)
+{
+	CAGE_ASSERT(generate.slot == SlotEnum::Legs);
+	Item item = generateBasicItem(generate);
+
 	{
 		Skill sk(generate);
 		sk.targetType = SkillTargetEnum::Position;
@@ -641,19 +691,21 @@ Item itemBoots(const Generate &generate)
 	}
 
 	finalizeBasicItem(item);
-	switch (randomRange(0, 2))
-	{
-		case 0:
-			item.updateName("Boots");
-			item.icon = "boots";
-			break;
-		case 1:
-			item.updateName("Shoes");
-			item.icon = "shoes";
-			break;
-		default:
-			CAGE_THROW_CRITICAL(Exception, "random out of range");
-	}
+	item.updateName("Shoes");
+	item.icon = "shoes";
+	return item;
+}
+
+Item itemBoots(const Generate &generate)
+{
+	CAGE_ASSERT(generate.slot == SlotEnum::Legs);
+	Item item = generateBasicItem(generate);
+
+	makeBoost(item);
+
+	finalizeBasicItem(item);
+	item.updateName("Boots");
+	item.icon = "boots";
 	return item;
 }
 
@@ -764,15 +816,17 @@ Item itemGeneric(const Generate &generate)
 
 	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelSlash }, itemSword);
 	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelSlash }, itemSaber);
+	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelSlash, LevelAoe }, itemMace);
 	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelPierce }, itemPike);
 	candidates.add(0, 0, 0, 0, SlotEnum::MainHand, { LevelSlash, LevelAoe }, itemScythe);
 	candidates.add(0, 1, 0, 0, SlotEnum::MainHand, { LevelPierce }, itemBow);
-	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { LevelMagic }, itemStaff);
+	candidates.add(1, 0, 0, 0, SlotEnum::MainHand, { Nothing }, itemStaff);
 	candidates.add(1, 1, 0, 0, SlotEnum::MainHand, { Nothing }, itemWand);
 
 	candidates.add(0, 0, 0, 0, SlotEnum::OffHand, { Nothing }, itemDagger);
 	candidates.add(0, H, 1, 0, SlotEnum::OffHand, { Nothing }, itemShield);
 	candidates.add(0, H, 1, 0, SlotEnum::OffHand, { Nothing }, itemTalisman);
+	candidates.add(0, H, 1, 0, SlotEnum::OffHand, { Nothing }, itemEnergyDrink);
 	candidates.add(1, 1, 0, 0, SlotEnum::OffHand, { Nothing }, itemWand);
 	candidates.add(1, 0, 1, 0, SlotEnum::OffHand, { Nothing }, itemScroll);
 	candidates.add(1, 1, 0, 0, SlotEnum::OffHand, { Nothing }, itemCrystalBall);
@@ -787,7 +841,9 @@ Item itemGeneric(const Generate &generate)
 	candidates.add(1, H, 0, 0, SlotEnum::Head, { Nothing }, itemCirclet);
 	candidates.add(1, H, 1, 0, SlotEnum::Head, { Nothing }, itemProtectiveTattoos);
 
-	candidates.add(0, 0, 0, 0, SlotEnum::Legs, { Nothing }, itemBoots);
+	candidates.add(0, 0, 0, 0, SlotEnum::Legs, { Nothing }, itemSandals);
+	candidates.add(0, 1, 0, 0, SlotEnum::Legs, { Nothing }, itemShoes);
+	candidates.add(0, 0, 1, 0, SlotEnum::Legs, { Nothing }, itemBoots);
 
 	candidates.add(0, 0, 0, 0, SlotEnum::Neck, { Nothing }, itemAmulet);
 	candidates.add(0, 0, 1, 0, SlotEnum::Neck, { Nothing }, itemPendant);

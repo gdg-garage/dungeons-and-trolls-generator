@@ -7,6 +7,7 @@ Item itemGeneric(const Generate &generate);
 Item itemSprayCan();
 Skill skillSwordAttack(const Generate &generate);
 Skill skillSaberAttack(const Generate &generate);
+Skill skillMaceAttack(const Generate &generate);
 Skill skillPikeAttack(const Generate &generate);
 Skill skillBowAttack(const Generate &generate);
 Skill skillStomp(const Generate &generate);
@@ -200,7 +201,7 @@ Monster monsterOgre(const Generate &generate)
 	it.icon = "mace";
 
 	{
-		Skill sk = skillSwordAttack(generate);
+		Skill sk = skillMaceAttack(generate);
 		sk.range[AttributeEnum::Constant] = 2;
 		sk.cost.clear();
 		it.addOther(sk, 1);
