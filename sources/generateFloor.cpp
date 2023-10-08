@@ -9,7 +9,8 @@ Item itemShop(uint32 maxLevel);
 Item itemPrimitive(SlotEnum slot);
 Item itemSprayCan();
 Monster monsterGeneric(const Generate &generate);
-std::string floorBossName(uint32 level);
+Decoration floorBossStatue(uint32 bossIndex);
+Decoration floorBossTrophy(uint32 bossIndex);
 Monster monsterChest(const Generate &generate);
 Monster monsterFloorBoss(uint32 level);
 Holder<PointerRange<Monster>> generateAntiHeroes();
@@ -587,37 +588,6 @@ namespace
 		}
 	}
 
-	Decoration floorBossPedestalDecoration(uint32 bossIndex)
-	{
-		switch (bossIndex)
-		{
-			case 1:
-				return Decoration{ "sword" };
-			case 2:
-				return Decoration{ "bow" };
-			case 3:
-				return Decoration{ "scythe" };
-			case 4:
-				return Decoration{ "magic" };
-			case 5:
-				return Decoration{ "duration" };
-			case 6:
-				return Decoration{ "support" };
-			case 7:
-				return Decoration{ "poison" };
-			case 8:
-				return Decoration{ "ground" };
-			case 9:
-				return Decoration{ "stun" };
-			case 10:
-				return Decoration{ "summon" };
-			case 11:
-				return Decoration{ "electric" };
-			default:
-				return Decoration{ "scroll", "Certificate of excellence" };
-		}
-	}
-
 	void generateShopFloor(Floor &f, uint32 maxLevel)
 	{
 		const uint32 portals = levelToBossIndex(maxLevel - 1);
@@ -665,9 +635,9 @@ namespace
 			f.tile(x, h / 2) = TileEnum::Waypoint;
 			f.extra(x, h / 2).push_back(Waypoint{ bossIndexToLevel(i) + 1 });
 			f.tile(x, 2) = TileEnum::Decoration;
-			f.extra(x, 2).push_back(Decoration{ "trophy", floorBossName(bossIndexToLevel(i)) });
+			f.extra(x, 2).push_back(floorBossStatue(i));
 			f.tile(x, 6) = TileEnum::Decoration;
-			f.extra(x, 6).push_back(floorBossPedestalDecoration(i));
+			f.extra(x, 6).push_back(floorBossTrophy(i));
 		}
 
 		if (maxLevel > 100)

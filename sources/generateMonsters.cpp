@@ -49,6 +49,7 @@ namespace
 		if (available == 0)
 			return;
 
+		const Real damageWeight = 2 - mr.generate.support;
 		std::map<AttributeEnum, Real> weights;
 		for (const Item &it : mr.equippedItems)
 		{
@@ -61,7 +62,7 @@ namespace
 				for (const auto &a : sk.duration)
 					weights[a.first] += max(a.second, 0);
 				for (const auto &a : sk.damageAmount)
-					weights[a.first] += max(a.second, 0) * 1.5;
+					weights[a.first] += max(a.second, 0) * damageWeight;
 				for (const auto &a : sk.caster.attributes)
 					for (const auto &b : a.second)
 						weights[b.first] += max(b.second, 0);
@@ -948,6 +949,51 @@ std::string floorBossName(uint32 level)
 	return (Stringizer() + "Guardian Of " + level + "th Floor").value.c_str();
 }
 
+namespace
+{
+	const char *floorBossIconImpl(uint32 bossIndex)
+	{
+		switch (bossIndex)
+		{
+			case 1:
+				return "Sword";
+			case 2:
+				return "Bow";
+			case 3:
+				return "Scythe";
+			case 4:
+				return "Magic";
+			case 5:
+				return "Duration";
+			case 6:
+				return "Support";
+			case 7:
+				return "Poison";
+			case 8:
+				return "Ground";
+			case 9:
+				return "Stun";
+			case 10:
+				return "Summon";
+			case 11:
+				return "Electric";
+			default:
+				return "Scroll";
+		}
+	}
+
+}
+
+Decoration floorBossStatue(uint32 bossIndex)
+{
+	return Decoration{ String("statue") + floorBossIconImpl(bossIndex), floorBossName(bossIndexToLevel(bossIndex)) };
+}
+
+Decoration floorBossTrophy(uint32 bossIndex)
+{
+	return Decoration{ String("trophy") + floorBossIconImpl(bossIndex), floorBossIconImpl(bossIndex) };
+}
+
 Monster monsterFloorBoss(uint32 level)
 {
 	const auto &levelSwitch = [level](uint32 floor) -> Real
@@ -969,7 +1015,7 @@ Monster monsterFloorBoss(uint32 level)
 
 	Monster mr = generateMonsterImpl(g, &selectOutlawMonster);
 	mr.attributes[AttributeEnum::Life] *= 5;
-	mr.icon = "guardian";
+	mr.icon = Stringizer() + "guardian" + floorBossIconImpl(levelToBossIndex(level));
 	mr.algorithm = "guardian";
 	mr.faction = "monster";
 

@@ -38,7 +38,7 @@ namespace
 	{
 		Candidates<void (*)(Item &)> candidates(item.generate);
 		candidates.slotMismatchPenalty = 0.5;
-		candidates.randomness = 1.5;
+		candidates.randomness = 2.0;
 
 		candidates.add(0, 0, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Strength>);
 		candidates.add(0, 1, 0, H, SlotEnum::MainHand, { Nothing }, addBoost<AttributeEnum::Dexterity>);
@@ -89,7 +89,7 @@ namespace
 	{
 		Candidates<void (*)(Item &)> candidates(item.generate);
 		candidates.slotMismatchPenalty = 0.5;
-		candidates.randomness = 1.5;
+		candidates.randomness = 2.0;
 
 		candidates.add(0, 0, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Strength>);
 		candidates.add(0, 1, H, H, SlotEnum::MainHand, { Nothing }, addRequirement<AttributeEnum::Dexterity>);

@@ -1,0 +1,58 @@
+name: Deploy
+on: [push, pull_request]
+
+jobs:
+  Ubuntu:
+    name: ubuntu-${{ matrix.os-version }}-${{ matrix.build-config }}-${{ matrix.compiler.cc }}
+    runs-on: ubuntu-${{ matrix.os-version }}.04
+    env:
+      CC: ${{ matrix.compiler.cc }}
+      CXX: ${{ matrix.compiler.cxx }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os-version: [22]
+        build-config: [release]
+        compiler:
+        - {
+            cc: clang-14,
+            cxx: clang++-14,
+            install: clang-14
+          }
+
+    steps:
+    - name: Install packages
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y xorg-dev nasm ${{ matrix.compiler.install }}
+
+    - name: Versions
+      run: |
+        cmake --version
+        ${{ matrix.compiler.cc }} --version
+        ${{ matrix.compiler.cxx }} --version
+        git --version
+
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Configure
+      run: |
+        mkdir build
+        cd build
+        cmake -DCMAKE_BUILD_TYPE=${{ matrix.build-config }} ..
+
+    - name: Build
+      run: |
+        cd build
+        cmake --build . --config ${{ matrix.build-config }} -- -j3
+
+    - name: Upload Artifact
+      if: matrix.build-config == 'release' && matrix.compiler.cc == 'clang-14'
+      uses: actions/upload-artifact@v3
+      with:
+        name: dntgenerator
+        path: |
+          build/result/${{ matrix.build-config }}/libcage-core.so
+          build/result/${{ matrix.build-config }}/dntgenerator

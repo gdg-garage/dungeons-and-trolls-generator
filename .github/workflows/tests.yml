@@ -42,15 +42,6 @@ jobs:
         cd build/result/${{ matrix.build-config }}
         ./dntgenerator.exe -s 20 -e 22 -m 30
 
-    - name: Upload Artifact
-      if: matrix.os-version == '2019' && matrix.build-config == 'release'
-      uses: actions/upload-artifact@v3
-      with:
-        name: dntgenerator
-        path: |
-          build/result/${{ matrix.build-config }}/cage-core.dll
-          build/result/${{ matrix.build-config }}/dntgenerator.exe
-
 
   Ubuntu:
     name: ubuntu-${{ matrix.os-version }}-${{ matrix.build-config }}-${{ matrix.compiler.cc }}
@@ -109,15 +100,6 @@ jobs:
         cd build/result/${{ matrix.build-config }}
         ./dntgenerator -s 20 -e 22 -m 30
 
-    - name: Upload Artifact
-      if: matrix.build-config == 'release' && matrix.compiler.cc == 'clang-14'
-      uses: actions/upload-artifact@v3
-      with:
-        name: dntgenerator
-        path: |
-          build/result/${{ matrix.build-config }}/libcage-core.so
-          build/result/${{ matrix.build-config }}/dntgenerator
-
     - name: List Icons
       if: matrix.build-config == 'release' && matrix.compiler.cc == 'gcc-13'
       shell: bash
@@ -136,7 +118,7 @@ jobs:
       if: matrix.build-config == 'release' && matrix.compiler.cc == 'gcc-13'
       uses: actions/upload-artifact@v3
       with:
-        name: dntgenerator
+        name: dnticons
         path: |
           build/result/${{ matrix.build-config }}/icons.txt
           build/result/${{ matrix.build-config }}/icons_decoration.txt
