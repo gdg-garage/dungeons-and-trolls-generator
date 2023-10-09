@@ -24,6 +24,7 @@ Monster monsterSatyr(uint32 level);
 Monster monsterElemental(uint32 level);
 Monster monsterVandal(uint32 level);
 Monster monsterNuclearBomb(uint32 level);
+Monster monsterGollum(uint32 level);
 
 namespace std
 {
@@ -1441,6 +1442,15 @@ namespace
 			f.tile(p) = TileEnum::Monster;
 			f.extra(p).push_back(monsterHydra(f.level));
 			surroundWithDecorations(f, p, "bones");
+		}
+
+		// the gollum
+		if (f.level > 45 && randomChance() < 0.05)
+		{
+			const Vec2i p = findAny(f, TileEnum::Empty);
+			f.tile(p) = TileEnum::Monster;
+			f.extra(p).push_back(monsterGollum(f.level));
+			surroundWithDecorations(f, p, "rocks");
 		}
 
 		// templars

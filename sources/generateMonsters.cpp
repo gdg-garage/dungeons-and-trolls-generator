@@ -246,7 +246,7 @@ Monster monsterTroll(const Generate &generate)
 	{
 		Skill sk(generate);
 		sk.name = "Regenerate";
-		sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Quick")) * 0.3;
+		sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Quick")) * 0.1;
 		sk.flags.passive = true;
 		it.addOther(sk, 1);
 		it.skills.push_back(std::move(sk));
@@ -1243,7 +1243,7 @@ Monster monsterHealingTotem(uint32 level)
 		sk.name = "Blessed Healing";
 		sk.radius[AttributeEnum::Constant] = randomRange(2.0, 4.0);
 		sk.duration[AttributeEnum::Constant] = randomRange(1.0, 2.0);
-		sk.target.attributes[AttributeEnum::Life][AttributeEnum::Constant] = level / 4;
+		sk.target.attributes[AttributeEnum::Life][AttributeEnum::Constant] = level * 0.1;
 		sk.caster.flags.groundEffect = true;
 		sk.flags.passive = true;
 		it.addOther(sk, 1);
@@ -1488,5 +1488,57 @@ Monster monsterNuclearBomb(uint32 level)
 	}
 
 	mr.updateName("Nuclear Bomb");
+	return mr;
+}
+
+Monster monsterGollum(uint32 level)
+{
+	Generate generate = Generate(level, 0);
+	generate.magic = 0;
+	generate.ranged = 0;
+	generate.defensive = 0;
+	generate.support = 0;
+
+	Monster mr(generate);
+	mr.icon = "gollum";
+	mr.algorithm = "random";
+	mr.faction = "neutral";
+
+	mr.attributes[AttributeEnum::Life] = generate.power + randomRange(30, 50);
+
+	const auto &item = [](uint32 level)
+	{
+		Generate g(level, 0);
+		g.magic = 1;
+		g.ranged = 0;
+		g.defensive = 1;
+		g.support = 0;
+
+		Item it(g);
+		it.slot = SlotEnum::OffHand;
+		it.name = "Ring";
+		it.icon = "ring";
+
+		{
+			Skill sk(g);
+			sk.name = "Invisibility";
+			sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constant] = g.power * 0.1 + 5;
+			sk.flags.passive = true;
+			it.addOther(sk, 1);
+			it.skills.push_back(std::move(sk));
+		}
+
+		return it;
+	};
+
+	{
+		Item it = item(level);
+		mr.addOther(it, 1);
+		mr.equippedItems.push_back(std::move(it));
+	}
+
+	mr.onDeath.push_back(item(level));
+
+	mr.updateName("Gollum");
 	return mr;
 }
