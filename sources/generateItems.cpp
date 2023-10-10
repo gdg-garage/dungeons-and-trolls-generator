@@ -875,8 +875,7 @@ Item itemShop(uint32 maxLevel)
 	CAGE_ASSERT(gen.power > 0);
 	bool unidentified = false;
 	Real costMult = 1;
-	const Real uniChance = clamp((Real(maxLevel) - 50) * 0.01, 0, 0.5);
-	if (gen.power > 10 && randomChance() < uniChance)
+	if (gen.power > 60 && randomChance() < 0.2)
 	{
 		unidentified = true;
 		costMult = pow(randomChance() + 0.9, 5);

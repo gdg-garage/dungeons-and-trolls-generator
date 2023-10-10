@@ -1392,7 +1392,7 @@ namespace
 		}
 
 		// the vandal
-		if (f.level > 10 && randomChance() < 0.05)
+		if (f.level > 40 && randomChance() < 0.05)
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
@@ -1418,7 +1418,7 @@ namespace
 		}
 
 		// the nuclear bomb
-		if (f.level > 50 && randomChance() < 0.05)
+		if (f.level > 60 && randomChance() < 0.05)
 		{
 			const Vec2i p = findAny(f, TileEnum::Empty);
 			f.tile(p) = TileEnum::Monster;
@@ -1454,7 +1454,7 @@ namespace
 		}
 
 		// templars
-		if (f.level > 70 && randomChance() < 0.05)
+		if (f.level > 60 && randomChance() < 0.05)
 		{
 			const Vec2i spawn = findAny(f, TileEnum::Spawn);
 			const uint32 cnt = randomRange(3u, 7u);
