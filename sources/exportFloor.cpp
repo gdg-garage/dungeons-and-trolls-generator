@@ -39,7 +39,6 @@ namespace
 				return uni(u8"\u2592");
 			case TileEnum::Outside:
 				return "~";
-				return uni(u8"\u2593");
 			default:
 				return "?";
 		}
@@ -66,9 +65,8 @@ namespace
 			case TileEnum::Monster:
 				return "monster";
 			case TileEnum::Wall:
+			case TileEnum::Outside: // treat outside same as walls
 				return "wall";
-			case TileEnum::Outside:
-				return "outside";
 			default:
 				CAGE_THROW_CRITICAL(Exception, "unknown tile enum");
 		}
@@ -76,7 +74,7 @@ namespace
 
 	std::string tileJson(Vec2i position, TileEnum type, const TileExtra &extra)
 	{
-		if (type == TileEnum::Empty || type == TileEnum::Outside)
+		if (type == TileEnum::Empty)
 			return {};
 
 		std::string json;
