@@ -632,6 +632,7 @@ Skill skillGeneric(const Generate &generate)
 	candidates.add(0, 1, 0, 1, SlotEnum::Body, { LevelDuration, LevelSummoning }, skillConstructBallista);
 	candidates.add(0, 0, 0, 1, SlotEnum::Head, { LevelAoe, LevelDuration, LevelStun }, skillWarcry);
 	candidates.add(0, 0, 0, 1, SlotEnum::Head, { LevelDuration }, skillFocus);
+	candidates.add(0, 0, 1, 0, SlotEnum::OffHand, { Nothing }, skillPatchWounds);
 	candidates.add(0, 0, 1, 1, SlotEnum::OffHand, { Nothing }, skillPatchWounds);
 	candidates.add(0, 0, 0, 1, SlotEnum::Head, { Nothing }, skillBerserk);
 	candidates.add(0, 0, 0, 1, SlotEnum::Head, { LevelDuration }, skillIntimidate);
