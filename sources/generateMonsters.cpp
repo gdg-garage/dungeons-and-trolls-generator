@@ -425,7 +425,7 @@ Monster monsterImp(const Generate &generate)
 		it.skills.push_back(std::move(sk));
 	}
 
-	if (generate.level > max(LevelFire, max(LevelAoe, LevelDuration)))
+	if (generate.level > max(max(LevelFire, LevelDuration), max(LevelAoe, LevelGroundEffect)))
 	{
 		Skill sk = skillMeteor(generate);
 		sk.cost.clear();
