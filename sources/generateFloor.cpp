@@ -633,6 +633,8 @@ namespace
 		for (uint32 i = 1; i < portals + 1; i++)
 		{
 			const sint32 x = 6 + i * 2;
+			f.tile(x - 1, h / 2) = TileEnum::Waypoint;
+			f.extra(x - 1, h / 2).push_back(Waypoint{ bossIndexToLevel(i) - 1 });
 			f.tile(x, h / 2) = TileEnum::Waypoint;
 			f.extra(x, h / 2).push_back(Waypoint{ bossIndexToLevel(i) + 1 });
 			f.tile(x, 2) = TileEnum::Decoration;
