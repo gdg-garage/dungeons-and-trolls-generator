@@ -36,7 +36,7 @@ Skill skillChainHook(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
-	sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Stretching")) * 0.1;
+	sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Stretching")) * 0.05;
 	sk.range[AttributeEnum::Constant] = 3;
 	sk.damageAmount[AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(0.7, "Surgical")) * 0.5;
 	sk.damageType = DamageTypeEnum::Pierce;
@@ -156,11 +156,12 @@ Skill skillPatchWounds(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
-	sk.range[AttributeEnum::Constant] = 2;
-	sk.target.attributes[AttributeEnum::Life][AttributeEnum::Constant] = 5;
+	sk.range[AttributeEnum::Constant] = 1;
+	sk.target.attributes[AttributeEnum::Life][AttributeEnum::Constant] = 10;
 	sk.target.attributes[AttributeEnum::Life][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Doctorly")) * 0.2;
 	sk.target.attributes[AttributeEnum::Life][AttributeEnum::Dexterity] = makeAttrFactor(generate.power, sk.addPower(1, "Carefully")) * 0.2;
 	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 15);
+	sk.flags.requiresOutOfCombat = true;
 	sk.updateName("Patch Wounds");
 	return sk;
 }
@@ -207,9 +208,9 @@ Skill skillCharge(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
-	sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Dashing")) * 0.15;
+	sk.range[AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Dashing")) * 0.08;
 	sk.range[AttributeEnum::Constant] = 3;
-	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 7);
+	sk.cost[AttributeEnum::Stamina] = makeCost(sk, 12);
 	sk.caster.flags.movement = true;
 	sk.updateName("Charge");
 	return sk;
@@ -389,7 +390,7 @@ Skill skillHeal(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Character;
-	sk.range[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Distant")) * 0.1;
+	sk.range[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Distant")) * 0.05;
 	sk.range[AttributeEnum::Constant] = 4;
 	sk.target.attributes[AttributeEnum::Life][AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Concentrated")) * 0.5;
 	sk.cost[AttributeEnum::Mana] = makeCost(sk, 20);
