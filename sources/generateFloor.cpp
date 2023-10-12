@@ -630,11 +630,10 @@ namespace
 
 		f.tile(4, h / 2) = TileEnum::Spawn;
 		f.tile(6, h / 2) = TileEnum::Stairs;
-		if (isLevelBoss(maxLevel))
+		if (maxLevel > 1)
 		{
-			const sint32 x = 5 + levelToBossIndex(maxLevel) * 2;
-			f.tile(x, 3) = TileEnum::Waypoint;
-			f.extra(x, 3).push_back(Waypoint{ maxLevel - 1 });
+			f.tile(3, 3) = TileEnum::Waypoint;
+			f.extra(3, 3).push_back(Waypoint{ maxLevel - 1 });
 		}
 		for (uint32 i = 1; i < portals + 1; i++)
 		{
