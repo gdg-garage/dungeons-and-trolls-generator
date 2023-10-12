@@ -276,7 +276,7 @@ Monster monsterVampire(const Generate &generate)
 		sk.targetType = SkillTargetEnum::Character;
 		sk.range[AttributeEnum::Constant] = 1;
 		sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constitution] = makeAttrFactor(generate.power, sk.addPower(1, "Sucking")) * 0.3;
-		sk.target.attributes[AttributeEnum::Life][AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Deep")) * 0.7; // bypasses resistances
+		sk.target.attributes[AttributeEnum::Life][AttributeEnum::Strength] = makeAttrFactor(generate.power, sk.addPower(1, "Deep")) * -0.7; // bypasses resistances
 		it.addOther(sk, 1);
 		it.skills.push_back(std::move(sk));
 	}
