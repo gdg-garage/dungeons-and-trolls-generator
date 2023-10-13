@@ -292,7 +292,7 @@ Skill skillScorch(const Generate &generate)
 Skill skillShockNova(const Generate &generate)
 {
 	Skill sk(generate);
-	sk.radius[AttributeEnum::Constant] = interpolate(3.0, 5.0, sk.addPower(1, "Vast"));
+	sk.radius[AttributeEnum::Constant] = interpolate(2.0, 4.0, sk.addPower(1, "Vast"));
 	sk.damageAmount[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Energetic")) * 0.3;
 	sk.damageType = DamageTypeEnum::Electric;
 	sk.cost[AttributeEnum::Mana] = makeCost(sk, 25);
@@ -336,7 +336,7 @@ Skill skillMeteor(const Generate &generate)
 	sk.range[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(0.6, "Distant")) * 0.1;
 	sk.range[AttributeEnum::Constant] = 2;
 	sk.radius[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(0.8, "Shower", AffixEnum::Suffix)) * 0.05;
-	sk.radius[AttributeEnum::Constant] = 3;
+	sk.radius[AttributeEnum::Constant] = 1;
 	sk.duration[AttributeEnum::Constant] = interpolate(2.0, 5.0, sk.addPower(1, "Cosmic"));
 	sk.damageAmount[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Vigorous")) * 0.15;
 	sk.damageType = DamageTypeEnum::Fire;
@@ -411,7 +411,7 @@ Skill skillSummonMinion(const Generate &generate)
 {
 	Skill sk(generate);
 	sk.targetType = SkillTargetEnum::Position;
-	sk.range[AttributeEnum::Constant] = 2;
+	sk.range[AttributeEnum::Constant] = 1;
 	sk.duration[AttributeEnum::Constant] = interpolate(7.0, 12.0, sk.addPower(1, "Lasting"));
 	sk.cost[AttributeEnum::Mana] = makeCost(sk, 65);
 	{
@@ -569,8 +569,8 @@ Skill skillDischarge(const Generate &generate)
 Skill skillLavaWalk(const Generate &generate)
 {
 	Skill sk(generate);
-	sk.radius[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(0.7, "Wast")) * 0.1;
-	sk.radius[AttributeEnum::Constant] = 2;
+	sk.radius[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(0.7, "Wast")) * 0.05;
+	sk.radius[AttributeEnum::Constant] = 1;
 	sk.duration[AttributeEnum::Constant] = interpolate(4.0, 8.0, sk.addPower(0.9, "Lasting"));
 	sk.damageAmount[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Burning"));
 	sk.damageType = DamageTypeEnum::Fire;
