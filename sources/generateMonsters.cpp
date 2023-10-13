@@ -1491,7 +1491,8 @@ Monster monsterNuclearBomb(uint32 level)
 		Skill sk(generate);
 		sk.name = "Fallout";
 		sk.radius[AttributeEnum::Constant] = 100;
-		sk.damageAmount[AttributeEnum::Constant] = generate.level + 10;
+		sk.duration[AttributeEnum::Constant] = 1000000;
+		sk.damageAmount[AttributeEnum::Constant] = generate.level / 5 + 5;
 		sk.damageType = DamageTypeEnum::Poison;
 		sk.target.flags.groundEffect = true;
 		mr.onDeath.push_back(std::move(sk));
