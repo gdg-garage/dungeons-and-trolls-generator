@@ -1402,13 +1402,12 @@ namespace
 			Skill sk(generate);
 			sk.name = "Shedding";
 			sk.radius[AttributeEnum::Constant] = 2;
-			sk.damageAmount[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Damaging")) * 0.5;
+			sk.damageAmount[AttributeEnum::Intelligence] = makeAttrFactor(generate.power, sk.addPower(1, "Damaging")) * 0.3;
 			sk.damageType = icon.first;
 			if (generate.level > LevelDuration)
 				sk.duration[AttributeEnum::Willpower] = makeAttrFactor(generate.power, sk.addPower(1, "Lasting")) * 0.1;
 			if (generate.level > LevelGroundEffect)
 				sk.caster.flags.groundEffect = true;
-			sk.caster.attributes[AttributeEnum::Life][AttributeEnum::Constant] = generate.power * 0.1;
 			sk.flags.passive = true;
 			it.addOther(sk, 1);
 			it.skills.push_back(std::move(sk));
