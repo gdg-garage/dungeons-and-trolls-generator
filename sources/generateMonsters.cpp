@@ -1035,7 +1035,7 @@ Holder<PointerRange<Monster>> generateAntiHeroes()
 		g.defensive = 0;
 		g.support = 0;
 		Monster mr = generateMonsterImpl(g, &selectOutlawMonster);
-		mr.attributes[AttributeEnum::Life] *= 5;
+		mr.attributes[AttributeEnum::Life] *= 30;
 		mr.name = "Vít";
 		mr.icon = "barbarian";
 		mr.algorithm = "antihero";
@@ -1051,7 +1051,7 @@ Holder<PointerRange<Monster>> generateAntiHeroes()
 		g.defensive = 0;
 		g.support = 0;
 		Monster mr = generateMonsterImpl(g, &selectOutlawMonster);
-		mr.attributes[AttributeEnum::Life] *= 5;
+		mr.attributes[AttributeEnum::Life] *= 30;
 		mr.name = "Eva";
 		mr.icon = "sorcerer";
 		mr.algorithm = "antihero";
@@ -1066,7 +1066,7 @@ Holder<PointerRange<Monster>> generateAntiHeroes()
 		g.defensive = 1;
 		g.support = 0;
 		Monster mr = generateMonsterImpl(g, &selectOutlawMonster);
-		mr.attributes[AttributeEnum::Life] *= 5;
+		mr.attributes[AttributeEnum::Life] *= 30;
 		mr.name = "Šimon";
 		mr.icon = "druid";
 		mr.algorithm = "antihero";
@@ -1080,7 +1080,7 @@ Holder<PointerRange<Monster>> generateAntiHeroes()
 		g.magic = 1;
 		g.support = 1;
 		Monster mr = generateMonsterImpl(g, &selectOutlawMonster);
-		mr.attributes[AttributeEnum::Life] *= 5;
+		mr.attributes[AttributeEnum::Life] *= 30;
 		mr.name = "Tomáš";
 		mr.icon = "necromancer";
 		mr.algorithm = "antihero";
@@ -1097,7 +1097,7 @@ Holder<PointerRange<Monster>> generateAntiHeroes()
 		g.ranged = 0;
 		g.support = 0;
 		Monster mr = generateMonsterImpl(g, &monsterZombie);
-		mr.attributes[AttributeEnum::Life] *= 3;
+		mr.attributes[AttributeEnum::Life] *= 15;
 		mr.updateName("Wolf");
 		mr.icon = "wolf";
 		mr.algorithm = "antihero";
@@ -1114,7 +1114,7 @@ Holder<PointerRange<Monster>> generateAntiHeroes()
 		g.defensive = 0;
 		g.support = 0;
 		Monster mr = generateMonsterImpl(g, &monsterSkeleton);
-		mr.attributes[AttributeEnum::Life] *= 2;
+		mr.attributes[AttributeEnum::Life] *= 10;
 		mr.updateName("Skeleton");
 		mr.icon = "skeleton";
 		mr.algorithm = "antihero";
